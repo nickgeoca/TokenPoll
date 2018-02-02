@@ -1,0 +1,21 @@
+node_modules
+build/
+coverage*
+mochawesome-report
+
+.DS_Store
+.project
+.settings
+private
+private/*
+audit/test/testchain/geth*
+audit/test/testchain/history*
+
+# Keys
+keys.js
+
+package-lock.json
+
+# Emacs
+*~
+*[#]*
