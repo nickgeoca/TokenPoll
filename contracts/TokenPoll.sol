@@ -20,17 +20,22 @@ contract TokenPoll {
     allocEndTime = _allocEndTime;
   }
 
-  // Users
+    // Users
   function allocVotes() public inAllocVoteTimeFrame() {
     uint userTokens = tokenContract.balanceOf(msg.sender);
-    
+    uint userVotePower = getUserVotePower(msg.sender);
+
     // State changes
     userTokenBalance[msg.sender] = userTokens;
-    totalTokenCount = totalTokenCount + userTokens;
-    totalVotePower = totalVotePower + sqrt(userTokens);
+    totalTokenCount += userTokens;
+    totalVotePower  += userVotePower;
   }
 
   // Internal/private
+
+  function getUserVotePower(address user) public view returns (uint) {
+    return sqrt(userTokenBalance[user]);
+  }
 
   // y = floor(sqrt(x))
   function sqrt(uint x) pure returns (uint) {
@@ -44,7 +49,6 @@ contract TokenPoll {
 
     return y;
   }
-
 
   // Modifiers
   function getBlockTime() internal view returns  (uint) { return now; }
