@@ -7,20 +7,20 @@ contract TokenPoll {
 
   // State/Events/Constructor
   mapping (address => uint) public userTokenBalance; // user -> token balance
-  totalTokenCount public uint; // Count of all tokens registered for vote
-  totalVotePower public uint;  // Total voting power of users
+  uint public totalTokenCount; // Count of all tokens registered for vote
+  uint public totalVotePower;  // Total voting power of users
 
-  allocStartTime public uint;
-  allocEndTime public uint;
-  tokenContract public ERC20;
-
+  uint public allocStartTime;
+  uint public allocEndTime;
+  ERC20 public tokenContract;
+  
   function TokenPoll(address _token, uint _allocStartTime, uint _allocEndTime) {
-    tokenContract = _token;
+    tokenContract = ERC20(_token);
     allocStartTime = _allocStartTime;
     allocEndTime = _allocEndTime;
   }
-
-    // Users
+  
+  // Users
   function allocVotes() public inAllocVoteTimeFrame() {
     uint userTokens = tokenContract.balanceOf(msg.sender);
     uint userVotePower = getUserVotePower(msg.sender);
@@ -41,12 +41,12 @@ contract TokenPoll {
   function sqrt(uint x) pure returns (uint) {
     uint z = (x + 1) / 2;
     uint y = x;
-
+    
     while (z < y) {
-        y = z;
-        z = (x / z + z) / 2;
+      y = z;
+      z = (x / z + z) / 2;
     }
-
+    
     return y;
   }
 

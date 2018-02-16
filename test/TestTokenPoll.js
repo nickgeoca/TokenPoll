@@ -1,7 +1,7 @@
 // var events = require('./../app/javascripts/events');
 // var util = require('./../app/javascripts/util');
 
-import * as TokenPollInterface from '../app/javascripts/lib/TokenPollInterface';
+const TPI = require("../app/TokenPollInterface.js");
 
 var ERC20 = artifacts.require('ERC20.sol');
 
@@ -13,39 +13,49 @@ const BigNumber = web3.BigNumber;
 // Tests
 contract('TokenPoll', function (accounts) {
 
-  const account1 = accounts[0];
-  const account2 = accounts[1];
-  const account3 = accounts[2];
-  const account4 = accounts[3];
-  const account5 = accounts[4];
-  const account6 = accounts[5];
+  const user1 = accounts[0];
+  const user2 = accounts[1];
+  const user3 = accounts[2];
+  const user4 = accounts[3];
+  const user5 = accounts[4];
+  const user6 = accounts[5];
   const doGood   = accounts[6];
   const company  = accounts[7];
   // const payoutAddress = accounts[8];
   // const arbitrator = accounts[9];
 
-  describe('escrow init tests', async () => {
-    // beforeEach(async () => {
-    // });
+  describe('token poll', async () => {
+    let tokenSupply;
+    let tokenName;
+    let tokenSymbol;
+    let tokenDecimals;
+    let token;
+    const allocStartTime = 50;
+    const allocEndTime = 100;
 
-    it('allocates voting in time window', async () => {
-      const tokenSupply = new BigNumber(1000000000000);
-      const tokenName = 'Test token'
-      const tokenSymbol = 'test'
-      const tokenDecimals = new BigNumber(18);
+    beforeEach(async () => {
+      tokenSupply = new BigNumber(1000000000000);
+      tokenName = 'Test token'
+      tokenSymbol = 'test'
+      tokenDecimals = new BigNumber(18);
 
+      token = await ERC20.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
+      await TPI.init(token.address, allocStartTime, allocEndTime, {from: doGood});
+    });
+
+    it('allocates voting', async () => {
+/*
       const bal1 = new BigNumber(84729832);
       const vp1E = bal1.sqrt().floor();  // 9204
 
-      token = await ERC20.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
-      await TokenPollInterface.init({from: doGood});
+      // Alloc tokens then votes to user1
+      await token.transfer(user1, bal1, {from: company});      
+      await TPI.allocVotes(user1);
 
-      await token.transfer(account1, bal1, {from: company});      
-
-      await TokenPollInterface.allocVotes(account1);
-
-      const vp1 = await TokenPollInterface.getUserVotePowerPercentage(account1);
+      // Test value
+      const vp1 = await TPI.getUserVotePowerPercentage(user1);
       assert.equal(vp1, vp1E, 'Voting not allocated properly');
+*/
     });
   });
 });
