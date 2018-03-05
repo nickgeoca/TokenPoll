@@ -1,21 +1,28 @@
+# Logs
+logs
+*.log
+
+# Directories used by tools like mocha & istanbul
+coverage
+shippable
+
+# Dependency directory
 node_modules
-build/
-coverage*
-mochawesome-report
 
-.DS_Store
-.project
-.settings
-private
-private/*
-audit/test/testchain/geth*
-audit/test/testchain/history*
+# Generated files
+config/development/contracts.json
+config/development/*.sol.js
+config/test/contracts.json
+build
+dist
 
-# Keys
-keys.js
-
-package-lock.json
-
-# Emacs
+# emacs
 *~
 *[#]*
+
+# key file
+keys.js
+
+build
+
+_*
