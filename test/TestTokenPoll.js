@@ -1,16 +1,24 @@
-// var events = require('./../app/javascripts/events');
-// var util = require('./../app/javascripts/util');
+const util = require("./util.js");
 
-const TPI = require("../app/TokenPollInterface.js");
+const tpi = require("../app/TokenPollInterface.js");
 
 var ERC20 = artifacts.require('ERC20.sol');
 
 var chai = require('chai')
-const assert = require("chai").use(require("chai-as-promised")).assert;
+
 const BigNumber = web3.BigNumber;
+
+const assert = require("chai").use(require("chai-as-promised")).assert;
+const eq = assert.equal.bind(assert);
+
+getRandomInt = (max) =>  new BigNumber( Math.floor(Math.random() * Math.floor(max)) );
 
 //************************************************
 // Tests
+
+// States
+// ['Start', 'VoteAllocation', 'Running', 'Refund', 'End']
+
 contract('TokenPoll', function (accounts) {
 
   const user1 = accounts[0];
@@ -19,10 +27,11 @@ contract('TokenPoll', function (accounts) {
   const user4 = accounts[3];
   const user5 = accounts[4];
   const user6 = accounts[5];
-  const doGood   = accounts[6];
-  const company  = accounts[7];
-  // const payoutAddress = accounts[8];
+  const doGood  = accounts[6];
+  const company = accounts[7];
+  const wallet = accounts[8];
   // const arbitrator = accounts[9];
+  let tokenPoll;
 
   describe('token poll', async () => {
     let tokenSupply;
@@ -30,32 +39,67 @@ contract('TokenPoll', function (accounts) {
     let tokenSymbol;
     let tokenDecimals;
     let token;
-    const allocStartTime = 50;
-    const allocEndTime = 100;
+    const voteAllocTimeStartOffset = 50;
+    const voteAllocTimeDifference = 100;
 
+    // Create token polls
     beforeEach(async () => {
+      // ERC20 stuff
       tokenSupply = new BigNumber(1000000000000);
       tokenName = 'Test token'
       tokenSymbol = 'test'
       tokenDecimals = new BigNumber(18);
+      const allocStartTime = await web3.eth.getBlock(await web3.eth.blockNumber).timestamp + voteAllocTimeStartOffset;
+      const allocEndTime = allocStartTime + voteAllocTimeDifference;
 
+      // make erc20 and tokenPoll
       token = await ERC20.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
-      await TPI.init(token.address, allocStartTime, allocEndTime, {from: doGood});
+      tokenPoll = await tpi.createTokenPoll(token.address, wallet, allocStartTime, allocEndTime, {from: doGood});
     });
 
-    it('allocates voting', async () => {
-/*
-      const bal1 = new BigNumber(84729832);
-      const vp1E = bal1.sqrt().floor();  // 9204
+    // state test
+    it('vote allocation fails outside time frame', async () => {
+      const bal1 = getRandomInt(1000000000);
+      const vp1E = bal1.sqrt().floor(); 
+      await token.transfer(user1, bal1, {from: company}); // Alloc tokens     
 
-      // Alloc tokens then votes to user1
-      await token.transfer(user1, bal1, {from: company});      
-      await TPI.allocVotes(user1);
+      // Fail before
+      await util.forwardEVMTime(0);
+      await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user1}));
 
-      // Test value
-      const vp1 = await TPI.getUserVotePowerPercentage(user1);
-      assert.equal(vp1, vp1E, 'Voting not allocated properly');
-*/
+      // Work during
+      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
+      await tpi.allocVotes(tokenPoll, {from: user1});
+      
+      // Fail after
+      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference + 5);
+      await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user1}));
+    });
+
+    it('allocates votes', async () => {
+      const bal1 = getRandomInt(1000000000);
+      const bal2 = getRandomInt(1000000000);
+      
+      // vote power
+      const vp1E = bal1.sqrt().floor();
+      const vp2E = bal2.sqrt().floor();
+      const percentVp1e = vp1E.dividedBy(vp1E.plus(vp2E));
+
+      // Alloc tokens     
+      await token.transfer(user1, bal1, {from: company}); 
+      await token.transfer(user2, bal2, {from: company}); 
+
+      // Put in vote allocation state
+      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
+
+      // Alloc votes
+      await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
+      await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
+
+      const percentVp1a = await tpi.getUserVotePowerPercentage(tokenPoll, user1);
+      eq(percentVp1a.toString(10), percentVp1e.toString(10), 'Voting not allocated properly');
+
+      
     });
   });
 });

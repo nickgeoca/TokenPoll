@@ -1,66 +1,82 @@
-var TokenPollFactory = artifacts.require('./../test/mocks/TokenPollFactory.sol');
-var MockTokenPoll = artifacts.require('./../test/mocks/MockTokenPoll.sol');
-var TokenPoll = artifacts.require('./../build/contracts/TokenPoll.sol');
+var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
+var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
+
 var tokenpoll = undefined;
 
-var simulated = false;
-var testrpc = true;
-var failPercentage = 0.01;
-
 // ==============
-// Test functions
+// Misc
 // ==============
 
-var setBlockTime = async(t, web3Params) => {
-  // begin timestamp
-  const tx = await tokenpoll.setBlockTime(t, web3Params);
+const pullEvent = (result, eventType) => {
+ for (let i = 0; i < result.logs.length; i++) {
+      let log = result.logs[i];
+      if (log.event == eventType) return log.args;
+    }
 }
 
 // =============
 // Init function
 // =============
 
-var init = async (tokenAddress, allocStartTime, allocEndTime, web3Params) => {
-  if (testrpc) {
-    tokenpoll = await MockTokenPoll.new(tokenAddress, allocStartTime, allocEndTime, web3Params);
-    return;
-  }
-  // else
-  fact = await TokenPollFactory.Deployed();
-  tx = await fact.createTokenPoll(tokenAddress, allocStartTime, allocEndTime, web3Params);
-  tokenpoll = await TokenPoll.at(tx.logs[0].tokenPoll);
+// 1) curry crap 2) Unuse mock and use blocktime in testing
+
+var createTokenPoll = async (tokenAddress, allocStartTime, allocEndTime, web3Params) => {
+  let fact = await TokenPollFactory.deployed();
+  let tx = await fact.createTokenPoll(tokenAddress, allocStartTime, allocEndTime, web3Params);
+
+  let event = pullEvent(tx, 'TokenPollCreated');
+
+  return await TokenPoll.at(event.tokenPoll);
 }
 
 // =================
 //  User functions
 // =================
 
-var allocVotes = async(web3Parms) => {
-  // If simulated allocate fake votes
-  if (simulated) return;
+// return successful, tx hash, ?
+var allocVotes = async(tokenPoll, web3Params) => {
+  if (tokenPoll == undefined) throw('Tokenpoll undefined');
 
-  // For all other cases, testrpc, testnet, mainnet
-  if (escrow == undefined) throw('Escrow undefined');
-  
-  const tx = tokenpoll.allocVotes(web3Parmas);
+  const tx = tokenPoll.allocVotes(web3Params);
+  console.log('Alloc votes t');
+  console.log(tx);
   return tx;
 }
 
-var getUserVotePowerPercentage = async(user) => {
-  const vp = await getUserVotePower(user);
-  const tvp = totalVotePower;
-  return vp / tvp;
+var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUserVotePower(user); };
+
+var getTotalVotePower = async(tokenPoll) => { return await tokenPoll.totalVotePower(); };
+
+// Total count of potential voters
+var getUserCount = async(tokenPoll) => { return await tokenPoll.userCount(); };
+
+var getUserVotePowerPercentage = async(tokenPoll, user) => {
+  const vp = await tokenPoll.getUserVotePower(user);
+  const tvp = await tokenPoll.totalVotePower();
+  return vp.dividedBy(tvp);
+}
+
+var getState = async(tokenPoll) => {
+  if (tokenPoll == undefined) throw('Tokenpoll undefined');
+
+  let state = await tokenPoll.getState();
+  
+  return ['Start', 'VoteAllocation', 'Running', 'Refund', 'End'][state];
 }
 
 // =================
 //       API
 // =================
 
-exports.setBlockTime = setBlockTime;
+module.exports = 
+  { createTokenPoll
+  , allocVotes
+  , getUserVotePower
+  , getTotalVotePower
+  , getUserVotePowerPercentage
+  , getUserCount
+  , getState
+  };
 
-// init
-exports.init = init;
-
-// User
-exports.allocVotes = allocVotes;
-exports.getUserVotePowerPercentage = getUserVotePowerPercentage;
+ 
+ 

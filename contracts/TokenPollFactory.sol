@@ -8,10 +8,9 @@ contract TokenPollFactory {
 
   function TokenPollFactory () {}
 
-  function createTokenPoll(address _token, uint _allocStartTime, uint _allocEndTime) {
-    TokenPoll tp = new TokenPoll(_token, _allocStartTime, _allocEndTime);
+  function createTokenPoll(address _token, address _wallet, uint _allocStartTime, uint _allocEndTime) {
+    TokenPoll tp = new TokenPoll(_token, _wallet, _allocStartTime, _allocEndTime);
 
     TokenPollCreated(msg.sender, tp);
   }
-
 }
