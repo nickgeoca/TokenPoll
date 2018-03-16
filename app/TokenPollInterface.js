@@ -1,7 +1,8 @@
 var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
 var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
-
 var tokenpoll = undefined;
+
+// todo , curry crap
 
 // ==============
 // Misc
@@ -18,11 +19,9 @@ const pullEvent = (result, eventType) => {
 // Init function
 // =============
 
-// 1) curry crap 2) Unuse mock and use blocktime in testing
-
-var createTokenPoll = async (tokenAddress, allocStartTime, allocEndTime, web3Params) => {
+var createTokenPoll = async (tokenAddress, escrow, allocStartTime, allocEndTime, web3Params) => {
   let fact = await TokenPollFactory.deployed();
-  let tx = await fact.createTokenPoll(tokenAddress, allocStartTime, allocEndTime, web3Params);
+  let tx = await fact.createTokenPoll(tokenAddress, escrow, allocStartTime, allocEndTime, web3Params);
 
   let event = pullEvent(tx, 'TokenPollCreated');
 
@@ -61,7 +60,13 @@ var getState = async(tokenPoll) => {
 
   let state = await tokenPoll.getState();
   
-  return ['Start', 'VoteAllocation', 'Running', 'Refund', 'End'][state];
+  return [ 'Start'            // Waits until vote allocation. Can't have Running/Voting before votes are allocated
+         , 'VoteAllocation'   // Token balances should be frozen and users allocate votes during this period.
+         , 'Running'          // After vote allocation but not voting
+         , 'Voting'           // In voting state. Outcome is either State.Running or State.VoteFailed
+         , 'VoteFailed'       // If this happens multisig wallet initiates refund
+         , 'Refund'           // Users can withdraw remaining balance
+         , 'End' ][state];
 }
 
 // =================

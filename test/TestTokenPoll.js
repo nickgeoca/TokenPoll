@@ -29,7 +29,7 @@ contract('TokenPoll', function (accounts) {
   const user6 = accounts[5];
   const doGood  = accounts[6];
   const company = accounts[7];
-  const wallet = accounts[8];
+  const escrow = accounts[8];
   // const arbitrator = accounts[9];
   let tokenPoll;
 
@@ -54,7 +54,7 @@ contract('TokenPoll', function (accounts) {
 
       // make erc20 and tokenPoll
       token = await ERC20.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
-      tokenPoll = await tpi.createTokenPoll(token.address, wallet, allocStartTime, allocEndTime, {from: doGood});
+      tokenPoll = await tpi.createTokenPoll(token.address, escrow, allocStartTime, allocEndTime, {from: doGood});
     });
 
     // state test
@@ -65,14 +65,17 @@ contract('TokenPoll', function (accounts) {
 
       // Fail before
       await util.forwardEVMTime(0);
+      eq(await tpi.getState(tokenPoll), 'Start');
       await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user1}));
 
       // Work during
       await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
+      eq(await tpi.getState(tokenPoll), 'VoteAllocation');
       await tpi.allocVotes(tokenPoll, {from: user1});
       
       // Fail after
       await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference + 5);
+      eq(await tpi.getState(tokenPoll), 'Running');
       await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user1}));
     });
 
@@ -91,6 +94,7 @@ contract('TokenPoll', function (accounts) {
 
       // Put in vote allocation state
       await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
+      eq(await tpi.getState(tokenPoll), 'VoteAllocation');
 
       // Alloc votes
       await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
@@ -98,8 +102,6 @@ contract('TokenPoll', function (accounts) {
 
       const percentVp1a = await tpi.getUserVotePowerPercentage(tokenPoll, user1);
       eq(percentVp1a.toString(10), percentVp1e.toString(10), 'Voting not allocated properly');
-
-      
     });
   });
 });

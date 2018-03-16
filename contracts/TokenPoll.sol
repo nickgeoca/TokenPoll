@@ -5,14 +5,13 @@ import "./ERC20.sol";
 // Voting is quadratic
 contract TokenPoll {
 
-  // todo add new state to js
   enum State { Start            // Waits until vote allocation. Can't have Running/Voting before votes are allocated
              , VoteAllocation   // Token balances should be frozen and users allocate votes during this period.
-             , Running          // 
+             , Running          // After vote allocation but not voting
              , Voting           // In voting state. Outcome is either State.Running or State.VoteFailed
-             , VoteFailed       // If this happens multisig wallet initiates refund
+             , VoteFailed       // If this happens multisig escrow initiates refund
              , Refund           // Users can withdraw remaining balance
-             , End }            // 
+             , End }            // End of polls
 
   // =====
   // State
@@ -20,33 +19,34 @@ contract TokenPoll {
 
   mapping (address => uint) public userTokenBalance; // user -> token balance
 
-  uint public totalTokenCount;                       // Count of all tokens registered for vote
-  uint public totalVotePower;                        // Total voting power of users
+  bool refundFlag;                   // keep track of state
+  bool voteFailedFlag;               // "
 
-  uint public userCount;
+  ERC20 public tokenContract;        // Voting power is based on token ownership count
 
-  uint public allocStartTime;
-  uint public allocEndTime;
+  uint public totalRefund;           // Total size of refund
 
-  ERC20 public tokenContract;
+  address public escrow;             // Initiate escrow to send funds to ICO wallet
 
-  bool refundFlag;
-  bool voteFailedFlag;
+  uint public allocStartTime;        // Start/end of voting allocation
+  uint public allocEndTime;          // "
 
-  uint public totalRefund;
-
-  address public wallet;
+  uint public userCount;             // Used for keeping track of quorum
+  uint public totalTokenCount;       // Count of all tokens registered for vote
+  uint public totalVotePower;        // Total voting power of users
+  mapping (address => bool) voted;   // User has voted
+  uint public yesVotes;              // 
+  uint public noVotes;               // 
 
   // ======================
   // Constructor & fallback
   // ======================
-todo change from wallet to escrow...
-  todo escrow.sendMoneyToICOWallet()
-  function TokenPoll(address _token, address _wallet, uint _allocStartTime, uint _allocEndTime) public {
+
+  function TokenPoll(address _token, address _escrow, uint _allocStartTime, uint _allocEndTime) public {
     tokenContract = ERC20(_token);
     allocStartTime = _allocStartTime;
     allocEndTime = _allocEndTime;
-    wallet = _wallet;
+    escrow = _escrow;
   }
 
   // fallback
@@ -58,7 +58,7 @@ todo change from wallet to escrow...
 
   // Users
   function allocVotes() public inState(State.VoteAllocation){
-    require(userHasAllocated[msg.sender] == false);
+    require(userTokenBalance[msg.sender] == 0);  // user has not allocated before
 
     uint userTokens = tokenContract.balanceOf(msg.sender);
 
@@ -69,28 +69,25 @@ todo change from wallet to escrow...
     // totalTokenCount -= userTokenBalance[msg.sender];
 
     // State changes
-    userHasAllocated[msg.sender] = true;
     userTokenBalance[msg.sender] = userTokens;
     totalVotePower  += getUserVotePower(msg.sender);
     totalTokenCount += userTokens;
     userCount += 1;
   }
 
+  // todo vote window, vote params (qorem),
   function userVote(bool voteFor) {
     require(voted[msg.sender] == false);
 
     voted[msg.sender] = true;
 
     if (voteFor)
-      yes += 1;
+      yesVotes += 1;
     else
-      no += 1;
-
-    todo vote window, vote params (qorem),
-      if (voteDecided and QuoremReached) State.Running, sendBalanceTo
+      noVotes += 1;
   }
 
-  function startRefund() public payable inState(State.VoteFailed) fromAddress(wallet) {
+  function startRefund() public payable inState(State.VoteFailed) fromAddress(escrow) {
     totalRefund = msg.value;
     refundFlag = true;
   }
@@ -101,7 +98,10 @@ todo change from wallet to escrow...
 
     // refund
     require(msg.sender.send(refundSize));
-  }  
+  }
+
+  //  function voteSuccessful() {}
+  //     if (voteDecided and QuoremReached) State.Running, sendBalanceTo
 
   // =======
   // Getters
@@ -149,8 +149,8 @@ todo change from wallet to escrow...
     _;
   }
 
-  modifier fromAddress(address _wallet) {
-    require(wallet == _wallet);
+  modifier fromAddress(address _escrow) {
+    require(escrow == _escrow);
     _;
   }
 
