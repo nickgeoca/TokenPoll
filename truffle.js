@@ -13,7 +13,8 @@ var rinkebyProvider = new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/
 var kovanProvider   = new HDWalletProvider(mnemonic, "https://kovan.infura.io/" + infura_apikey);
 var liveProvider    = new HDWalletProvider(mnemonic, "https://mainnet.infura.io/" + infura_apikey);
 
-const gasPrice = 40 * 1000000000; // gigawei
+const gasPriceMainNet = 0; // gigawei
+const gasPriceTest = 2 * 1000000000; // gigawei
 const gas = 6000000;
 
 module.exports = {
@@ -24,28 +25,28 @@ module.exports = {
       network_id: "*" // Match any network id
     },
     live: {
-      gasPrice: gasPrice, 
+      gasPrice: gasPriceMainNet, 
       gas: gas,
       provider: liveProvider,
       network_id: 1,
       from: liveProvider.getAddress() 
     },
     ropsten: {
-      gasPrice: gasPrice, 
+      gasPrice: gasPriceTest, 
       gas: gas,
       provider: ropstenProvider,
       network_id: 3,
       from: ropstenProvider.getAddress() 
     },
     rinkeby: { 
-      gasPrice: gasPrice, 
+      gasPrice: gasPriceTest, 
       gas: gas,
       network_id: 4, 
       provider: rinkebyProvider,
       from: rinkebyProvider.getAddress() 
     },
     kovan: {
-      gasPrice: gasPrice, 
+      gasPrice: gasPriceTest, 
       gas: gas,
       provider: kovanProvider,
       network_id: 42,
