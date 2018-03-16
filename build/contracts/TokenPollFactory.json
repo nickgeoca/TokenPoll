@@ -1,0 +1,1138 @@
+{
+  "contractName": "TokenPollFactory",
+  "abi": [
+    {
+      "inputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "tokenPoll",
+          "type": "address"
+        }
+      ],
+      "name": "TokenPollCreated",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "name": "_escrow",
+          "type": "address"
+        },
+        {
+          "name": "_allocStartTime",
+          "type": "uint256"
+        },
+        {
+          "name": "_allocEndTime",
+          "type": "uint256"
+        }
+      ],
+      "name": "createTokenPoll",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6060604052341561000f57600080fd5b610d8c8061001e6000396000f300606060405260043610610041576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680635818e44114610046575b600080fd5b341561005157600080fd5b6100ae600480803573ffffffffffffffffffffffffffffffffffffffff1690602001909190803573ffffffffffffffffffffffffffffffffffffffff169060200190919080359060200190919080359060200190919050506100b0565b005b6000848484846100be6101ce565b808573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001838152602001828152602001945050505050604051809103906000f080151561014b57600080fd5b90503373ffffffffffffffffffffffffffffffffffffffff167f7564a76079f912cbe2d4cab94216340ff1c978c197ef4b5784d669a00dcb0ed582604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a25050505050565b604051610b82806101df8339019056006060604052341561000f57600080fd5b604051608080610b828339810160405280805190602001909190805190602001909190805190602001909190805190602001909190505083600160026101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550816004819055508060058190555082600360006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050505050610a99806100e96000396000f3006060604052600436106100fc576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806301541fe31461011657806307973ccf1461013f5780631865c57d1461016857806324e3eb641461019f5780632790c642146101c857806329a87023146101f157806332f3e20d1461023e57806355a373d61461025357806360f8dab7146102a8578063677342ce146102bd578063764912ef146102f45780638446d57a1461031d578063adf4a14414610342578063b5b47f421461034c578063e2fdcc1714610375578063eab6d716146103ca578063f5f3d4f714610417578063fb286c6514610440575b341561010757600080fd5b6000151561011457600080fd5b005b341561012157600080fd5b610129610469565b6040518082815260200191505060405180910390f35b341561014a57600080fd5b61015261046f565b6040518082815260200191505060405180910390f35b341561017357600080fd5b61017b610475565b6040518082600681111561018b57fe5b60ff16815260200191505060405180910390f35b34156101aa57600080fd5b6101b26104e3565b6040518082815260200191505060405180910390f35b34156101d357600080fd5b6101db6104e9565b6040518082815260200191505060405180910390f35b34156101fc57600080fd5b610228600480803573ffffffffffffffffffffffffffffffffffffffff169060200190919050506104ef565b6040518082815260200191505060405180910390f35b341561024957600080fd5b610251610507565b005b341561025e57600080fd5b6102666106e5565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34156102b357600080fd5b6102bb61070b565b005b34156102c857600080fd5b6102de60048080359060200190919050506107d5565b6040518082815260200191505060405180910390f35b34156102ff57600080fd5b610307610826565b6040518082815260200191505060405180910390f35b341561032857600080fd5b6103406004808035151590602001909190505061082c565b005b61034a610914565b005b341561035757600080fd5b61035f6109e5565b6040518082815260200191505060405180910390f35b341561038057600080fd5b6103886109eb565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34156103d557600080fd5b610401600480803573ffffffffffffffffffffffffffffffffffffffff16906020019091905050610a11565b6040518082815260200191505060405180910390f35b341561042257600080fd5b61042a610a61565b6040518082815260200191505060405180910390f35b341561044b57600080fd5b610453610a67565b6040518082815260200191505060405180910390f35b60025481565b60065481565b600060045442101561048a57600090506104e0565b4260045410801561049c575060055442105b156104aa57600190506104e0565b600160009054906101000a900460ff16156104c857600590506104e0565b6005544211156104db57600290506104e0565b600690505b90565b60055481565b60045481565b60006020528060005260406000206000915090505481565b6000600180600681111561051757fe5b61051f610475565b600681111561052a57fe5b14151561053657600080fd5b60008060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205414151561058357600080fd5b600160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166370a08231336000604051602001526040518263ffffffff167c0100000000000000000000000000000000000000000000000000000000028152600401808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001915050602060405180830381600087803b151561064857600080fd5b6102c65a03f1151561065957600080fd5b505050604051805190509150816000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055506106b133610a11565b6008600082825401925050819055508160076000828254019250508190555060016006600082825401925050819055505050565b600160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600080600580600681111561071c57fe5b610724610475565b600681111561072f57fe5b14151561073b57600080fd5b6000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549250600754836002540281151561078d57fe5b0491503373ffffffffffffffffffffffffffffffffffffffff166108fc839081150290604051600060405180830381858888f1935050505015156107d057600080fd5b505050565b60008060006002600185018115156107e957fe5b0491508390505b8082101561081c57819050600282838681151561080957fe5b040181151561081457fe5b0491506107f0565b8092505050919050565b60075481565b60001515600960003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060009054906101000a900460ff16151514151561088b57600080fd5b6001600960003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060006101000a81548160ff02191690831515021790555080156108ff576001600a60008282540192505081905550610911565b6001600b600082825401925050819055505b50565b600480600681111561092257fe5b61092a610475565b600681111561093557fe5b14151561094157600080fd5b600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff168073ffffffffffffffffffffffffffffffffffffffff16600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff161415156109c057600080fd5b3460028190555060018060006101000a81548160ff0219169083151502179055505050565b600b5481565b600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b6000610a5a6000808473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020546107d5565b9050919050565b60085481565b600a54815600a165627a7a7230582005de835d3b8b2807c12fe4cf06eac4c25fb5d9b17388e2fb4ae387dc964c43350029a165627a7a72305820d8857e0ba4ef591606515acf5d1321ddd40c1fc2508e110cc123224dcaf78c080029",
+  "deployedBytecode": "0x606060405260043610610041576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680635818e44114610046575b600080fd5b341561005157600080fd5b6100ae600480803573ffffffffffffffffffffffffffffffffffffffff1690602001909190803573ffffffffffffffffffffffffffffffffffffffff169060200190919080359060200190919080359060200190919050506100b0565b005b6000848484846100be6101ce565b808573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001838152602001828152602001945050505050604051809103906000f080151561014b57600080fd5b90503373ffffffffffffffffffffffffffffffffffffffff167f7564a76079f912cbe2d4cab94216340ff1c978c197ef4b5784d669a00dcb0ed582604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a25050505050565b604051610b82806101df8339019056006060604052341561000f57600080fd5b604051608080610b828339810160405280805190602001909190805190602001909190805190602001909190805190602001909190505083600160026101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550816004819055508060058190555082600360006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050505050610a99806100e96000396000f3006060604052600436106100fc576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806301541fe31461011657806307973ccf1461013f5780631865c57d1461016857806324e3eb641461019f5780632790c642146101c857806329a87023146101f157806332f3e20d1461023e57806355a373d61461025357806360f8dab7146102a8578063677342ce146102bd578063764912ef146102f45780638446d57a1461031d578063adf4a14414610342578063b5b47f421461034c578063e2fdcc1714610375578063eab6d716146103ca578063f5f3d4f714610417578063fb286c6514610440575b341561010757600080fd5b6000151561011457600080fd5b005b341561012157600080fd5b610129610469565b6040518082815260200191505060405180910390f35b341561014a57600080fd5b61015261046f565b6040518082815260200191505060405180910390f35b341561017357600080fd5b61017b610475565b6040518082600681111561018b57fe5b60ff16815260200191505060405180910390f35b34156101aa57600080fd5b6101b26104e3565b6040518082815260200191505060405180910390f35b34156101d357600080fd5b6101db6104e9565b6040518082815260200191505060405180910390f35b34156101fc57600080fd5b610228600480803573ffffffffffffffffffffffffffffffffffffffff169060200190919050506104ef565b6040518082815260200191505060405180910390f35b341561024957600080fd5b610251610507565b005b341561025e57600080fd5b6102666106e5565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34156102b357600080fd5b6102bb61070b565b005b34156102c857600080fd5b6102de60048080359060200190919050506107d5565b6040518082815260200191505060405180910390f35b34156102ff57600080fd5b610307610826565b6040518082815260200191505060405180910390f35b341561032857600080fd5b6103406004808035151590602001909190505061082c565b005b61034a610914565b005b341561035757600080fd5b61035f6109e5565b6040518082815260200191505060405180910390f35b341561038057600080fd5b6103886109eb565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34156103d557600080fd5b610401600480803573ffffffffffffffffffffffffffffffffffffffff16906020019091905050610a11565b6040518082815260200191505060405180910390f35b341561042257600080fd5b61042a610a61565b6040518082815260200191505060405180910390f35b341561044b57600080fd5b610453610a67565b6040518082815260200191505060405180910390f35b60025481565b60065481565b600060045442101561048a57600090506104e0565b4260045410801561049c575060055442105b156104aa57600190506104e0565b600160009054906101000a900460ff16156104c857600590506104e0565b6005544211156104db57600290506104e0565b600690505b90565b60055481565b60045481565b60006020528060005260406000206000915090505481565b6000600180600681111561051757fe5b61051f610475565b600681111561052a57fe5b14151561053657600080fd5b60008060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205414151561058357600080fd5b600160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166370a08231336000604051602001526040518263ffffffff167c0100000000000000000000000000000000000000000000000000000000028152600401808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001915050602060405180830381600087803b151561064857600080fd5b6102c65a03f1151561065957600080fd5b505050604051805190509150816000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055506106b133610a11565b6008600082825401925050819055508160076000828254019250508190555060016006600082825401925050819055505050565b600160029054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600080600580600681111561071c57fe5b610724610475565b600681111561072f57fe5b14151561073b57600080fd5b6000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549250600754836002540281151561078d57fe5b0491503373ffffffffffffffffffffffffffffffffffffffff166108fc839081150290604051600060405180830381858888f1935050505015156107d057600080fd5b505050565b60008060006002600185018115156107e957fe5b0491508390505b8082101561081c57819050600282838681151561080957fe5b040181151561081457fe5b0491506107f0565b8092505050919050565b60075481565b60001515600960003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060009054906101000a900460ff16151514151561088b57600080fd5b6001600960003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060006101000a81548160ff02191690831515021790555080156108ff576001600a60008282540192505081905550610911565b6001600b600082825401925050819055505b50565b600480600681111561092257fe5b61092a610475565b600681111561093557fe5b14151561094157600080fd5b600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff168073ffffffffffffffffffffffffffffffffffffffff16600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff161415156109c057600080fd5b3460028190555060018060006101000a81548160ff0219169083151502179055505050565b600b5481565b600360009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b6000610a5a6000808473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020546107d5565b9050919050565b60085481565b600a54815600a165627a7a7230582005de835d3b8b2807c12fe4cf06eac4c25fb5d9b17388e2fb4ae387dc964c43350029a165627a7a72305820d8857e0ba4ef591606515acf5d1321ddd40c1fc2508e110cc123224dcaf78c080029",
+  "sourceMap": "76:364:4:-;;;176:31;;;;;;;;76:364;;;;;;",
+  "deployedSourceMap": "76:364:4:-;;;;;;;;;;;;;;;;;;;;;;;;211:227;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;317:12;346:6;354:7;363:15;380:13;332:62;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;317:77;;418:10;401:32;;;430:2;401:32;;;;;;;;;;;;;;;;;;;;;;211:227;;;;;:::o;76:364::-;;;;;;;;;;:::o",
+  "source": "pragma solidity ^0.4.15;\n\nimport \"./TokenPoll.sol\";\n\n// Voting is quadratic\ncontract TokenPollFactory {\n  event TokenPollCreated(address indexed sender, address tokenPoll);\n\n  function TokenPollFactory () {}\n\n  function createTokenPoll(address _token, address _escrow, uint _allocStartTime, uint _allocEndTime) {\n    TokenPoll tp = new TokenPoll(_token, _escrow, _allocStartTime, _allocEndTime);\n\n    TokenPollCreated(msg.sender, tp);\n  }\n}\n",
+  "sourcePath": "/home/nick/workspace/dapps/nick/TokenPoll/contracts/TokenPollFactory.sol",
+  "ast": {
+    "absolutePath": "/home/nick/workspace/dapps/nick/TokenPoll/contracts/TokenPollFactory.sol",
+    "exportedSymbols": {
+      "TokenPollFactory": [
+        1079
+      ]
+    },
+    "id": 1080,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1039,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".15"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:4"
+      },
+      {
+        "absolutePath": "/home/nick/workspace/dapps/nick/TokenPoll/contracts/TokenPoll.sol",
+        "file": "./TokenPoll.sol",
+        "id": 1040,
+        "nodeType": "ImportDirective",
+        "scope": 1080,
+        "sourceUnit": 1038,
+        "src": "26:25:4",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [
+          1037
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 1079,
+        "linearizedBaseContracts": [
+          1079
+        ],
+        "name": "TokenPollFactory",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "id": 1046,
+            "name": "TokenPollCreated",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 1045,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1042,
+                  "indexed": true,
+                  "name": "sender",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1046,
+                  "src": "129:22:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1041,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "129:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1044,
+                  "indexed": false,
+                  "name": "tokenPoll",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1046,
+                  "src": "153:17:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1043,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "153:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "128:43:4"
+            },
+            "src": "106:66:4"
+          },
+          {
+            "body": {
+              "id": 1049,
+              "nodeType": "Block",
+              "src": "205:2:4",
+              "statements": []
+            },
+            "id": 1050,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "TokenPollFactory",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1047,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "202:2:4"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1048,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "205:0:4"
+            },
+            "scope": 1079,
+            "src": "176:31:4",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 1077,
+              "nodeType": "Block",
+              "src": "311:127:4",
+              "statements": [
+                {
+                  "assignments": [
+                    1062
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 1062,
+                      "name": "tp",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 1078,
+                      "src": "317:12:4",
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                        "typeString": "contract TokenPoll"
+                      },
+                      "typeName": {
+                        "contractScope": null,
+                        "id": 1061,
+                        "name": "TokenPoll",
+                        "nodeType": "UserDefinedTypeName",
+                        "referencedDeclaration": 1037,
+                        "src": "317:9:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      },
+                      "value": null,
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 1070,
+                  "initialValue": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 1065,
+                        "name": "_token",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1052,
+                        "src": "346:6:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1066,
+                        "name": "_escrow",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1054,
+                        "src": "354:7:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1067,
+                        "name": "_allocStartTime",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1056,
+                        "src": "363:15:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1068,
+                        "name": "_allocEndTime",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1058,
+                        "src": "380:13:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        },
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      ],
+                      "id": 1064,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "nodeType": "NewExpression",
+                      "src": "332:13:4",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_creation_nonpayable$_t_address_$_t_address_$_t_uint256_$_t_uint256_$returns$_t_contract$_TokenPoll_$1037_$",
+                        "typeString": "function (address,address,uint256,uint256) returns (contract TokenPoll)"
+                      },
+                      "typeName": {
+                        "contractScope": null,
+                        "id": 1063,
+                        "name": "TokenPoll",
+                        "nodeType": "UserDefinedTypeName",
+                        "referencedDeclaration": 1037,
+                        "src": "336:9:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      }
+                    },
+                    "id": 1069,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "332:62:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                      "typeString": "contract TokenPoll"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "317:77:4"
+                },
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "expression": {
+                          "argumentTypes": null,
+                          "id": 1072,
+                          "name": "msg",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 1091,
+                          "src": "418:3:4",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_magic_message",
+                            "typeString": "msg"
+                          }
+                        },
+                        "id": 1073,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "sender",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": null,
+                        "src": "418:10:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1074,
+                        "name": "tp",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1062,
+                        "src": "430:2:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      ],
+                      "id": 1071,
+                      "name": "TokenPollCreated",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 1046,
+                      "src": "401:16:4",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_address_$returns$__$",
+                        "typeString": "function (address,address)"
+                      }
+                    },
+                    "id": 1075,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "401:32:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 1076,
+                  "nodeType": "ExpressionStatement",
+                  "src": "401:32:4"
+                }
+              ]
+            },
+            "id": 1078,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "createTokenPoll",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1059,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1052,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "236:14:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1051,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "236:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1054,
+                  "name": "_escrow",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "252:15:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1053,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "252:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1056,
+                  "name": "_allocStartTime",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "269:20:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1055,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "269:4:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1058,
+                  "name": "_allocEndTime",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "291:18:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1057,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "291:4:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "235:75:4"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1060,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "311:0:4"
+            },
+            "scope": 1079,
+            "src": "211:227:4",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1080,
+        "src": "76:364:4"
+      }
+    ],
+    "src": "0:441:4"
+  },
+  "legacyAST": {
+    "absolutePath": "/home/nick/workspace/dapps/nick/TokenPoll/contracts/TokenPollFactory.sol",
+    "exportedSymbols": {
+      "TokenPollFactory": [
+        1079
+      ]
+    },
+    "id": 1080,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1039,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".15"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:4"
+      },
+      {
+        "absolutePath": "/home/nick/workspace/dapps/nick/TokenPoll/contracts/TokenPoll.sol",
+        "file": "./TokenPoll.sol",
+        "id": 1040,
+        "nodeType": "ImportDirective",
+        "scope": 1080,
+        "sourceUnit": 1038,
+        "src": "26:25:4",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [
+          1037
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 1079,
+        "linearizedBaseContracts": [
+          1079
+        ],
+        "name": "TokenPollFactory",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "id": 1046,
+            "name": "TokenPollCreated",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 1045,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1042,
+                  "indexed": true,
+                  "name": "sender",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1046,
+                  "src": "129:22:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1041,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "129:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1044,
+                  "indexed": false,
+                  "name": "tokenPoll",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1046,
+                  "src": "153:17:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1043,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "153:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "128:43:4"
+            },
+            "src": "106:66:4"
+          },
+          {
+            "body": {
+              "id": 1049,
+              "nodeType": "Block",
+              "src": "205:2:4",
+              "statements": []
+            },
+            "id": 1050,
+            "implemented": true,
+            "isConstructor": true,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "TokenPollFactory",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1047,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "202:2:4"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1048,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "205:0:4"
+            },
+            "scope": 1079,
+            "src": "176:31:4",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 1077,
+              "nodeType": "Block",
+              "src": "311:127:4",
+              "statements": [
+                {
+                  "assignments": [
+                    1062
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 1062,
+                      "name": "tp",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 1078,
+                      "src": "317:12:4",
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                        "typeString": "contract TokenPoll"
+                      },
+                      "typeName": {
+                        "contractScope": null,
+                        "id": 1061,
+                        "name": "TokenPoll",
+                        "nodeType": "UserDefinedTypeName",
+                        "referencedDeclaration": 1037,
+                        "src": "317:9:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      },
+                      "value": null,
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 1070,
+                  "initialValue": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 1065,
+                        "name": "_token",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1052,
+                        "src": "346:6:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1066,
+                        "name": "_escrow",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1054,
+                        "src": "354:7:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1067,
+                        "name": "_allocStartTime",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1056,
+                        "src": "363:15:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1068,
+                        "name": "_allocEndTime",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1058,
+                        "src": "380:13:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        },
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      ],
+                      "id": 1064,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "nodeType": "NewExpression",
+                      "src": "332:13:4",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_creation_nonpayable$_t_address_$_t_address_$_t_uint256_$_t_uint256_$returns$_t_contract$_TokenPoll_$1037_$",
+                        "typeString": "function (address,address,uint256,uint256) returns (contract TokenPoll)"
+                      },
+                      "typeName": {
+                        "contractScope": null,
+                        "id": 1063,
+                        "name": "TokenPoll",
+                        "nodeType": "UserDefinedTypeName",
+                        "referencedDeclaration": 1037,
+                        "src": "336:9:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      }
+                    },
+                    "id": 1069,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "332:62:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                      "typeString": "contract TokenPoll"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "317:77:4"
+                },
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "expression": {
+                          "argumentTypes": null,
+                          "id": 1072,
+                          "name": "msg",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 1091,
+                          "src": "418:3:4",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_magic_message",
+                            "typeString": "msg"
+                          }
+                        },
+                        "id": 1073,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberName": "sender",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": null,
+                        "src": "418:10:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "id": 1074,
+                        "name": "tp",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1062,
+                        "src": "430:2:4",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_contract$_TokenPoll_$1037",
+                          "typeString": "contract TokenPoll"
+                        }
+                      ],
+                      "id": 1071,
+                      "name": "TokenPollCreated",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 1046,
+                      "src": "401:16:4",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_address_$returns$__$",
+                        "typeString": "function (address,address)"
+                      }
+                    },
+                    "id": 1075,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "401:32:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 1076,
+                  "nodeType": "ExpressionStatement",
+                  "src": "401:32:4"
+                }
+              ]
+            },
+            "id": 1078,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [],
+            "name": "createTokenPoll",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1059,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1052,
+                  "name": "_token",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "236:14:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1051,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "236:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1054,
+                  "name": "_escrow",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "252:15:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1053,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "252:7:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1056,
+                  "name": "_allocStartTime",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "269:20:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1055,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "269:4:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1058,
+                  "name": "_allocEndTime",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1078,
+                  "src": "291:18:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1057,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "291:4:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "235:75:4"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 1060,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "311:0:4"
+            },
+            "scope": 1079,
+            "src": "211:227:4",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1080,
+        "src": "76:364:4"
+      }
+    ],
+    "src": "0:441:4"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.19+commit.c4cbbb05.Emscripten.clang"
+  },
+  "networks": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xad0b0a17f5eeb0d704e1b2be8481cc707207f6fe",
+      "transactionHash": "0xaa325feede2d09d5f8fc464bd937ab67fe02db10028c3943fe794baae46fb3fe"
+    }
+  },
+  "schemaVersion": "2.0.0",
+  "updatedAt": "2018-03-16T02:01:56.034Z"
+}
