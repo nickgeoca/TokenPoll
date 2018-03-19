@@ -19,6 +19,11 @@ const pullEvent = (result, eventType) => {
 // Init function
 // =============
 
+var init = async (web3) => {
+  await WalletFactory.setProvider(web3.currentProvider);
+  await Wallet.setProvider(web3.currentProvider);
+}
+
 var createTokenPoll = async (tokenAddress, escrow, allocStartTime, allocEndTime, web3Params) => {
   let fact = await TokenPollFactory.deployed();
   let tx = await fact.createTokenPoll(tokenAddress, escrow, allocStartTime, allocEndTime, web3Params);
