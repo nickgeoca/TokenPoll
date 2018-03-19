@@ -79,7 +79,8 @@ var getState = async(tokenPoll) => {
 // =================
 
 module.exports = 
-  { createTokenPoll
+  { init
+  , createTokenPoll
   , allocVotes
   , getUserVotePower
   , getTotalVotePower
