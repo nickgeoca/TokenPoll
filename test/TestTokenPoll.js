@@ -33,6 +33,8 @@ contract('TokenPoll', function (accounts) {
   // const arbitrator = accounts[9];
   let tokenPoll;
 
+  tpi.init(web3);
+
   describe('token poll', async () => {
     let tokenSupply;
     let tokenName;
@@ -46,15 +48,16 @@ contract('TokenPoll', function (accounts) {
     beforeEach(async () => {
       // ERC20 stuff
       tokenSupply = new BigNumber(1000000000000);
-      tokenName = 'Test token'
-      tokenSymbol = 'test'
+      tokenName = 'Test token';
+      tokenSymbol = 'test';
       tokenDecimals = new BigNumber(18);
       const allocStartTime = await web3.eth.getBlock(await web3.eth.blockNumber).timestamp + voteAllocTimeStartOffset;
       const allocEndTime = allocStartTime + voteAllocTimeDifference;
 
       // make erc20 and tokenPoll
       token = await ERC20.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
-      tokenPoll = await tpi.createTokenPoll(token.address, escrow, allocStartTime, allocEndTime, {from: doGood});
+      tokenPoll = await tpi.createTokenPoll({from: doGood});
+      await tpi.initializeTokenPoll(tokenPoll, token.address, escrow, allocStartTime, allocEndTime, {from: doGood, gas: 200000});
     });
 
     // state test
@@ -65,7 +68,7 @@ contract('TokenPoll', function (accounts) {
 
       // Fail before
       await util.forwardEVMTime(0);
-      eq(await tpi.getState(tokenPoll), 'Start');
+      eq(await tpi.getState(tokenPoll), 'Initialized');
       await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user1}));
 
       // Work during

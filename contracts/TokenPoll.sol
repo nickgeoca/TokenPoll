@@ -5,13 +5,17 @@ import "./ERC20.sol";
 // Voting is quadratic
 contract TokenPoll {
 
-  enum State { Start            // Waits until vote allocation. Can't have Running/Voting before votes are allocated
+  enum State { Uninitialized    // Waits token poll is parameterized
+             , Initialized      // Waits until vote allocation. Can't have Running/Voting before votes are allocated
              , VoteAllocation   // Token balances should be frozen and users allocate votes during this period.
              , Running          // After vote allocation but not voting
              , Voting           // In voting state. Outcome is either State.Running or State.VoteFailed
              , VoteFailed       // If this happens multisig escrow initiates refund
-             , Refund           // Users can withdraw remaining balance
-             , End }            // End of polls
+
+             // Outcomes  
+             , Successful       // End of polls
+             , Refunding        // Users can withdraw remaining balance
+             }
 
   // =====
   // State
@@ -19,8 +23,10 @@ contract TokenPoll {
 
   mapping (address => uint) public userTokenBalance; // user -> token balance
 
+  address initializer;               // Owner function.. used to initialize
   bool refundFlag;                   // keep track of state
   bool voteFailedFlag;               // "
+  bool initialized;                  // if contract is initialized with parameters
 
   ERC20 public tokenContract;        // Voting power is based on token ownership count
 
@@ -42,7 +48,13 @@ contract TokenPoll {
   // Constructor & fallback
   // ======================
 
-  function TokenPoll(address _token, address _escrow, uint _allocStartTime, uint _allocEndTime) public {
+  function TokenPoll(address _initializer) public { initializer = _initializer; }
+
+  function initialize(address _token, address _escrow, uint _allocStartTime, uint _allocEndTime) public inState(State.Uninitialized) {
+    require(msg.sender == initializer);
+    require(_allocStartTime > now);
+
+    initialized = true;
     tokenContract = ERC20(_token);
     allocStartTime = _allocStartTime;
     allocEndTime = _allocEndTime;
@@ -92,7 +104,7 @@ contract TokenPoll {
     refundFlag = true;
   }
 
-  function userRefund() public inState(State.Refund) {
+  function userRefund() public inState(State.Refunding) {
     uint userTokenCount = userTokenBalance[msg.sender];
     uint refundSize = totalRefund * userTokenCount / totalTokenCount;
 
@@ -108,17 +120,16 @@ contract TokenPoll {
   // =======
 
   function getState() public view returns (State) {
-    if (now < allocStartTime) 
-      return State.Start;
-    if (allocStartTime < now && now < allocEndTime) 
-      return State.VoteAllocation;
+    if (!initialized)          return State.Uninitialized;
+    if (now < allocStartTime)  return State.Initialized;
 
-    if (refundFlag)
-      return State.Refund;
-    if (now > allocEndTime) 
-      return State.Running;
+    if (allocStartTime < now 
+        && now < allocEndTime) return State.VoteAllocation;
 
-    return State.End;
+    if (refundFlag)            return State.Refunding;
+    if (now > allocEndTime)    return State.Running;
+
+    else                       return State.Successful;
   }
 
   function getUserVotePower(address user) public view returns (uint) {

@@ -24,9 +24,13 @@ var init = async (web3) => {
   await TokenPoll.setProvider(web3.currentProvider);
 }
 
-var createTokenPoll = async (tokenAddress, escrow, allocStartTime, allocEndTime, web3Params) => {
+var initializeTokenPoll = async (tokenPoll, tokenAddress, escrow, allocStartTime, allocEndTime, web3Params) => {
+  return await tokenPoll.initialize(tokenAddress, escrow, allocStartTime, allocEndTime, web3Params);
+}
+
+var createTokenPoll = async (web3Params) => {
   let fact = await TokenPollFactory.deployed();
-  let tx = await fact.createTokenPoll(tokenAddress, escrow, allocStartTime, allocEndTime, web3Params);
+  let tx = await fact.createTokenPoll(web3Params);
 
   let event = pullEvent(tx, 'TokenPollCreated');
 
@@ -62,16 +66,18 @@ var getUserVotePowerPercentage = async(tokenPoll, user) => {
 
 var getState = async(tokenPoll) => {
   if (tokenPoll == undefined) throw('Tokenpoll undefined');
-
   let state = await tokenPoll.getState();
-  
-  return [ 'Start'            // Waits until vote allocation. Can't have Running/Voting before votes are allocated
-         , 'VoteAllocation'   // Token balances should be frozen and users allocate votes during this period.
-         , 'Running'          // After vote allocation but not voting
-         , 'Voting'           // In voting state. Outcome is either State.Running or State.VoteFailed
-         , 'VoteFailed'       // If this happens multisig wallet initiates refund
-         , 'Refund'           // Users can withdraw remaining balance
-         , 'End' ][state];
+  return     [ 'Uninitialized'    // Waits token poll is parameterized
+             , 'Initialized'      // Waits until vote allocation. Can't have Running/Voting before votes are allocated
+             , 'VoteAllocation'   // Token balances should be frozen and users allocate votes during this period.
+             , 'Running'          // After vote allocation but not voting
+             , 'Voting'           // In voting state. Outcome is either State.Running or State.VoteFailed
+             , 'VoteFailed'       // If this happens multisig escrow initiates refund
+
+             // Outcomes  
+             , 'Successful'       // End of polls
+             , 'Refunding'        // Users can withdraw remaining balance
+             ][state];
 }
 
 // =================
@@ -81,6 +87,7 @@ var getState = async(tokenPoll) => {
 module.exports = 
   { init
   , createTokenPoll
+  , initializeTokenPoll
   , allocVotes
   , getUserVotePower
   , getTotalVotePower
