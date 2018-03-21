@@ -37,7 +37,7 @@ var createTokenPoll = async (web3Params) => {
   return await TokenPoll.at(event.tokenPoll);
 }
 
-var getContractObject = async (address) => {return await TokenPoll.at(address);};
+var getTokenPollWithAddress = async (address) => {return await TokenPoll.at(address);};
 
 // =================
 //  User functions
@@ -90,7 +90,7 @@ module.exports =
   { init
   , createTokenPoll
   , initializeTokenPoll
-  , getContractObject
+  , getTokenPollWithAddress
   , allocVotes
   , getUserVotePower
   , getTotalVotePower
