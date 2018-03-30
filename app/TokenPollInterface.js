@@ -39,6 +39,14 @@ var createTokenPoll = async (web3Params) => {
 
 var getTokenPollWithAddress = async (address) => {return await TokenPoll.at(address);};
 
+// Returns time in seconds
+var getAllocationTimeFrame = async (tokenPoll) => {
+  const start = await tokenPoll.allocStartTime();
+  const end   = await tokenPoll.allocEndTime();
+
+  return {start, end}
+};
+
 // =================
 //  User functions
 // =================
@@ -91,6 +99,7 @@ module.exports =
   , createTokenPoll
   , initializeTokenPoll
   , getTokenPollWithAddress
+  , getAllocationTimeFrame
   , allocVotes
   , getUserVotePower
   , getTotalVotePower
