@@ -105,11 +105,16 @@ contract TokenPoll {
   }
 
   function userRefund() public inState(State.Refunding) {
-    uint userTokenCount = userTokenBalance[msg.sender];
-    uint refundSize = totalRefund * userTokenCount / totalTokenCount;
+    address user = msg.sender;
+
+    // Get tokens then clear. Reentrant safe
+    uint userTokenCount = userTokenBalance[user];
+    require(userTokenCount != 0);
+    userTokenBalance[user] = 0;
 
     // refund
-    require(msg.sender.send(refundSize));
+    uint refundSize = totalRefund * userTokenCount / totalTokenCount;
+    untrustedSendEth(user, refundSize);  // untrusted external call
   }
 
   //  function voteSuccessful() {}
@@ -153,6 +158,9 @@ contract TokenPoll {
   // ================
   // Internal/private
   // ================
+
+  // This must be private
+  function untrustedSendEth(address a, uint v) private { require(a.send(v)); } // untrusted external call
 
   // Modifiers
   modifier inState(State s) {
