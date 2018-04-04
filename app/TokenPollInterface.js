@@ -1,7 +1,5 @@
 var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
 var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
-var tokenpoll = undefined;
-
 // todo , curry crap
 
 // ==============

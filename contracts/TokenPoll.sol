@@ -88,12 +88,12 @@ contract TokenPoll {
   }
 
   // todo vote window, vote params (qorem),
-  function userVote(bool voteFor) {
+  function castVote(bool value) {
     require(voted[msg.sender] == false);
 
     voted[msg.sender] = true;
 
-    if (voteFor)
+    if (value)
       yesVotes += 1;
     else
       noVotes += 1;
@@ -106,9 +106,9 @@ contract TokenPoll {
 
   function userRefund() public inState(State.Refunding) {
     address user = msg.sender;
+    uint userTokenCount = userTokenBalance[user];
 
     // Get tokens then clear. Reentrant safe
-    uint userTokenCount = userTokenBalance[user];
     require(userTokenCount != 0);
     userTokenBalance[user] = 0;
 
@@ -159,7 +159,7 @@ contract TokenPoll {
   // Internal/private
   // ================
 
-  // This must be private
+  // This must be private. 'private' must not be removed
   function untrustedSendEth(address a, uint v) private { require(a.send(v)); } // untrusted external call
 
   // Modifiers
