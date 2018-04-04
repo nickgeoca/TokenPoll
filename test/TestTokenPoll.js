@@ -2,8 +2,7 @@ const util = require("./util.js");
 
 const tpi = require("../app/TokenPollInterface.js");
 
-var ERC20 = artifacts.require('ERC20.sol');
-
+var Token = artifacts.require("./test/mocks/Token.sol");
 var chai = require('chai')
 
 const BigNumber = web3.BigNumber;
@@ -55,7 +54,7 @@ contract('TokenPoll', function (accounts) {
       const allocEndTime = allocStartTime + voteAllocTimeDifference;
 
       // make erc20 and tokenPoll
-      token = await ERC20.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
+      token = await Token.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
       tokenPoll = await tpi.createTokenPoll({from: doGood});
       await tpi.initializeTokenPoll(tokenPoll, token.address, escrow, allocStartTime, allocEndTime, {from: doGood, gas: 200000});
     });
