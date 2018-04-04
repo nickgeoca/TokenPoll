@@ -61,6 +61,9 @@ var allocVotes = async(tokenPoll, web3Params) => {
   return tx;
 }
 
+// Vote is a boolean
+var castVote = async(tokenPoll, vote, web3Params) => { return tokenPoll.castVote(vote, web3Params); }
+
 var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUserVotePower(user); };
 
 var getTotalVotePower = async(tokenPoll) => { return await tokenPoll.totalVotePower(); };
@@ -101,12 +104,10 @@ module.exports =
   , getTokenPollWithAddress
   , getAllocationTimeFrame
   , allocVotes
+  , castVote
   , getUserVotePower
   , getTotalVotePower
   , getUserVotePowerPercentage
   , getUserCount
   , getState
   };
-
- 
- 
