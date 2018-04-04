@@ -29,6 +29,7 @@ contract TokenPoll {
   bool initialized;                  // if contract is initialized with parameters
 
   ERC20 public tokenContract;        // Voting power is based on token ownership count
+  ERC20 public stableCoin;           // 
 
   uint public totalRefund;           // Total size of refund
 
@@ -50,12 +51,13 @@ contract TokenPoll {
 
   function TokenPoll(address _initializer) public { initializer = _initializer; }
 
-  function initialize(address _token, address _escrow, uint _allocStartTime, uint _allocEndTime) public inState(State.Uninitialized) {
+  function initialize(address _token, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime) public inState(State.Uninitialized) {
     require(msg.sender == initializer);
     require(_allocStartTime > now);
 
     initialized = true;
     tokenContract = ERC20(_token);
+    stableCoin = ERC20(_stableCoin);
     allocStartTime = _allocStartTime;
     allocEndTime = _allocEndTime;
     escrow = _escrow;
@@ -88,7 +90,7 @@ contract TokenPoll {
   }
 
   // todo vote window, vote params (qorem),
-  function userVote(bool voteFor) {
+  function castVote(bool vote) {
     require(voted[msg.sender] == false);
 
     voted[msg.sender] = true;
@@ -98,23 +100,38 @@ contract TokenPoll {
     else
       noVotes += 1;
   }
+  
+LOOK OVER THESE
+>>>>>>
+  
+  // function getEscrowFundsForRefund();
+  // function raiseEscrowDailyLimit();
+
+  // ????? function escrowWithdraw() public 
 
   function startRefund() public payable inState(State.VoteFailed) fromAddress(escrow) {
-    totalRefund = msg.value;
+  escrow.reduceDailyLimitToZero()
+
+    //escrow.sendAllCashOver() todo
+    totalRefund = stableCoin.balanceOf(escrow);
     refundFlag = true;
   }
+^^^^^
+LOOK OVER THESE  
 
   function userRefund() public inState(State.Refunding) {
     address user = msg.sender;
+    uint userTokenCount = userTokenBalance[user];
 
     // Get tokens then clear. Reentrant safe
-    uint userTokenCount = userTokenBalance[user];
     require(userTokenCount != 0);
     userTokenBalance[user] = 0;
 
     // refund
     uint refundSize = totalRefund * userTokenCount / totalTokenCount;
-    untrustedSendEth(user, refundSize);  // untrusted external call
+
+    escrow.execute() stableCoin.transfer(user, refundSize);
+      
   }
 
   //  function voteSuccessful() {}
