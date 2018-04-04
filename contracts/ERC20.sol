@@ -50,6 +50,13 @@ contract ERC20Interface {
     // solhint-disable-next-line no-simple-event-func-name  
     event Transfer(address indexed _from, address indexed _to, uint256 _value); 
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+
+    /*
+      this is erc223 stuff
+    */
+    string public name;
+    string public symbol;
+    uint8 public decimals;
 }
 
 contract ERC20 is ERC20Interface {
@@ -57,15 +64,6 @@ contract ERC20 is ERC20Interface {
     uint256 constant private MAX_UINT256 = 2**256 - 1;
     mapping (address => uint256) public balances;
     mapping (address => mapping (address => uint256)) public allowed;
-    /*
-    NOTE:
-    The following variables are OPTIONAL vanities. One does not have to include them.
-    They allow one to customise the token contract & in no way influences the core functionality.
-    Some wallets/interfaces might not even bother to look at this information.
-    */
-    string public name;                   //fancy name: eg Simon Bucks
-    uint8 public decimals;                //How many decimals to show.
-    string public symbol;                 //An identifier: eg SBX
 
     function ERC20(
         uint256 _initialAmount,
