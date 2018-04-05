@@ -22,8 +22,14 @@ var init = async (web3) => {
 var getERC20WithAddress = async (address) => { return await ERC20.at(address); };
 
 var getBalance = async (token, address) => { 
-  decimals = await token.decimals();  // todo add exception when doesn't have decimals (not erc20)
-  return await token.balanceOf(address).dividedBy(decimals); 
+  let decimals;
+
+  try        { decimals = await token.decimals(); }
+  catch(err) { decimals = new BigNumber(0);       }
+
+  decimals = (new BigNumber(10)).pow(decimals);
+
+  return await token.balanceOf(address).dividedBy(decimals);
 };
 
 // =================
