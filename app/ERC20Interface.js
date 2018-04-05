@@ -1,3 +1,5 @@
+import {BigNumber} from 'bignumber.js';
+
 var ERC20 = artifacts.require('./../contracts/ERC20.sol');
 
 // ==============
@@ -28,8 +30,7 @@ var getBalance = async (token, address) => {
   catch(err) { decimals = new BigNumber(0);       }
 
   decimals = (new BigNumber(10)).pow(decimals);
-
-  return await token.balanceOf(address).dividedBy(decimals);
+  return (await token.balanceOf(address)).dividedBy(decimals);
 };
 
 // =================
