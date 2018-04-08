@@ -5,9 +5,93 @@ import "./ERC20.sol";
 // todo change initalizier to owner
 // todo safe math
 
+contract Escrow {
+  function submitTransaction(address,uint256,bytes) public;
+}
+
+contract EscrowERC20WithdrawDailyLimitInterface {
+  struct WithdrawT {
+    uint dailyLimit;    // User cap
+    uint dayLastSpent;  // Last day withdrew from
+    uint remainingVar;  // Remaining balance from last withdraw date. Use calcMaxWithdraw()
+  }
+  
+  function calcMaxWithdraw() public constant returns (uint);
+  function withdrawTokens(address erc20, address escrow, address to, uint amount) internal;
+  function changeEscrowDailyLimit(uint _newLim) internal;
+}
+
+contract EscrowERC20WithdrawDailyLimit is EscrowERC20WithdrawDailyLimitInterface {
+  // =====
+  // State
+  // =====
+
+  WithdarwT private withdraw;
+  
+  // ======
+  // Public
+  // ======
+  function calcMaxWithdraw() public constant returns (uint) {
+    uint today = now / 24 hours;
+
+    // If new day, return updated dailyLimit
+    if (today > withdraw.dayLastSpent)
+      return withdraw.dailyLimit;
+
+    return withdraw.remainingVar;
+  }
+
+  // todo. at what point can they start withdrawing?
+  // todo keep or add wallet?
+  function withdrawTokens(address erc20, address escrow, address to, uint amount) internal {
+    updateWithdrawData();
+    limit = calcMaxWithdraw();
+    require(limit >= amount);
+
+    escrowSendERC20(erc20, escrow, to, amount);
+  }
+
+  function changeEscrowDailyLimit(uint _newLim) internal {
+    updateWithdrawData();
+    uint alreadySpent = withdraw.dailyLimit - calcMaxWithdraw();
+
+    if (alreadySpent > _newLim)
+      withdraw.remainingVar = 0;
+    else
+      withdraw.remainingVar = _newLim - alreadySpent;
+
+    withdraw.dailyLimit = _newLim; 
+  }
+
+  // ======
+  // Private
+  // ======
+  function updateWithdrawData() private {
+    uint today = now / 24 hours;
+
+    if (today > withdraw.dayLastSpent) {
+      withdraw.dayLastSpent = today;
+      withdraw.remainingVar = withdraw.dailyLimit;
+    }
+  }
+
+  function escrowSendERC20 (address erc20, address escrow, address user, uint value) private {
+    ERC20(erc20).transfer(user, refundSize);
+    bytes4 memory fnSig = bytes4(a9059cbb);   // transfer(address,uint256)
+    bytes32 memory newLimit = bytes32(uintNewLimit);
+    bytes memory data = new bytes(36);
+    
+    // Set function signature and new daily limit params
+    for (uint i = 0; i < 4; i++)  data[i] = fnSig[i];
+    for (uint i = 4; i < 36; i++) data[i] = newLimit[i];
+    
+    // Call fn through escrow
+    Escrow(escrow).submitTransaction(erc20, 0, data);
+  }
+}
 
 // Voting is quadratic
-contract TokenPoll {
+contract TokenPoll is EscrowERC20WithdrawDailyLimit {
 
   enum State { Uninitialized    // Waits token poll is parameterized
              , Initialized      // Waits until vote allocation. Can't have Running/Voting before votes are allocated
@@ -74,6 +158,12 @@ contract TokenPoll {
   // Functions
   // =========
 
+  
+  // ERC20 Withdraw stuff
+  function calcMaxWithdraw() public constant returns (uint);
+  function withdrawTokens(address erc20, address escrow, address to, uint amount) internal;
+  function changeEscrowDailyLimit(uint _newLim) internal;
+
   // Users
   function allocVotes() public inState(State.VoteAllocation){
     require(userTokenBalance[msg.sender] == 0);  // user has not allocated before
@@ -93,6 +183,11 @@ contract TokenPoll {
     userCount += 1;
   }
 
+  function withdraw(address to, uint value) public isController() { withdrawToekns(stableCoin, escrow, to, value); }
+
+  // todo
+  // function changeEscrowDailyLimit(uint _newLim) internal;
+
   // todo vote window, vote params (qorem),
   function castVote(bool vote) {
     require(voted[msg.sender] == false);
@@ -103,70 +198,6 @@ contract TokenPoll {
       yesVotes += 1;
     else
       noVotes += 1;
-  }
-
-
-  struct WithdrawT {
-    uint dailyLimit;    // User cap
-    uint dayLastSpent;  // Last day withdrew from
-    uint remainingVar;  // Remaining balance from last withdraw date. Use calcMaxWithdraw()
-  }
-
-  WithdarwT withdraw;
-  
-  function calcMaxWithdraw() public constant returns (uint) {
-    uint today = now / 24 hours;
-
-    // If new day, return updated dailyLimit
-    if (today > withdraw.dayLastSpent)
-      return withdraw.dailyLimit;
-
-    return withdraw.remainingVar;
-  }
-
-  function updateWithdrawData() private {
-    uint today = now / 24 hours;
-
-    if (today > withdraw.dayLastSpent) {
-      withdraw.dayLastSpent = today;
-      withdraw.remainingVar = withdraw.dailyLimit;
-    }
-  }
-
-  function changeEscrowDailyLimit(uint _newLim) private {
-    updateWithdrawData();
-    uint alreadySpent = withdraw.dailyLimit - calcMaxWithdraw();
-
-    if (alreadySpent > _newLim)
-      withdraw.remainingVar = 0;
-    else
-      withdraw.remainingVar = _newLim - alreadySpent;
-
-    withdraw.dailyLimit = _newLim; 
-  }
-
-  // todo. at what point can they start withdrawing?
-  // todo keep or add wallet?
-  function withdrawTokens(address to, uint amount) public {
-    updateWithdrawData();
-    limit = calcMaxWithdraw();
-    require(limit >= amount);
-
-    escrowSendStableCoins(to, amount);
-  }
-
-  function escrowSendStableCoins (address user, uint value) private {
-    stableCoin.transfer(user, refundSize);
-    bytes4 memory fnSig = bytes4(a9059cbb);   // transfer(address,uint256)
-    bytes32 memory newLimit = bytes32(uintNewLimit);
-    bytes memory data = new bytes(36);
-    
-    // Set function signature and new daily limit params
-    for (uint i = 0; i < 4; i++)  data[i] = fnSig[i];
-    for (uint i = 4; i < 36; i++) data[i] = newLimit[i];
-    
-    // Call fn through escrow
-    escrow.submitTransaction(address(stableCoin), 0, data);
   }
 
   function startRefund() public payable inState(State.VoteFailed) fromAddress(escrow) {
