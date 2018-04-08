@@ -2,6 +2,10 @@ pragma solidity ^0.4.15;
 
 import "./ERC20.sol";
 
+// todo change initalizier to owner
+// todo safe math
+
+
 // Voting is quadratic
 contract TokenPoll {
 
@@ -101,19 +105,56 @@ contract TokenPoll {
       noVotes += 1;
   }
 
-  function changeEscrowDailyLimit (uint uintNewLimit) private {
-    bytes4 memory fnSig = 0xcea08621;   // changeDailyLimit(uint256)
-    bytes32 memory newLimit = bytes32(uintNewLimit);
-    bytes memory data = new bytes(36);
-    
-    // Set function signature and new daily limit params
-    for (uint i = 0; i < 4; i++)  data[i] = fnSig[i];
-    for (uint i = 4; i < 36; i++) data[i] = newLimit[i];
 
-    // Call fn through escrow
-    escrow.submitTransaction(address(escrow), 0, data);
+  struct WithdrawT {
+    uint dailyLimit;    // User cap
+    uint dayLastSpent;  // Last day withdrew from
+    uint remainingVar;  // Remaining balance from last withdraw date. Use calcMaxWithdraw()
   }
+
+  WithdarwT withdraw;
   
+  function calcMaxWithdraw() public constant returns (uint) {
+    uint today = now / 24 hours;
+
+    // If new day, return updated dailyLimit
+    if (today > withdraw.dayLastSpent)
+      return withdraw.dailyLimit;
+
+    return withdraw.remainingVar;
+  }
+
+  function updateWithdrawData() private {
+    uint today = now / 24 hours;
+
+    if (today > withdraw.dayLastSpent) {
+      withdraw.dayLastSpent = today;
+      withdraw.remainingVar = withdraw.dailyLimit;
+    }
+  }
+
+  function changeEscrowDailyLimit(uint _newLim) private {
+    updateWithdrawData();
+    uint alreadySpent = withdraw.dailyLimit - calcMaxWithdraw();
+
+    if (alreadySpent > _newLim)
+      withdraw.remainingVar = 0;
+    else
+      withdraw.remainingVar = _newLim - alreadySpent;
+
+    withdraw.dailyLimit = _newLim; 
+  }
+
+  // todo. at what point can they start withdrawing?
+  // todo keep or add wallet?
+  function withdrawTokens(address to, uint amount) public {
+    updateWithdrawData();
+    limit = calcMaxWithdraw();
+    require(limit >= amount);
+
+    escrowSendStableCoins(to, amount);
+  }
+
   function escrowSendStableCoins (address user, uint value) private {
     stableCoin.transfer(user, refundSize);
     bytes4 memory fnSig = bytes4(a9059cbb);   // transfer(address,uint256)
@@ -127,7 +168,6 @@ contract TokenPoll {
     // Call fn through escrow
     escrow.submitTransaction(address(stableCoin), 0, data);
   }
-
 
   function startRefund() public payable inState(State.VoteFailed) fromAddress(escrow) {
     changeEscrowDailyLimit(0);
