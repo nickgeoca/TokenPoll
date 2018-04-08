@@ -100,24 +100,40 @@ contract TokenPoll {
     else
       noVotes += 1;
   }
-  
-LOOK OVER THESE
->>>>>>
-  
-  // function getEscrowFundsForRefund();
-  // function raiseEscrowDailyLimit();
 
-  // ????? function escrowWithdraw() public 
+  function changeEscrowDailyLimit (uint uintNewLimit) private {
+    bytes4 memory fnSig = 0xcea08621;   // changeDailyLimit(uint256)
+    bytes32 memory newLimit = bytes32(uintNewLimit);
+    bytes memory data = new bytes(36);
+    
+    // Set function signature and new daily limit params
+    for (uint i = 0; i < 4; i++)  data[i] = fnSig[i];
+    for (uint i = 4; i < 36; i++) data[i] = newLimit[i];
+
+    // Call fn through escrow
+    escrow.submitTransaction(address(escrow), 0, data);
+  }
+  
+  function escrowSendStableCoins (address user, uint value) private {
+    stableCoin.transfer(user, refundSize);
+    bytes4 memory fnSig = bytes4(a9059cbb);   // transfer(address,uint256)
+    bytes32 memory newLimit = bytes32(uintNewLimit);
+    bytes memory data = new bytes(36);
+    
+    // Set function signature and new daily limit params
+    for (uint i = 0; i < 4; i++)  data[i] = fnSig[i];
+    for (uint i = 4; i < 36; i++) data[i] = newLimit[i];
+    
+    // Call fn through escrow
+    escrow.submitTransaction(address(stableCoin), 0, data);
+  }
+
 
   function startRefund() public payable inState(State.VoteFailed) fromAddress(escrow) {
-  escrow.reduceDailyLimitToZero()
-
-    //escrow.sendAllCashOver() todo
+    changeEscrowDailyLimit(0);
     totalRefund = stableCoin.balanceOf(escrow);
     refundFlag = true;
   }
-^^^^^
-LOOK OVER THESE  
 
   function userRefund() public inState(State.Refunding) {
     address user = msg.sender;
@@ -129,9 +145,7 @@ LOOK OVER THESE
 
     // refund
     uint refundSize = totalRefund * userTokenCount / totalTokenCount;
-
-    escrow.execute() stableCoin.transfer(user, refundSize);
-      
+    escrowSendStableCoins(user, refundSize);
   }
 
   //  function voteSuccessful() {}
