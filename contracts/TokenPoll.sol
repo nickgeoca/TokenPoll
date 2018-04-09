@@ -40,7 +40,7 @@ contract TokenPoll {
   uint public userCount;             // Used for keeping track of quorum
   uint public totalTokenCount;       // Count of all tokens registered for vote
   uint public totalVotePower;        // Total voting power of users
-  mapping (address => bool) voted;   // User has voted
+  mapping (address => bool) public voted;   // User has voted
   uint public yesVotes;              // 
   uint public noVotes;               // 
 
