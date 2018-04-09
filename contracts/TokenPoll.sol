@@ -33,6 +33,8 @@ contract EscrowERC20WithdrawWithDailyLimit is EscrowERC20WithdrawWithDailyLimitI
   // Public
   // ======
 
+  function dailyLimit() public constant returns (uint) { return withdraw.dailyLimit; }
+
   function remainingWithdraw() public constant returns (uint) {
     uint today = now / 24 hours;
     bool haveNotWithdrawnToday = today > withdraw.dayLastSpent;
@@ -78,7 +80,7 @@ contract EscrowERC20WithdrawWithDailyLimit is EscrowERC20WithdrawWithDailyLimitI
     }
 
     // Make sure don't go over
-    uint remaining = (withdraw.dailyLimit - withdraw.cumulativeSpentLastDay);
+    uint remaining = withdraw.dailyLimit - withdraw.cumulativeSpentLastDay;
     require(remaining >= amount); 
 
     // Deduct balance
