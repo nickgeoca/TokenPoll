@@ -68,7 +68,7 @@ var yesVotes = async(tokenPoll) => { return tokenPoll.yesVotes(); }
 
 var noVotes = async(tokenPoll) => { return tokenPoll.noVotes(); }
 
-var noVotes = async(tokenPoll) => { return (await yesVotes(tokenPoll)) + (await noVotes(tokenPoll)); }
+var totalVotes = async(tokenPoll) => { return (await yesVotes(tokenPoll)) + (await noVotes(tokenPoll)); }
 
 var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUserVotePower(user); };
 
