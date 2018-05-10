@@ -55,7 +55,10 @@ contract TokenPoll is Ownable {
   uint public userCount;             // Used for keeping track of quorum
   uint public totalTokenCount;       // Count of all tokens registered for vote
   uint public totalVotePower;        // Total voting power of users
-  mapping (address => bool) public voted;   // User has voted
+
+  mapping (address => uint) public hasVoted;
+  // mapping (address => uint) public voteStance;
+
   uint public yesVotes;              // 
   uint public noVotes;               // 
 
@@ -106,9 +109,12 @@ contract TokenPoll is Ownable {
 
   // todo vote window, vote params (qorem),
   function castVote(bool vote) public {
-    require(voted[msg.sender] == false);
+    bool userNotVoted = ((hasVoted[msg.sender] >> 0) & 1) == 0;
 
-    voted[msg.sender] = true;
+    require(userNotVoted);
+
+    hasVoted[msg.sender]   |= 1 << 0;
+    // voteStance[msg.sender] |= (vote ? 1 : 0) << 0;
 
     if (vote)
       yesVotes += 1;
@@ -128,21 +134,15 @@ contract TokenPoll is Ownable {
 
     // refund
     uint refundSize = totalRefund * userTokenCount / totalTokenCount;
-    ERC20(Escrow(escrow).erc20).transfer(user, refundSize); // todo is there a better way
+    ERC20(address(Escrow(escrow).erc20)).transfer(user, refundSize); // todo is there a better way
   }
 
-    /* ----------------------------------------
-    function MultiSigWalletWithDailyLimit(address[] _owners, uint _required, bool _fixedOwners, uint _dailyLimit)
-    function changeEscrowDailyLimit(uint _newLim) public onlyWallet { _changeDailyLimit(_newLim); };
-    function executeTransaction(uint transactionId)
-    function withdrawTokens(address erc20, address to, uint value) public onlyOwner { _withdrawTokens(erc20, to, value); }
-    function getMaxWithdraw() public view returns (uint) { return _getMaxWithdraw(); }
-    // */ // --------------------------------------------------
   // todo - at what point can they start withdrawing?
   // todo - keep or add wallet?
 
   function startRefund() public inState(State.VoteFailed) {
-    totalRefund = ERC20(Escrow(escrow).erc20).balanceOf(escrow);
+    address erc20 = address(Escrow(escrow).erc20);
+    totalRefund = ERC20(erc20).balanceOf(escrow);
     escrowChangeDailyLimit(totalRefund);
     escrowTransferTokens(address(this), totalRefund);
     refundFlag = true;
