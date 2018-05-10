@@ -56,8 +56,8 @@ contract TokenPoll is Ownable {
   uint public totalTokenCount;       // Count of all tokens registered for vote
   uint public totalVotePower;        // Total voting power of users
 
-  mapping (address => uint) public hasVoted;
-  // mapping (address => uint) public voteStance;
+  mapping (address => mapping (uint => bool)) public voteStance;
+  mapping (address => mapping (uint => bool)) public hasVoted;
 
   uint public yesVotes;              // 
   uint public noVotes;               // 
@@ -109,12 +109,10 @@ contract TokenPoll is Ownable {
 
   // todo vote window, vote params (qorem),
   function castVote(bool vote) public {
-    bool userNotVoted = ((hasVoted[msg.sender] >> 0) & 1) == 0;
 
-    require(userNotVoted);
-
-    hasVoted[msg.sender]   |= 1 << 0;
-    // voteStance[msg.sender] |= (vote ? 1 : 0) << 0;
+    require(!hasVoted[msg.sender][0]);
+    voteStance[msg.sender][0] = vote;
+    hasVoted[msg.sender][0] = true;
 
     if (vote)
       yesVotes += 1;
