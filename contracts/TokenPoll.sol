@@ -1,95 +1,22 @@
 pragma solidity ^0.4.15;
 
+import "./Ownable.sol";
 import "./ERC20.sol";
+
+
+contract Escrow {
+  function submitTransaction(address destination, uint value, bytes data) public returns (uint transactionId);
+  address public erc20;
+}
+
+// https://www.stellar.org/developers/guides/issuing-assets.html
+// https://www.stellar.org/blog/tokens-on-stellar/
 
 // todo change initalizier to owner
 // todo safe math
 
-contract Escrow {
-  function submitTransaction(address,uint256,bytes) public;
-}
-
-contract EscrowERC20WithdrawDailyLimitInterface {
-
-  struct WithdrawT {
-    uint dailyLimit;             // User cap
-    uint dayLastSpent;           // Last day withdrew from
-    uint cumulativeSpentLastDay; // Cumulative balance from last withdraw date
-  }
-  
-  // "erc20.transfer(to, amount)"
-  function _withdrawTokens(address erc20, address escrow, address to, uint amount) internal;
-
-  function calcMaxWithdraw() public constant returns (uint);
-
-  function _changeEscrowDailyLimit(uint _newLim) internal;
-}
-
-contract EscrowERC20WithdrawWithDailyLimit is EscrowERC20WithdrawWithDailyLimitInterface {
-
-  WithdarwT private withdraw;
-  
-  // ======
-  // Public
-  // ======
-
-  function dailyLimit() public constant returns (uint) { return withdraw.dailyLimit; }
-
-  function remainingWithdraw() public constant returns (uint) {
-    uint today = now / 24 hours;
-    bool haveNotWithdrawnToday = today > withdraw.dayLastSpent;
-
-    // If new day, then they have max dailyLimit
-    if (haveNotWithdrawnToday)
-      return withdraw.dailyLimit;
-
-    return (withdraw.cumulativeSpentLastDay > withdraw.dailyLimit)
-           ? 0                                                       // Happens if decrease dailyLimit on same day
-           : withdraw.dailyLimit - withdraw.cumulativeSpentLastDay;  // maxSpending - runningSpending
-  }
-
-  // todo. at what point can they start withdrawing?
-  // todo keep or add wallet?
-  function _withdrawTokens(address erc20, address escrow, address _to, uint _amount) internal {
-    deductDailyWithdraw(amount);
-
-    // transfer(address,uint256)
-    bytes memory data = new bytes(4 + 20 + 32);
-    uint i = 0;
-    for (; i < 4; i++)  data[i] = bytes4(0xa9059cbb)[i];
-    for (; i < 24; i++) data[i] = bytes20(_to)[i];
-    for (; i < 56; i++) data[i] = bytes32(_amount)[i];
-    
-    // Call through escrow -- "erc20.transfer(to, amount)"
-    Escrow(escrow).submitTransaction(erc20, 0, data);    
-  }
-
-  // Clears daily limit for the day.
-  function _changeEscrowDailyLimit(uint _newLim) internal { withdraw.dailyLimit = _newLim; }
-
-  // =======
-  // Private
-  // =======
-
-  function deductDailyWithdraw(uint amount) private {
-    // Update if latest day
-    uint today = now / 24 hours;
-    if (today > withdraw.dayLastSpent) {
-      withdraw.cumulativeSpentLastDay = 0;
-      withdraw.dayLastSpent = now / 24 hours; // today
-    }
-
-    // Make sure don't go over
-    uint remaining = withdraw.dailyLimit - withdraw.cumulativeSpentLastDay;
-    require(remaining >= amount); 
-
-    // Deduct balance
-    withdraw.cumulativeSpentLastDay += amount;
-  }
-}
-
 // Voting is quadratic
-contract TokenPoll is EscrowERC20WithdrawWithDailyLimit {
+contract TokenPoll is Ownable {
 
   enum State { Uninitialized    // Waits token poll is parameterized
              , Initialized      // Waits until vote allocation. Can't have Running/Voting before votes are allocated
@@ -103,18 +30,19 @@ contract TokenPoll is EscrowERC20WithdrawWithDailyLimit {
              , Refunding        // Users can withdraw remaining balance
              }
 
+  event Vote(address indexed voter, bool vote);
+
   // =====
   // State
   // =====  
 
   mapping (address => uint) public userTokenBalance; // user -> token balance
 
-  address initializer;               // Owner function.. used to initialize
   bool refundFlag;                   // keep track of state
   bool voteFailedFlag;               // "
   bool initialized;                  // if contract is initialized with parameters
 
-  ERC20 public tokenContract;        // Voting power is based on token ownership count
+  ERC20 public icoCoin;              // Voting power is based on token ownership count
   ERC20 public stableCoin;           // 
 
   uint public totalRefund;           // Total size of refund
@@ -135,7 +63,7 @@ contract TokenPoll is EscrowERC20WithdrawWithDailyLimit {
   // Constructor & fallback
   // ======================
 
-  function TokenPoll(address _initializer) public { initializer = _initializer; }
+  constructor() public Ownable() {}
 
   function () public { require(false); return; }
 
@@ -143,37 +71,37 @@ contract TokenPoll is EscrowERC20WithdrawWithDailyLimit {
   // ICO Functions
   // =============
 
-  // ERC20 Withdraw stuff
-  function withdrawTokens(address to, uint value) public isController() { _withdrawTokens(stableCoin, escrow, to, value); }
-
-  function initialize(address _token, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime, uint _dailyLimit) public inState(State.Uninitialized) {
-    require(msg.sender == initializer);
+  // This is used b/c order of creating contracts:
+  //    1 tokenPollAddr = TokenPoll() 
+  //    2 escrowAddr    = Escrow(tokenPollAddr)
+  //    3                 TokenPoll.initialize(escrowAddress)
+  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime, uint _dailyLimit) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
 
     initialized = true;
-    tokenContract = ERC20(_token);
+    icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
     allocStartTime = _allocStartTime;
     allocEndTime = _allocEndTime;
     escrow = _escrow;
-    _changeEscrowDailyLimit(_dailyLimit);
+    escrowChangeDailyLimit(_dailyLimit);
   }
 
-  // ==============
-  // User Functions
-  // ==============
-  
+  // ===============
+  // Voter Functions
+  // ===============
+
   // Users
   function allocVotes() public inState(State.VoteAllocation){
     require(userTokenBalance[msg.sender] == 0);  // user has not allocated before
 
-    uint userTokens = tokenContract.balanceOf(msg.sender);
+    uint userTokens = icoCoin.balanceOf(msg.sender);
 
     // State changes
     userTokenBalance[msg.sender] = userTokens;
     totalVotePower  += getUserVotePower(msg.sender);
     totalTokenCount += userTokens;
-    userCount += 1;
+    userCount       += 1;
   }
 
   // todo vote window, vote params (qorem),
@@ -182,10 +110,12 @@ contract TokenPoll is EscrowERC20WithdrawWithDailyLimit {
 
     voted[msg.sender] = true;
 
-    if (voteFor)
+    if (vote)
       yesVotes += 1;
     else
       noVotes += 1;
+
+    Vote(msg.sender, vote);
   }
 
   function userRefund() public inState(State.Refunding) {
@@ -198,13 +128,48 @@ contract TokenPoll is EscrowERC20WithdrawWithDailyLimit {
 
     // refund
     uint refundSize = totalRefund * userTokenCount / totalTokenCount;
-    escrowSendStableCoins(user, refundSize);
+    ERC20(Escrow(escrow).erc20).transfer(user, refundSize); // todo is there a better way
   }
 
-  function startRefund() public payable inState(State.VoteFailed) {
-    _changeEscrowDailyLimit(0);
-    totalRefund = stableCoin.balanceOf(escrow);
+    /* ----------------------------------------
+    function MultiSigWalletWithDailyLimit(address[] _owners, uint _required, bool _fixedOwners, uint _dailyLimit)
+    function changeEscrowDailyLimit(uint _newLim) public onlyWallet { _changeDailyLimit(_newLim); };
+    function executeTransaction(uint transactionId)
+    function withdrawTokens(address erc20, address to, uint value) public onlyOwner { _withdrawTokens(erc20, to, value); }
+    function getMaxWithdraw() public view returns (uint) { return _getMaxWithdraw(); }
+    // */ // --------------------------------------------------
+  // todo - at what point can they start withdrawing?
+  // todo - keep or add wallet?
+
+  function startRefund() public inState(State.VoteFailed) {
+    totalRefund = ERC20(Escrow(escrow).erc20).balanceOf(escrow);
+    escrowChangeDailyLimit(totalRefund);
+    escrowTransferTokens(address(this), totalRefund);
     refundFlag = true;
+  }
+
+  // Call through escrow -- "erc20.transfer(to, amount)"
+  function escrowChangeDailyLimit(uint newLimit) private {
+    bytes memory data = new bytes(4 + 32);
+    uint i = 0;
+    for (; i < 4; i++)  data[i] = bytes4(0xcea08621)[i];
+    for (; i < 36; i++) data[i] = bytes32(newLimit)[i];
+
+    // change daily limit
+    Escrow(escrow).submitTransaction(escrow, 0, data);    
+  }
+
+// todo must check if transaction failed or not
+  // Call through escrow -- "erc20.transfer(to, amount)"
+  function escrowTransferTokens(address _to, uint _amount) private {
+    bytes memory data = new bytes(4 + 20 + 32);
+    uint i = 0;
+    for (; i < 4; i++)  data[i] = bytes4(0x06b091f9)[i];
+    for (; i < 24; i++) data[i] = bytes20(_to)[i];
+    for (; i < 56; i++) data[i] = bytes32(_amount)[i];
+
+    // change daily limit
+    Escrow(escrow).submitTransaction(escrow, 0, data);    
   }
 
   // =======
@@ -245,7 +210,8 @@ contract TokenPoll is EscrowERC20WithdrawWithDailyLimit {
   // Modifiers
   // ================
 
-  // Modifiers
+  // modifier onlyOwner() ...
+
   modifier inState(State s) {
     require(getState() == s);
     _;

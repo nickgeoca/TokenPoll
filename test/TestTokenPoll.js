@@ -13,6 +13,8 @@ const eq = assert.equal.bind(assert);
 
 getRandomInt = (max) =>  new BigNumber( Math.floor(Math.random() * Math.floor(max)) );
 
+genNumEth = (n) => (new BigNumber(10)).pow(18).times(n);
+
 //************************************************
 // Tests
 
@@ -36,35 +38,54 @@ contract('TokenPoll', function (accounts) {
   tpi.init(web3);
 
   describe('token poll', async () => {
-    let tokenSupply;
-    let tokenName;
-    let tokenSymbol;
-    let tokenDecimals;
-    let token;
+    let icoTokenSupply;
+    let icoTokenName;
+    let icoTokenSymbol;
+    let icoTokenDecimals;
+    let icoToken;
+
+    let scTokenSupply;
+    let scTokenName;
+    let scTokenSymbol;
+    let scTokenDecimals;
+    let scToken;
+
     const voteAllocTimeStartOffset = 50;
     const voteAllocTimeDifference = 100;
 
     // Create token polls
     beforeEach(async () => {
-      // ERC20 stuff
-      tokenSupply = new BigNumber(1000000000000);
-      tokenName = 'Test token';
-      tokenSymbol = 'test';
-      tokenDecimals = new BigNumber(18);
+      // ICO coin
+      icoTokenSupply = genNumEth(10);
+      icoTokenName = 'ico token';
+      icoTokenSymbol = 'ico';
+      icoTokenDecimals = new BigNumber(18);
+
+      // Stable coin
+      scTokenSupply = genNumEth(10);
+      scTokenName = 'stable coin';
+      scTokenSymbol = 'sc';
+      scTokenDecimals = new BigNumber(18);
+
+      dailyLimit = genNumEth(1); 
       const allocStartTime = await web3.eth.getBlock(await web3.eth.blockNumber).timestamp + voteAllocTimeStartOffset;
       const allocEndTime = allocStartTime + voteAllocTimeDifference;
 
-      // make erc20 and tokenPoll
-      token = await ERC20.new(tokenSupply, tokenName, tokenDecimals, tokenSymbol, {from: company});
+      icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
+      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: company});
+
       tokenPoll = await tpi.createTokenPoll({from: doGood});
-      await tpi.initializeTokenPoll(tokenPoll, token.address, escrow, allocStartTime, allocEndTime, {from: doGood, gas: 200000});
+/*
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, escrow, allocStartTime, allocEndTime, dailyLimit, {from: doGood, gas: 200000});
+*/
     });
 
     // state test
     it('vote allocation fails outside time frame', async () => {
-      const bal1 = getRandomInt(1000000000);
+      // Give user 1 some money
+      const bal1 = getNumEth(getRandomInt(2));
       const vp1E = bal1.sqrt().floor(); 
-      await token.transfer(user1, bal1, {from: company}); // Alloc tokens     
+      await icoToken.transfer(user1, bal1, {from: company}); // Alloc tokens
 
       // Fail before
       await util.forwardEVMTime(0);
@@ -75,7 +96,7 @@ contract('TokenPoll', function (accounts) {
       await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
       eq(await tpi.getState(tokenPoll), 'VoteAllocation');
       await tpi.allocVotes(tokenPoll, {from: user1});
-      
+
       // Fail after
       await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference + 5);
       eq(await tpi.getState(tokenPoll), 'Running');

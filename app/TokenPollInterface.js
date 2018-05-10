@@ -24,8 +24,8 @@ var init = async (web3) => {
   await TokenPoll.setProvider(web3.currentProvider);
 }
 
-var initializeTokenPoll = async (tokenPoll, tokenAddress, escrow, allocStartTime, allocEndTime, web3Params) => {
-  return await tokenPoll.initialize(tokenAddress, escrow, allocStartTime, allocEndTime, web3Params);
+var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, allocEndTime, dailyLimit, web3Params) => {
+  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, allocEndTime, dailyLimit, web3Params);
 }
 
 var createTokenPoll = async (web3Params) => {
