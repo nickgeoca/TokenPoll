@@ -22,7 +22,6 @@ genNumEth = (n) => (new BigNumber(10)).pow(18).times(n);
 // ['Start', 'VoteAllocation', 'Running', 'Refund', 'End']
 
 contract('TokenPoll', function (accounts) {
-
   const user1 = accounts[0];
   const user2 = accounts[1];
   const user3 = accounts[2];
@@ -124,6 +123,32 @@ contract('TokenPoll', function (accounts) {
       await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
       await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
 
+      const percentVp1a = await tpi.getUserVotePowerPercentage(tokenPoll, user1);
+      eq(percentVp1a.toString(10), percentVp1e.toString(10), 'Voting not allocated properly');
+    });
+
+    it('executes vote', async () => {
+      const bal1 = getRandomInt(1000000000);
+      const bal2 = getRandomInt(1000000000);
+      
+      // vote power
+      const vp1E = bal1.sqrt().floor();
+      const vp2E = bal2.sqrt().floor();
+      const percentVp1e = vp1E.dividedBy(vp1E.plus(vp2E));
+
+      // Alloc tokens     
+      await token.transfer(user1, bal1, {from: company}); 
+      await token.transfer(user2, bal2, {from: company}); 
+
+      // Put in vote allocation state
+      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
+      eq(await tpi.getState(tokenPoll), 'VoteAllocation');
+
+      // Votes
+      await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
+      await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
+
+      // Check
       const percentVp1a = await tpi.getUserVotePowerPercentage(tokenPoll, user1);
       eq(percentVp1a.toString(10), percentVp1e.toString(10), 'Voting not allocated properly');
     });
