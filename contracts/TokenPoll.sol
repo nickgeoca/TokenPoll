@@ -56,12 +56,17 @@ contract TokenPoll is Ownable {
   uint public totalTokenCount;       // Count of all tokens registered for vote
   uint public totalVotePower;        // Total voting power of users
 
-  mapping (address => mapping (uint => bool)) public voteStance;
+  mapping (address => mapping (uint => bool)) public voteChoice;
   mapping (address => mapping (uint => bool)) public hasVoted;
 
   uint public yesVotes;              // 
   uint public noVotes;               // 
 
+
+  function getVoteChoice(address a, uint pollNum) view returns (bool) { return voteChoice[a][pollNum]; }
+
+  function getHasVoted(address a, uint pollNum) view returns (bool) { return hasVoted[a][pollNum]; }
+  
   // ======================
   // Constructor & fallback
   // ======================
@@ -111,7 +116,7 @@ contract TokenPoll is Ownable {
   function castVote(bool vote) public {
 
     require(!hasVoted[msg.sender][0]);
-    voteStance[msg.sender][0] = vote;
+    voteChoice[msg.sender][0] = vote;
     hasVoted[msg.sender][0] = true;
 
     if (vote)

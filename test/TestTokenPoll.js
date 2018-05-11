@@ -127,7 +127,7 @@ contract('TokenPoll', function (accounts) {
       eq(percentVp1a.toString(10), percentVp1e.toString(10), 'Voting not allocated properly');
     });
 
-    it('executes vote', async () => {
+    it('test cast vote', async () => {
       const bal1 = getRandomInt(1000000000);
       const bal2 = getRandomInt(1000000000);
       
@@ -136,7 +136,7 @@ contract('TokenPoll', function (accounts) {
       const vp2E = bal2.sqrt().floor();
       const percentVp1e = vp1E.dividedBy(vp1E.plus(vp2E));
 
-      // Alloc tokens     
+      // Alloc tokens
       await token.transfer(user1, bal1, {from: company}); 
       await token.transfer(user2, bal2, {from: company}); 
 
@@ -147,10 +147,20 @@ contract('TokenPoll', function (accounts) {
       // Votes
       await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
       await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
+      await util.forwardEVMTime(voteAllocTimeDifference);
 
-      // Check
-      const percentVp1a = await tpi.getUserVotePowerPercentage(tokenPoll, user1);
-      eq(percentVp1a.toString(10), percentVp1e.toString(10), 'Voting not allocated properly');
+      await tpi.castVote(tokenPoll, true, {from: user1});
+      await tpi.castVote(tokenPoll, false, {from: user2});
+
+      eq( await tpi.getUserVotePower(tokenPoll, user1)
+        , vp1E);      
+      eq( await tpi.getUserVotePower(tokenPoll, user2)
+        , vp2E);      
+
+      eq( await tpi.getHasVoted(tokenPoll, user1)
+        , true);
+      eq( await tpi.getHasVoted(tokenPoll, user2)
+        , true);
     });
   });
 });
