@@ -130,7 +130,7 @@ contract('TokenPoll', function (accounts) {
     it('test cast vote', async () => {
       const bal1 = getRandomInt(1000000000);
       const bal2 = getRandomInt(1000000000);
-      
+
       // vote power
       const vp1E = bal1.sqrt().floor();
       const vp2E = bal2.sqrt().floor();

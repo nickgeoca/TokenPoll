@@ -18,16 +18,19 @@ contract Escrow {
 // Voting is quadratic
 contract TokenPoll is Ownable {
 
-  enum State { Uninitialized    // Waits token poll is parameterized
-             , Initialized      // Waits until vote allocation. Can't have Running/Voting before votes are allocated
-             , VoteAllocation   // Token balances should be frozen and users allocate votes during this period.
-             , Running          // After vote allocation but not voting
-             , Voting           // In voting state. Outcome is either State.Running or State.VoteFailed
-             , VoteFailed       // If this happens multisig escrow initiates refund
+  enum State { Uninitialized      // Waits token poll is parameterized
+             , Initialized        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
+             , VoteAllocation     // Token balances should be frozen and users allocate votes during this period.
 
-             // Outcomes  
-             , Successful       // End of polls
-             , Refunding        // Users can withdraw remaining balance
+             , InRound            // Voting period. Follows VoteAllocation & NextRoundApproved
+             , PostRoundDecision
+             , NextRoundApproved
+
+             // End states
+             , Refund            // Users can withdraw remaining balance
+             , Finished          // End of polls
+
+             , UnknownState
              }
 
   event Vote(address indexed voter, bool vote);
@@ -36,37 +39,44 @@ contract TokenPoll is Ownable {
   // State
   // =====  
 
-  mapping (address => uint) public userTokenBalance; // user -> token balance
-
+  // Round variables
   bool refundFlag;                   // keep track of state
-  bool voteFailedFlag;               // "
-  bool initialized;                  // if contract is initialized with parameters
-
-  ERC20 public icoCoin;              // Voting power is based on token ownership count
-  ERC20 public stableCoin;           // 
-
-  uint public totalRefund;           // Total size of refund
-
-  address public escrow;             // Initiate escrow to send funds to ICO wallet
-
+  bool nextRoundApprovedFlag;        // "
+  bool initializedFlag;              // if contract is initialized with parameters
+  uint public currentRound;
   uint public allocStartTime;        // Start/end of voting allocation
   uint public allocEndTime;          // "
 
+  // Fund variables
+  ERC20 public stableCoin;           // Location of funds
+  address public escrow;             // Initiate escrow to send funds to ICO wallet
+  uint public totalRefund;           // Total size of refund
+
+  // Voting variables
+  ERC20 public icoCoin;              // Voting power is based on token ownership count
+  mapping (address => uint) public userTokenBalance; // user -> token balance
   uint public userCount;             // Used for keeping track of quorum
   uint public totalTokenCount;       // Count of all tokens registered for vote
   uint public totalVotePower;        // Total voting power of users
-
   mapping (address => mapping (uint => bool)) public voteChoice;
-  mapping (address => mapping (uint => bool)) public hasVoted;
+  uint public yesVotes;
+  uint public noVotes;
+  int public quadraticYesVotes;
+  int public quadraticNoVotes;
 
-  uint public yesVotes;              // 
-  uint public noVotes;               // 
+  // =========
+  // Blah
+  // =========
 
+  function getVoteChoice(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum]; }
 
-  function getVoteChoice(address a, uint pollNum) view returns (bool) { return voteChoice[a][pollNum]; }
+  function getHasVoted(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum] != 0; }
 
-  function getHasVoted(address a, uint pollNum) view returns (bool) { return hasVoted[a][pollNum]; }
-  
+  modifier validVoter() {
+    require(userTokenBalance[msg.sender] != 0);
+    _;
+  }
+
   // ======================
   // Constructor & fallback
   // ======================
@@ -86,7 +96,7 @@ contract TokenPoll is Ownable {
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime, uint _dailyLimit) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
 
-    initialized = true;
+    initializedFlag = true;
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
     allocStartTime = _allocStartTime;
@@ -112,22 +122,70 @@ contract TokenPoll is Ownable {
     userCount       += 1;
   }
 
+  // todo fix this fn
+  // Return (start time, end time) of this or upcoming round
+  function getThisOrUpcomingRoundStartEnd () returns (uint, uint) {
+    return (0,3);
+  }
+
+  function clearVoteTransition () private { nextRoundApprovedFlag = false; }
+  function setVoteTransition () private { nextRoundApprovedFlag = true; }
+  
+  // todo, make sure it is impossible to postpone a next round indefinetly
   // todo vote window, vote params (qorem),
-  function castVote(bool vote) public {
+  function castVote(bool vote) public inState(State.InRound) validVoter() {
+    require(!getHasVoted[msg.sender][currentRound]);
 
-    require(!hasVoted[msg.sender][0]);
-    voteChoice[msg.sender][0] = vote;
-    hasVoted[msg.sender][0] = true;
+    voteChoice[msg.sender][currentRound] = vote;
 
-    if (vote)
+    if (vote) {
       yesVotes += 1;
-    else
+      quadraticYesVotes += getUserVotePower(msg.sender);
+    }
+    else {
       noVotes += 1;
+      quadraticNoVotes += getUserVotePower(msg.sender);
+    }
 
     Vote(msg.sender, vote);
   }
 
-  function userRefund() public inState(State.Refunding) {
+  /*  
+      function allocVotes() public inState(State.VoteAllocation)
+      function castVote(bool vote) public 
+      function userRefund() public inState(State.Refund) 
+      function startRefund() public inState(State.VoteFailed) 
+  */
+
+  function trasitionFromState_NextRoundApproved () public inState(State.NextRoundApproved) {
+    uint (start, end) = getThisOrUpcomingRoundStartEnd();
+    require(start < now < end);
+    clearVoteTransition();
+  }
+
+  // todo - at what point can they start withdrawing?
+  // todo - keep or add wallet?
+  function transitionFromState_PostRoundDecision () public inState(State.PostRoundDecision) {
+    bool notEnoughVotes = quadraticYesVotes < quadraticNoVotes;
+
+    if (notEnoughVotes) {
+      address erc20 = address(Escrow(escrow).erc20);
+      totalRefund = ERC20(erc20).balanceOf(escrow);
+      escrowChangeDailyLimit(totalRefund);
+      escrowTransferTokens(address(this), totalRefund);
+      refundFlag = true;
+    }
+    else {
+      setVoteTransition();
+      currentRound = 1 + currentRound;
+      quadraticYesVotes = 0;
+      quadraticNoVotes = 0;
+      noVotes = 0;
+      yesVotes = 0;
+    }
+  }
+
+  function userRefund() public inState(State.Refund) {
     address user = msg.sender;
     uint userTokenCount = userTokenBalance[user];
 
@@ -138,17 +196,6 @@ contract TokenPoll is Ownable {
     // refund
     uint refundSize = totalRefund * userTokenCount / totalTokenCount;
     ERC20(address(Escrow(escrow).erc20)).transfer(user, refundSize); // todo is there a better way
-  }
-
-  // todo - at what point can they start withdrawing?
-  // todo - keep or add wallet?
-
-  function startRefund() public inState(State.VoteFailed) {
-    address erc20 = address(Escrow(escrow).erc20);
-    totalRefund = ERC20(erc20).balanceOf(escrow);
-    escrowChangeDailyLimit(totalRefund);
-    escrowTransferTokens(address(this), totalRefund);
-    refundFlag = true;
   }
 
   // Call through escrow -- "erc20.transfer(to, amount)"
@@ -180,16 +227,21 @@ contract TokenPoll is Ownable {
   // =======
 
   function getState() public view returns (State) {
-    if (!initialized)          return State.Uninitialized;
+    if (!initializedFlag)      return State.Uninitialized;
     if (now < allocStartTime)  return State.Initialized;
 
     if (allocStartTime < now 
         && now < allocEndTime) return State.VoteAllocation;
 
-    if (refundFlag)            return State.Refunding;
-    if (now > allocEndTime)    return State.Running;
+    if (refundFlag)            return State.Refund;
+    if (now > allocEndTime)    return State.InRound
+    if (nextRoundApprovedFlag) return State.PostRoundDecision;
 
-    else                       return State.Successful;
+    if ()                      return NextRoundApproved;
+
+    if (endOfRounds)           return State.Finished;
+
+    else State.UnknownState;
   }
 
   function getUserVotePower(address user) public view returns (uint) {
