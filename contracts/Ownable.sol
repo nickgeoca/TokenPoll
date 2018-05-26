@@ -23,7 +23,7 @@ contract Ownable is OwnableInterface {
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
    * account.
    */
-  constructor() internal {
+  function Ownable () internal {
     owner = msg.sender;
   }
 
