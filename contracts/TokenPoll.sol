@@ -2,6 +2,7 @@ pragma solidity ^0.4.15;
 
 import "./Ownable.sol";
 import "./ERC20.sol";
+import "./SafeMath.sol";
 
 
 contract Escrow {
@@ -17,6 +18,7 @@ contract Escrow {
 
 // Voting is quadratic
 contract TokenPoll is Ownable {
+  using SafeMath for uint256;
 
   enum State { Uninitialized      // Waits token poll is parameterized
              , Initialized        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
@@ -68,14 +70,15 @@ contract TokenPoll is Ownable {
   // Blah
   // =========
 
+  // todo fix this fn
+  // Return (start time, end time) of this or upcoming round
+  function getThisOrUpcomingRoundStartEnd () returns (uint, uint) {
+    return (0,3);
+  }
+
   function getVoteChoice(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum]; }
 
   function getHasVoted(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum] != 0; }
-
-  modifier validVoter() {
-    require(userTokenBalance[msg.sender] != 0);
-    _;
-  }
 
   // ======================
   // Constructor & fallback
@@ -117,45 +120,32 @@ contract TokenPoll is Ownable {
 
     // State changes
     userTokenBalance[msg.sender] = userTokens;
-    totalVotePower  += getUserVotePower(msg.sender);
-    totalTokenCount += userTokens;
-    userCount       += 1;
+    totalVotePower  = totalVotePower.safeAdd(getUserVotePower(msg.sender));
+    totalTokenCount = totalTokenCount.safeAdd(userTokens);
+    userCount       = userCount.safeAdd(1);
   }
 
-  // todo fix this fn
-  // Return (start time, end time) of this or upcoming round
-  function getThisOrUpcomingRoundStartEnd () returns (uint, uint) {
-    return (0,3);
-  }
 
-  function clearVoteTransition () private { nextRoundApprovedFlag = false; }
-  function setVoteTransition () private { nextRoundApprovedFlag = true; }
+
   
   // todo, make sure it is impossible to postpone a next round indefinetly
   // todo vote window, vote params (qorem),
   function castVote(bool vote) public inState(State.InRound) validVoter() {
-    require(!getHasVoted[msg.sender][currentRound]);
+    require(!getHasVoted(msg.sender, currentRound));
 
     voteChoice[msg.sender][currentRound] = vote;
 
     if (vote) {
-      yesVotes += 1;
-      quadraticYesVotes += getUserVotePower(msg.sender);
+      yesVotes = yesVotes.safeAdd(1);
+      quadraticYesVotes = quadraticYesVotes.safeAdd(getUserVotePower(msg.sender));
     }
     else {
-      noVotes += 1;
-      quadraticNoVotes += getUserVotePower(msg.sender);
+      noVotes = noVotes.safeAdd(1);
+      quadraticNoVotes = quadraticNoVotes.safeAdd(getUserVotePower(msg.sender));
     }
 
     Vote(msg.sender, vote);
   }
-
-  /*  
-      function allocVotes() public inState(State.VoteAllocation)
-      function castVote(bool vote) public 
-      function userRefund() public inState(State.Refund) 
-      function startRefund() public inState(State.VoteFailed) 
-  */
 
   function trasitionFromState_NextRoundApproved () public inState(State.NextRoundApproved) {
     uint (start, end) = getThisOrUpcomingRoundStartEnd();
@@ -177,7 +167,7 @@ contract TokenPoll is Ownable {
     }
     else {
       setVoteTransition();
-      currentRound = 1 + currentRound;
+      currentRound = currentRound.safeAdd(1);
       quadraticYesVotes = 0;
       quadraticNoVotes = 0;
       noVotes = 0;
@@ -194,7 +184,7 @@ contract TokenPoll is Ownable {
     userTokenBalance[user] = 0;
 
     // refund
-    uint refundSize = totalRefund * userTokenCount / totalTokenCount;
+    uint refundSize = totalRefund.safeMul(userTokenCount).safeDiv(totalTokenCount);
     ERC20(address(Escrow(escrow).erc20)).transfer(user, refundSize); // todo is there a better way
   }
 
@@ -234,10 +224,10 @@ contract TokenPoll is Ownable {
         && now < allocEndTime) return State.VoteAllocation;
 
     if (refundFlag)            return State.Refund;
-    if (now > allocEndTime)    return State.InRound
+    if (now > allocEndTime)    return State.InRound;
     if (nextRoundApprovedFlag) return State.PostRoundDecision;
 
-    if ()                      return NextRoundApproved;
+    if (true)                      return NextRoundApproved;
 
     if (endOfRounds)           return State.Finished;
 
@@ -250,16 +240,20 @@ contract TokenPoll is Ownable {
 
   // y = floor(sqrt(x))
   function sqrt(uint x) public pure returns (uint) {
-    uint z = (x + 1) / 2;
+    uint z = x.safeAdd(1).safeDiv(2);
     uint y = x;
     
     while (z < y) {
       y = z;
-      z = (x / z + z) / 2;
+      z = x.safeDiv(z).safeAdd(z).safeDiv(2);
     }
     
     return y;
   }
+
+  function clearVoteTransition () private { nextRoundApprovedFlag = false; }
+  function setVoteTransition () private { nextRoundApprovedFlag = true; }
+
   
   // ================
   // Modifiers
@@ -277,4 +271,8 @@ contract TokenPoll is Ownable {
     _;
   }
 
+  modifier validVoter() {
+    require(userTokenBalance[msg.sender] != 0);
+    _;
+  }
 }
