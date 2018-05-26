@@ -23,7 +23,6 @@ contract TokenPoll is Ownable {
   enum State { Uninitialized      // Waits token poll is parameterized
              , Initialized        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
              , VoteAllocation     // Token balances should be frozen and users allocate votes during this period.
-             , WaitingToStart     // 
 
              , InRound            // Voting period. Follows VoteAllocation & NextRoundApproved
              , PostRoundDecision
@@ -117,9 +116,10 @@ contract TokenPoll is Ownable {
     uint timeLimit = end.safeAdd(maxTimeBetweenRounds);
 
     require(timeLimit > now);
+    require(currentRoundNumber > 0);
+
     // todo call refund
   }
-
 
   // =============
   // ICO Functions
@@ -132,13 +132,15 @@ contract TokenPoll is Ownable {
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime, uint _dailyLimit) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
 
-    initializedFlag = true;
-    icoCoin = ERC20(_icoToken);
-    stableCoin = ERC20(_stableCoin);
     allocStartTime = _allocStartTime;
     allocEndTime = _allocEndTime;
+
+    initializedFlag = true;
+    nextRoundApprovedFlag = true;
+
+    icoCoin = ERC20(_icoToken);
+    stableCoin = ERC20(_stableCoin);
     escrow = _escrow;
-    // escrowChangeDailyLimit(_dailyLimit);
   }
 
   // ===============
@@ -187,10 +189,6 @@ contract TokenPoll is Ownable {
     clearVoteTransition();
   }
 
-  function transitionFromState_WaitingToStart () public inState(State.WaitingToStart) {
-    
-uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
-  }
 
   // todo - at what point can they start withdrawing?
   // todo - keep or add wallet?
@@ -217,19 +215,7 @@ uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
       escrowTransferTokens(getOwner(), approvedFunds);
     }
   }
-  /*
-  function getCurrentRoundNumber() public view returns (uint) {
-    uint round = currentRoundNumber;
-    uint s = getState();
-    if (   s == State.InRound
-        || s == State.PostRoundDecision
-        || s == State.Refund
-        || s == State.Finished) 
-      return round;
 
-    return round + 1;
-  }
-  */
   function userRefund() public inState(State.Refund) {
     address user = msg.sender;
     uint userTokenCount = userTokenBalance[user];
@@ -265,20 +251,14 @@ uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
     uint roundEnd;
     (roundStart, roundEnd) = getThisOrUpcomingRoundStartEnd();
 
-    // Determine state based on variable states
     if (!initializedFlag)      return State.Uninitialized;
     if (refundFlag)            return State.Refund;
-    if (nextRoundApprovedFlag) return State.NextRoundApproved;
     if (currentRoundNumber
         > numberOfRounds)      return State.Finished;
-
-    // Determine state based on time
     if (now < allocStartTime)  return State.Initialized;
     if (allocStartTime < now 
         && now < allocEndTime) return State.VoteAllocation;
-
-    if (currentRoundNumber == 0) return State.WaitingToStart;
-
+    if (nextRoundApprovedFlag) return State.NextRoundApproved;
     if (roundStart < now
         && now < roundEnd)     return State.InRound;
     if (now > roundEnd)        return State.PostRoundDecision;
