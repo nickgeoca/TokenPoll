@@ -13,9 +13,6 @@ contract Escrow {
 // https://www.stellar.org/developers/guides/issuing-assets.html
 // https://www.stellar.org/blog/tokens-on-stellar/
 
-// todo change initalizier to owner
-// todo safe math
-
 // Voting is quadratic
 contract TokenPoll is Ownable {
   using SafeMath for uint256;
@@ -73,20 +70,6 @@ contract TokenPoll is Ownable {
   uint public quadraticYesVotes;
   uint public quadraticNoVotes;
 
-  // =========
-  // Blah
-  // =========
-
-  // todo fix this fn
-  // Return (start time, end time) of this or upcoming round
-  function getRoundStartTime () returns (uint) { return currentRoundStartTime; }
-
-  function getRoundEndTime() returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
-
-  function getVoteChoice(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum]; }
-
-  function getHasVoted(address user, uint _roundNum) view returns (bool) { return hasVoted[user][_roundNum]; }
-
   // ======================
   // Constructor & fallback
   // ======================
@@ -96,39 +79,6 @@ contract TokenPoll is Ownable {
   }
 
   function () public { require(false); return; }
-
-  // =============
-  // MISC
-  // =============
-
-
-  // Always last a week
-  function setNextRound(uint newStartTime) inState(State.NextRoundApproved) onlyOwner {
-    uint lastStart = getRoundStartTime();
-    uint lastEnd   = getRoundEndTime();
-    
-    require(lastEnd < now);       // They can only do this once
-    require(newStartTime > now);
-    require(newStartTime < (now.safeAdd(roundDuration)));
-
-    currentRoundStartTime = newStartTime;
-  }
-
-  function if_haventCalledNewRoundSoonEnough_then_refund() public inState(State.NextRoundApproved) {
-    uint start = getRoundStartTime();
-    uint end   = getRoundEndTime();
-    uint timeLimit;
-    bool isRoundZero = currentRoundNumber == 0;
-
-    if (isRoundZero) 
-      timeLimit = allocEndTime.safeAdd(maxTimeBetweenRounds);
-    else 
-      timeLimit = end.safeAdd(maxTimeBetweenRounds);
-
-    require(timeLimit > now);
-    nextRoundApprovedFlag = false;
-    putInRefundState();
-  }
 
   // =============
   // ICO Functions
@@ -152,6 +102,22 @@ contract TokenPoll is Ownable {
     escrow = _escrow;
   }
 
+  function setupNextRound(uint newStartTime) inState(State.NextRoundApproved) onlyOwner {
+    uint lastEnd   = getRoundEndTime();
+    
+    require(lastEnd < now);       // They can only do this once
+    require(newStartTime > now);
+    require(newStartTime < (now.safeAdd(roundDuration)));
+
+    currentRoundStartTime = newStartTime;
+  }
+
+  // must be inState(State.NextRoundApproved)
+  function startRound() public { transitionFromState_NextRoundApproved(); }
+
+  // must be inState(State.PostRoundDecision)
+  function approveNewRound() public {  transitionFromState_PostRoundDecision(); }
+
   // ===============
   // Voter Functions
   // ===============
@@ -171,7 +137,7 @@ contract TokenPoll is Ownable {
     totalTokenCount = totalTokenCount.safeAdd(userTokens);
     userCount       = userCount.safeAdd(1);
   }
-  
+
   function castVote(bool vote) public inState(State.InRound) validVoter() {
     require(!getHasVoted(msg.sender, currentRoundNumber));
 
@@ -190,46 +156,6 @@ contract TokenPoll is Ownable {
     Vote(msg.sender, vote);
   }
 
-  function trasitionFromState_NextRoundApproved () public inState(State.NextRoundApproved) {
-    uint start = getRoundStartTime();
-    uint end   = getRoundEndTime();
-
-    require(start < now && now < end);
-    nextRoundApprovedFlag = false;
-  }
-
-  function putInRefundState() private {
-    // address erc20 = address(Escrow(escrow).erc20);
-    // totalRefund = ERC20(erc20).balanceOf(escrow);
-    totalRefund = stableCoin.balanceOf(escrow);
-    // escrowChangeDailyLimit(totalRefund);
-    escrowTransferTokens(address(this), totalRefund);
-    refundFlag = true;
-  }
-
-  // Sends funds to owner if approved
-  // todo, vote params (qorem),
-  function transitionFromState_PostRoundDecision () public inState(State.PostRoundDecision) {
-    bool notEnoughVotes = quadraticYesVotes < quadraticNoVotes;
-    uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
-    uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
-
-    // Check if needs a refund
-    if (notEnoughVotes) {
-      putInRefundState();
-      return;
-    }
-
-    // Update state and send funds over
-    nextRoundApprovedFlag = true;
-    currentRoundNumber = currentRoundNumber.safeAdd(1);
-    quadraticYesVotes = 0;
-    quadraticNoVotes = 0;
-    noVotes = 0;
-    yesVotes = 0;
-    escrowTransferTokens(getOwner(), approvedFunds);
-  }
-
   function userRefund() public inState(State.Refund) {
     require(userTokenBalance[msg.sender] != 0);
     address user = msg.sender;
@@ -240,20 +166,23 @@ contract TokenPoll is Ownable {
     stableCoin.transfer(user, refundSize);
   }
 
-  // Call through escrow -- "erc20.transfer(to, amount)"
-  function escrowTransferTokens(address _to, uint _amount) private {
-    bytes memory data = new bytes(4 + 20 + 32);
-    uint i = 0;
-    for (; i < 4; i++)  data[i] = bytes4(0x06b091f9)[i];
-    for (; i < 24; i++) data[i] = bytes20(_to)[i];
-    for (; i < 56; i++) data[i] = bytes32(_amount)[i];
+  // must be inState(State.NextRoundApproved)
+  function startRefund_voteFailed() public { transitionFromState_PostRoundDecision(); }
 
-    Escrow(escrow).submitTransaction(escrow, 0, data);    
-  }
+  // must be inState(State.NextRoundApproved) 
+  function startRefund_illegalRoundDelay() public {  if_haventCalledNewRoundSoonEnough_then_refund(); }
 
   // =======
   // Getters
   // =======
+
+  function getRoundStartTime () returns (uint) { return currentRoundStartTime; }
+
+  function getRoundEndTime() returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
+
+  function getVoteChoice(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum]; }
+
+  function getHasVoted(address user, uint _roundNum) view returns (bool) { return hasVoted[user][_roundNum]; }
 
   function getState() public view returns (State) {
     uint roundStart = getRoundStartTime();
@@ -287,6 +216,76 @@ contract TokenPoll is Ownable {
     }
     
     return y;
+  }
+
+  // ================
+  // Private fns
+  // ================
+
+  function if_haventCalledNewRoundSoonEnough_then_refund() private inState(State.NextRoundApproved) {
+    uint end   = getRoundEndTime();
+    uint timeLimit;
+    bool isRoundZero = currentRoundNumber == 0;
+
+    if (isRoundZero) 
+      timeLimit = allocEndTime.safeAdd(maxTimeBetweenRounds);
+    else 
+      timeLimit = end.safeAdd(maxTimeBetweenRounds);
+
+    require(timeLimit > now);
+    nextRoundApprovedFlag = false;
+    putInRefundState();
+  }
+
+  // Call through escrow -- "erc20.transfer(to, amount)"
+  function escrowTransferTokens(address _to, uint _amount) private {
+    bytes memory data = new bytes(4 + 20 + 32);
+    uint i = 0;
+    for (; i < 4; i++)  data[i] = bytes4(0x06b091f9)[i];
+    for (; i < 24; i++) data[i] = bytes20(_to)[i];
+    for (; i < 56; i++) data[i] = bytes32(_amount)[i];
+
+    Escrow(escrow).submitTransaction(escrow, 0, data);    
+  }
+
+  function putInRefundState() private {
+    // address erc20 = address(Escrow(escrow).erc20);
+    // totalRefund = ERC20(erc20).balanceOf(escrow);
+    totalRefund = stableCoin.balanceOf(escrow);
+    // escrowChangeDailyLimit(totalRefund);
+    escrowTransferTokens(address(this), totalRefund);
+    refundFlag = true;
+  }
+
+  function transitionFromState_NextRoundApproved () private inState(State.NextRoundApproved) {
+    uint start = getRoundStartTime();
+    uint end   = getRoundEndTime();
+
+    require(start < now && now < end);
+    nextRoundApprovedFlag = false;
+  }
+
+  // Sends funds to owner if approved
+  // todo, vote params (qorem),
+  function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
+    bool notEnoughVotes = quadraticYesVotes < quadraticNoVotes;
+    uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
+    uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
+
+    // Check if needs a refund
+    if (notEnoughVotes) {
+      putInRefundState();
+      return;
+    }
+
+    // Update state and send funds over
+    nextRoundApprovedFlag = true;
+    currentRoundNumber = currentRoundNumber.safeAdd(1);
+    quadraticYesVotes = 0;
+    quadraticNoVotes = 0;
+    noVotes = 0;
+    yesVotes = 0;
+    escrowTransferTokens(getOwner(), approvedFunds);
   }
 
   // ================
