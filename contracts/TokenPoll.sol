@@ -34,6 +34,10 @@ contract TokenPoll is Ownable {
 
   event Vote(address indexed voter, bool vote);
 
+  event RoundResult(uint round, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yetVoters, uint noVoters);
+
+  event NewRoundInfo(uint round, uint startTime, uint endTime);
+
   // =====
   // State
   // =====  
@@ -88,7 +92,7 @@ contract TokenPoll is Ownable {
   //    1 tokenPollAddr = TokenPoll() 
   //    2 escrowAddr    = Escrow(tokenPollAddr)
   //    3                 TokenPoll.initialize(escrowAddress)
-  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime, uint _dailyLimit) public inState(State.Uninitialized) onlyOwner {
+  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
 
     allocStartTime = _allocStartTime;
@@ -105,9 +109,11 @@ contract TokenPoll is Ownable {
   function setupNextRound(uint newStartTime) inState(State.NextRoundApproved) onlyOwner {
     uint lastEnd   = getRoundEndTime();
     
-    require(lastEnd < now);       // They can only do this once
+    require(lastEnd < now);                                // They can only do this once
     require(newStartTime > now);
-    require(newStartTime < (now.safeAdd(roundDuration)));
+    // require(newStartTime < (now.safeAdd(roundDuration)));  // 
+
+    NewRoundInfo(currentRoundNumber, newStartTime, newStartTime.safeAdd(roundDuration));
 
     currentRoundStartTime = newStartTime;
   }
@@ -271,6 +277,8 @@ contract TokenPoll is Ownable {
     bool notEnoughVotes = quadraticYesVotes < quadraticNoVotes;
     uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
     uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
+
+    RoundResult(currentRoundNumber, !notEnoughVotes, quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes);
 
     // Check if needs a refund
     if (notEnoughVotes) {
