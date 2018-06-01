@@ -88,6 +88,10 @@ contract TokenPoll is Ownable {
   // ICO Functions
   // =============
 
+  function getOwner() public view returns (address) { return _getOwner(); }
+
+  function transferOwnership(address newOwner) public { _transferOwnership(newOwner); } 
+
   // This is used b/c order of creating contracts:
   //    1 tokenPollAddr = TokenPoll() 
   //    2 escrowAddr    = Escrow(tokenPollAddr)
