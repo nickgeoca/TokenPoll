@@ -9,7 +9,8 @@ contract TokenPollFactory {
   function TokenPollFactory () {}
 
   function createTokenPoll() {
-    TokenPoll tp = new TokenPoll(msg.sender);
+    TokenPoll tp = new TokenPoll();
+    tp.transferOwnership(msg.sender);
     TokenPollCreated(msg.sender, tp);
   }
 }
