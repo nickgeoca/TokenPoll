@@ -67,18 +67,12 @@ contract TokenPoll is Ownable {
   uint public userCount;             // Used for keeping track of quorum
   uint public totalTokenCount;       // Count of all tokens registered for vote
   uint public totalVotePower;        // Total voting power of users
-<<<<<<< HEAD
-  mapping (address => bool) public voted;   // User has voted
-  uint public yesVotes;              // 
-  uint public noVotes;               // 
-=======
   mapping (address => mapping (uint => bool)) public voteChoice;
   mapping (address => mapping (uint => bool)) public hasVoted;
   uint public yesVotes;
   uint public noVotes;
   uint public quadraticYesVotes;
   uint public quadraticNoVotes;
->>>>>>> voting
 
   // ======================
   // Constructor & fallback
@@ -150,25 +144,12 @@ contract TokenPoll is Ownable {
     userCount       = userCount.safeAdd(1);
   }
 
-<<<<<<< HEAD
-  // todo vote window, vote params (qorem),
-  function castVote(bool value) {
-    require(voted[msg.sender] == false);
-=======
   function castVote(bool vote) public inState(State.InRound) validVoter() {
     require(!getHasVoted(msg.sender, currentRoundNumber));
->>>>>>> voting
 
     hasVoted[msg.sender][currentRoundNumber] = true;
     voteChoice[msg.sender][currentRoundNumber] = vote;
 
-<<<<<<< HEAD
-    if (value)
-      yesVotes += 1;
-    else
-      noVotes += 1;
-  }
-=======
     if (vote) {
       yesVotes = yesVotes.safeAdd(1);
       quadraticYesVotes = quadraticYesVotes.safeAdd(getUserVotePower(msg.sender));
@@ -177,7 +158,6 @@ contract TokenPoll is Ownable {
       noVotes = noVotes.safeAdd(1);
       quadraticNoVotes = quadraticNoVotes.safeAdd(getUserVotePower(msg.sender));
     }
->>>>>>> voting
 
     Vote(msg.sender, vote);
   }
@@ -186,14 +166,7 @@ contract TokenPoll is Ownable {
     require(userTokenBalance[msg.sender] != 0);
     address user = msg.sender;
     uint userTokenCount = userTokenBalance[user];
-<<<<<<< HEAD
-
-    // Get tokens then clear. Reentrant safe
-    require(userTokenCount != 0);
-    userTokenBalance[user] = 0;
-=======
     uint refundSize = totalRefund.safeMul(userTokenCount).safeDiv(totalTokenCount);
->>>>>>> voting
 
     userTokenBalance[user] = 0;
     stableCoin.transfer(user, refundSize);
@@ -255,10 +228,6 @@ contract TokenPoll is Ownable {
   // Private fns
   // ================
 
-<<<<<<< HEAD
-  // This must be private. 'private' must not be removed
-  function untrustedSendEth(address a, uint v) private { require(a.send(v)); } // untrusted external call
-=======
   function if_haventCalledNewRoundSoonEnough_then_refund() private inState(State.NextRoundApproved) {
     uint end   = getRoundEndTime();
     uint timeLimit;
@@ -326,7 +295,6 @@ contract TokenPoll is Ownable {
     yesVotes = 0;
     escrowTransferTokens(getOwner(), approvedFunds);
   }
->>>>>>> voting
 
   // ================
   // Modifiers
