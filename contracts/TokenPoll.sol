@@ -49,7 +49,7 @@ contract TokenPoll is Ownable {
 
   // Round variables
   uint public constant maxTimeBetweenRounds = 180 days;
-  uint public constant roundDuration = 1 weeks;
+  uint public constant roundDuration = 5 minutes;
   uint public constant numberOfRounds = 12;
   uint public currentRoundNumber;
   uint public allocStartTime;        // Start/end of voting allocation

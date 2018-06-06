@@ -115,14 +115,12 @@ var startRefund_illegalRoundDelay = async(tokenPoll, web3Params) => {
 // Getters
 // =======
 
-var getCurrentRoundVoteCount = async(tokenPoll) => {
-  verifyTokenPoll(tokenPoll);
-  verifyInState(tokenPoll, 'InRound');
+var yesVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(); };
+var noVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.noVotes(); };
+var totalVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return (await yesVotes(tokenPoll)) + (await noVotes(tokenPoll)); };
+var getQuadraticYesVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.quadraticYesVotes(); }
+var getQuadraticNoVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.quadraticNoVotes(); }
 
-  const yes = await tokenPoll.quadraticYesVotes();
-  const no  = await tokenPoll.quadraticNoVotes();
-  return {yes, no}
-}
 
 // Returns time in seconds
 var getAllocationTimeFrame = async (tokenPoll) => {
