@@ -115,37 +115,6 @@ var startRefund_illegalRoundDelay = async(tokenPoll, web3Params) => {
 // Getters
 // =======
 
-var yesVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(); };
-var noVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.noVotes(); };
-var totalVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return (await yesVotes(tokenPoll)) + (await noVotes(tokenPoll)); };
-var getQuadraticYesVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.quadraticYesVotes(); }
-var getQuadraticNoVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.quadraticNoVotes(); }
-
-
-// Returns time in seconds
-var getAllocationTimeFrame = async (tokenPoll) => {
-  verifyTokenPoll(tokenPoll);
-  const start = await tokenPoll.allocStartTime();
-  const end   = await tokenPoll.allocEndTime();
-
-  return {start, end}
-};
-
-
-var getRoundTimeFrame = async (tokenPoll) => {
-  verifyTokenPoll(tokenPoll);
-  let start = await tokenPoll.getRoundStartTime();
-  let end = await tokenPoll.getRoundEndTime();
-
-  return {start, end};
-}
-
-var hasVoted = async(tokenPoll, user, roundNum) => { return await tokenPoll.getHasVoted(user, roundNum); };
-
-var getUserVoteChoice = async(tokenPoll, user, roundNum) => { return await tokenPoll.getVoteChoice(user, roundNum); };
-
-var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUserVotePower(user); };
-
 var getState = async(tokenPoll) => {
   verifyTokenPoll(tokenPoll);
 
@@ -163,6 +132,34 @@ var getState = async(tokenPoll) => {
 
              , 'UnknownState'
              ][state];
+}
+
+var getUserHasVoted = async(tokenPoll, user, roundNum) => { return await tokenPoll.getHasVoted(user, roundNum); };
+var getUserVoteChoice = async(tokenPoll, user, roundNum) => { return await tokenPoll.getVoteChoice(user, roundNum); };
+var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUserVotePower(user); };
+
+var getYesVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(); };
+var getNoVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.noVotes(); };
+var getTotalVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return (await getYesVotes(tokenPoll)) + (await getNoVotes(tokenPoll)); };
+var getQuadraticYesVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.quadraticYesVotes(); }
+var getQuadraticNoVotes = async (tokenPoll) => {   verifyTokenPoll(tokenPoll); return tokenPoll.quadraticNoVotes(); }
+
+// Returns time in seconds
+var getAllocationTimeFrame = async (tokenPoll) => {
+  verifyTokenPoll(tokenPoll);
+  const start = await tokenPoll.allocStartTime();
+  const end   = await tokenPoll.allocEndTime();
+
+  return {start, end}
+};
+
+
+var getRoundTimeFrame = async (tokenPoll) => {
+  verifyTokenPoll(tokenPoll);
+  let start = await tokenPoll.getRoundStartTime();
+  let end = await tokenPoll.getRoundEndTime();
+
+  return {start, end};
 }
 
 // **** misc
@@ -202,20 +199,21 @@ module.exports =
   // Misc
   , getAllocationTimeFrame
   , getRoundTimeFrame
+  , getState
 
-  , hasVoted
+  // Vote stats 1
+  , getUserHasVoted
   , getUserVoteChoice
   , getUserVotePower
 
-  , getState
+  , getYesVotes
+  , getNoVotes
+  , getTotalVotes
+  , getQuadraticYesVotes
+  , getQuadraticNoVotes
 
-  // Vote stats
+  // Vote stats 2
   , getTotalVotePower
   , getUserCount
   , getUserVotePowerPercentage
   };
-
-
-
-
-
