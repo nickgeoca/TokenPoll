@@ -40,7 +40,7 @@ contract TokenPoll is Ownable {
 
   // =====
   // State
-  // =====  
+  // =====
 
   // State variables
   bool refundFlag;                   // keep track of state
@@ -135,14 +135,13 @@ contract TokenPoll is Ownable {
   // Users
   function allocVotes() public inState(State.VoteAllocation){
     bool notYetAllocated = userTokenBalance[msg.sender] == 0;
-
-    require(notYetAllocated); 
-
     uint userTokens = icoCoin.balanceOf(msg.sender);
+
+    require(notYetAllocated);   // Alloc only once
+    require(userTokens != 0);   // User has tokens
 
     // State changes
     userTokenBalance[msg.sender] = userTokens;
-
     totalVotePower  = totalVotePower.safeAdd(getUserVotePower(msg.sender));
     totalTokenCount = totalTokenCount.safeAdd(userTokens);
     userCount       = userCount.safeAdd(1);
