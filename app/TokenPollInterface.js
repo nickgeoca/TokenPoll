@@ -119,19 +119,23 @@ var getState = async(tokenPoll) => {
   verifyTokenPoll(tokenPoll);
 
   let state = await tokenPoll.getState();
-      return [ 'Uninitialized'      // Waits token poll is parameterized
-             , 'Initialized'        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
-             , 'VoteAllocation'     // Token balances should be frozen and users allocate votes during this period.
+  let states = 
+      [ 'Uninitialized'      // Waits token poll is parameterized
+      , 'Initialized'        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
+      , 'VoteAllocation'     // Token balances should be frozen and users allocate votes during this period.
 
-             , 'InRound'            // Voting period. Follows VoteAllocation & NextRoundApproved
-             , 'PostRoundDecision'
-             , 'NextRoundApproved'
+      , 'InRound'            // Voting period. Follows VoteAllocation & NextRoundApproved
+      , 'PostRoundDecision'
+      , 'NextRoundApproved'
 
-             , 'Refund'             // Users can withdraw remaining balance
-             , 'Finished'           // End of polls
+      , 'Refund'             // Users can withdraw remaining balance
+      , 'Finished'           // End of polls
+                 
+      , 'UnknownState'
+      ];
 
-             , 'UnknownState'
-             ][state];
+
+  return states[state];
 }
 
 var getUserHasVoted = async(tokenPoll, user, roundNum) => { return await tokenPoll.getHasVoted(user, roundNum); };
