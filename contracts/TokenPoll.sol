@@ -133,12 +133,12 @@ contract TokenPoll is Ownable {
   // ===============
 
   // Users
-  function allocVotes() public inState(State.VoteAllocation){
+  function allocVotes() public { // inState(State.VoteAllocation){
     bool notYetAllocated = userTokenBalance[msg.sender] == 0;
     uint userTokens = icoCoin.balanceOf(msg.sender);
 
-    require(notYetAllocated);   // Alloc only once
-    require(userTokens != 0);   // User has tokens
+    // require(notYetAllocated);   // Alloc only once
+    // require(userTokens != 0);   // User has tokens
 
     // State changes
     userTokenBalance[msg.sender] = userTokens;
