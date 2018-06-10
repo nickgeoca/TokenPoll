@@ -44,7 +44,6 @@ const expectThrow = async promise => {
   assert.fail("Expected throw not received");
 };
 
-
 module.exports = 
   { mineNBlocks
   , forwardEVMTime

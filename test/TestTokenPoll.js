@@ -11,7 +11,7 @@ const BigNumber = web3.BigNumber;
 const assert = require("chai").use(require("chai-as-promised")).assert;
 const eq = assert.equal.bind(assert);
 
-// const getRandomInt = (max) =>  new BigNumber( Math.floor(Math.random() * Math.floor(max)) );
+const getRandomInt = (max) =>  new BigNumber( Math.floor(Math.random() * Math.floor(max)) );
 
 const genNumEth = (n) => (new BigNumber(10)).pow(18).times(n);
 
@@ -100,7 +100,7 @@ contract('TokenPoll', function (accounts) {
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user2}));
     });
-/*
+
     it('test cast vote', async () => {
       const bal1 = getRandomInt(1000000000);
       const bal2 = getRandomInt(1000000000);
@@ -111,8 +111,8 @@ contract('TokenPoll', function (accounts) {
       const percentVp1e = vp1E.dividedBy(vp1E.plus(vp2E));
 
       // Alloc tokens
-      await token.transfer(user1, bal1, {from: company}); 
-      await token.transfer(user2, bal2, {from: company}); 
+      await icoToken.transfer(user1, bal1, {from: company}); 
+      await icoToken.transfer(user2, bal2, {from: company}); 
 
       // Put in vote allocation state
       await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
@@ -123,19 +123,24 @@ contract('TokenPoll', function (accounts) {
       await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
       await util.forwardEVMTime(voteAllocTimeDifference);
 
+      // Setup next round then start the round
+      let t = web3.eth.getBlock('latest').timestamp; 
+      await tpi.setupNextRound(tokenPoll, 30 + t, {from: doGood});  // 30 seconds from now
+      await util.forwardEVMTime(120);
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+      await tpi.startRound(tokenPoll, {from: company});
+      eq(await tpi.getState(tokenPoll), 'InRound');
       await tpi.castVote(tokenPoll, true, {from: user1});
       await tpi.castVote(tokenPoll, false, {from: user2});
 
-      eq( await tpi.getUserVotePower(tokenPoll, user1)
-        , vp1E);      
-      eq( await tpi.getUserVotePower(tokenPoll, user2)
-        , vp2E);      
-
-      eq( await tpi.getHasVoted(tokenPoll, user1)
+      eq( (await tpi.getUserVotePower(tokenPoll, user1))
+        , vp1E.toString(10));      
+      eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
+        , vp2E.toString(10));      
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 0)
         , true);
-      eq( await tpi.getHasVoted(tokenPoll, user2)
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 0)
         , true);
     });
-*/
   });
 });

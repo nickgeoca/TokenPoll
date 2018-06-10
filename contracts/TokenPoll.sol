@@ -112,11 +112,10 @@ contract TokenPoll is Ownable {
 
   function setupNextRound(uint newStartTime) inState(State.NextRoundApproved) onlyOwner {
     uint lastEnd   = getRoundEndTime();
-    
+
     require(lastEnd < now);                                // They can only do this once
     require(newStartTime > now);
     // require(newStartTime < (now.safeAdd(roundDuration)));  // 
-
     NewRoundInfo(currentRoundNumber, newStartTime, newStartTime.safeAdd(roundDuration));
 
     currentRoundStartTime = newStartTime;
