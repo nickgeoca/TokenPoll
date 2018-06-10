@@ -4,6 +4,8 @@ var TokenPollFactory = artifacts.require('TokenPollFactory.sol');
 module.exports = function(deployer, network, accounts) {
   return deployer.deploy(SafeMath).then(async () => {
 
+    await deployer.link(SafeMath, TokenPollFactory);
+
     await deployer.deploy(TokenPollFactory);
     
   });

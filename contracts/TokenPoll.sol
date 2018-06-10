@@ -133,18 +133,18 @@ contract TokenPoll is Ownable {
   // ===============
 
   // Users
-  function allocVotes() public { // inState(State.VoteAllocation) {
-    // bool notYetAllocated = userTokenBalance[msg.sender] == 0;
-    // uint userTokens = icoCoin.balanceOf(msg.sender);
+  function allocVotes() public inState(State.VoteAllocation) {
+    bool notYetAllocated = userTokenBalance[msg.sender] == 0;
+    uint userTokens = icoCoin.balanceOf(msg.sender);
 
-    // require(notYetAllocated);   // Alloc only once
-    // require(userTokens != 0);   // User has tokens
+    require(notYetAllocated);   // Alloc only once
+    require(userTokens != 0);   // User has tokens
 
     // State changes
-    userTokenBalance[msg.sender] = 3; // userTokens;
-    //    totalVotePower  = totalVotePower.safeAdd(getUserVotePower(msg.sender));
-    //    totalTokenCount = totalTokenCount.safeAdd(userTokens);
-    //    userCount       = userCount.safeAdd(1);
+    userTokenBalance[msg.sender] = userTokens;
+    totalVotePower  = totalVotePower.safeAdd(getUserVotePower(msg.sender));
+    totalTokenCount = totalTokenCount.safeAdd(userTokens);
+    userCount       = userCount.safeAdd(1);
   }
 
   function castVote(bool vote) public inState(State.InRound) validVoter() {
@@ -215,13 +215,13 @@ contract TokenPoll is Ownable {
   function getUserVotePower(address user) public view returns (uint) { return sqrt(userTokenBalance[user]); }
 
   // y = floor(sqrt(x))
-  function sqrt(uint x) public pure returns (uint) {
-    uint z = x.safeAdd(1).safeDiv(2);
+  function sqrt(uint256 x) public pure returns (uint) {
+    uint z = x.safeAdd(1) / 2;
     uint y = x;
     
     while (z < y) {
       y = z;
-      z = x.safeDiv(z).safeAdd(z).safeDiv(2);
+      z = (x / z + z) / 2;
     }
     
     return y;
