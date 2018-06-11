@@ -284,8 +284,9 @@ contract TokenPoll is Ownable {
     uint newRoundStrikeNumber = notEnoughVotes ? roundStrikeNumber.safeAdd(1) : roundStrikeNumber;
     bool threeStrikes = 3 == newRoundStrikeNumber;
 
-    if (threeStrikes) 
+    if (threeStrikes) {
       putInRefundState();
+    }
     else if (enoughVotes) {
       uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
       uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
@@ -300,10 +301,10 @@ contract TokenPoll is Ownable {
     }
     else {                   // No strikes, approved next round
       roundStrikeNumber = 0;
-      nextRoundApprovedFlag = true;
       currentRoundNumber = currentRoundNumber.safeAdd(1);
     }
 
+    nextRoundApprovedFlag = true;
     quadraticYesVotes = 0;
     quadraticNoVotes = 0;
     noVotes = 0;
