@@ -281,25 +281,24 @@ contract TokenPoll is Ownable {
   function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
     bool notEnoughVotes = quadraticYesVotes < quadraticNoVotes;
     bool enoughVotes = !notEnoughVotes;
-    uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
-    uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
-    bool threeStrikes = 2 == roundStrikeNumber; //
-
-    RoundResult(currentRoundNumber, enoughVotes, quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes, notEnoughVotes ? 1 + currentRoundNumber : currentRoundNumber);
+    uint newRoundStrikeNumber = notEnoughVotes ? roundStrikeNumber.safeAdd(1) : roundStrikeNumber;
+    bool threeStrikes = 3 == newRoundStrikeNumber;
 
     if (threeStrikes) 
       putInRefundState();
-    else if (enoughVotes)
+    else if (enoughVotes) {
+      uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
+      uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
       escrowTransferTokens(getOwner(), approvedFunds);
+    }
 
     // State changes
-    if (threeStrikes) {          // Failed so refund users
-      currentRoundNumber = currentRoundNumber.safeAdd(1);
+    RoundResult(currentRoundNumber, enoughVotes, quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes, newRoundStrikeNumber);
+
+    if (notEnoughVotes) {    // One more strike
+      roundStrikeNumber = newRoundStrikeNumber;
     }
-    else if (notEnoughVotes) {   // One more strike
-      roundStrikeNumber = roundStrikeNumber.safeAdd(1);
-    }
-    else {                       // No strikes, approved next round
+    else {                   // No strikes, approved next round
       roundStrikeNumber = 0;
       nextRoundApprovedFlag = true;
       currentRoundNumber = currentRoundNumber.safeAdd(1);
