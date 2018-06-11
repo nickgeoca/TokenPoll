@@ -287,19 +287,19 @@ contract TokenPoll is Ownable {
 
     RoundResult(currentRoundNumber, enoughVotes, quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes, notEnoughVotes ? 1 + currentRoundNumber : currentRoundNumber);
 
-    if (threeStrikes) {          // Failed so refund users
+    if (threeStrikes) 
       putInRefundState();
+    else if (enoughVotes)
+      escrowTransferTokens(getOwner(), approvedFunds);
 
-      // State changes
+    // State changes
+    if (threeStrikes) {          // Failed so refund users
       currentRoundNumber = currentRoundNumber.safeAdd(1);
     }
     else if (notEnoughVotes) {   // One more strike
       roundStrikeNumber = roundStrikeNumber.safeAdd(1);
     }
     else {                       // No strikes, approved next round
-      escrowTransferTokens(getOwner(), approvedFunds);
-
-      // State changes
       roundStrikeNumber = 0;
       nextRoundApprovedFlag = true;
       currentRoundNumber = currentRoundNumber.safeAdd(1);
