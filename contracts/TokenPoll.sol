@@ -34,7 +34,7 @@ contract TokenPoll is Ownable {
 
   event Vote(address indexed voter, bool vote);
 
-  event RoundResult(uint round, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yetVoters, uint noVoters);
+  event RoundResult(uint round, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yetVoters, uint noVoters, uint strikeNumber);
 
   event NewRoundInfo(uint round, uint startTime, uint endTime);
 
@@ -55,6 +55,7 @@ contract TokenPoll is Ownable {
   uint public allocStartTime;        // Start/end of voting allocation
   uint public allocEndTime;          // "
   uint public currentRoundStartTime; // ...
+  uint public roundStrikeNumber;
 
   // Fund variables
   ERC20 public stableCoin;           // Location of funds
@@ -98,6 +99,8 @@ contract TokenPoll is Ownable {
   //    3                 TokenPoll.initialize(escrowAddress)
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
+    require(_allocEndTime > _allocStartTime);
+    // todo, look more at error checking
 
     allocStartTime = _allocStartTime;
     allocEndTime = _allocEndTime;
@@ -277,25 +280,35 @@ contract TokenPoll is Ownable {
   // todo, vote params (qorem),
   function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
     bool notEnoughVotes = quadraticYesVotes < quadraticNoVotes;
+    bool enoughVotes = !notEnoughVotes;
     uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
     uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
+    bool threeStrikes = 2 == roundStrikeNumber; //
 
-    RoundResult(currentRoundNumber, !notEnoughVotes, quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes);
+    RoundResult(currentRoundNumber, enoughVotes, quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes, notEnoughVotes ? 1 + currentRoundNumber : currentRoundNumber);
 
-    // Check if needs a refund
-    if (notEnoughVotes) {
+    if (threeStrikes) {          // Failed so refund users
       putInRefundState();
-      return;
+
+      // State changes
+      currentRoundNumber = currentRoundNumber.safeAdd(1);
+    }
+    else if (notEnoughVotes) {   // One more strike
+      roundStrikeNumber = roundStrikeNumber.safeAdd(1);
+    }
+    else {                       // No strikes, approved next round
+      escrowTransferTokens(getOwner(), approvedFunds);
+
+      // State changes
+      roundStrikeNumber = 0;
+      nextRoundApprovedFlag = true;
+      currentRoundNumber = currentRoundNumber.safeAdd(1);
     }
 
-    // Update state and send funds over
-    nextRoundApprovedFlag = true;
-    currentRoundNumber = currentRoundNumber.safeAdd(1);
     quadraticYesVotes = 0;
     quadraticNoVotes = 0;
     noVotes = 0;
     yesVotes = 0;
-    escrowTransferTokens(getOwner(), approvedFunds);
   }
 
   // ================
