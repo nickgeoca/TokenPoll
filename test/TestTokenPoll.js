@@ -3,6 +3,8 @@ const util = require("./util.js");
 const tpi = require("../app/TokenPollInterface.js");
 
 var ERC20 = artifacts.require('ERC20.sol');
+var MSW = artifacts.require('./wallet/MultiSigWallet.sol');
+var MSWF = artifacts.require('./wallet/MultiSigWalletFactory.sol');
 
 var chai = require('chai')
 
@@ -32,8 +34,9 @@ contract('TokenPoll', function (accounts) {
   const user6 = accounts[5];
   const doGood  = accounts[6];
   const company = accounts[7];
-  const escrow = accounts[8];
-  // const arbitrator = accounts[9];
+  const scOwner = accounts[8];
+  //const  = accounts[9]; // Stable coin owner
+
   let tokenPoll;
 
   tpi.init(web3);
@@ -76,7 +79,7 @@ contract('TokenPoll', function (accounts) {
       scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: company});
 
       tokenPoll = await tpi.createTokenPoll({from: doGood});
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, escrow, allocStartTime, allocEndTime, {from: doGood, gas: 200000});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, allocEndTime, {from: doGood, gas: 200000});
     });
 
     it('allocates votes', async () => {
@@ -148,51 +151,42 @@ contract('TokenPoll', function (accounts) {
 
 
   describe('token poll start to finish', async () => {
-    let icoTokenSupply;
-    let icoTokenName;
-    let icoTokenSymbol;
-    let icoTokenDecimals;
-    let icoToken;
-    
-    let scTokenSupply;
-    let scTokenName;
-    let scTokenSymbol;
-    let scTokenDecimals;
-    let scToken;
-    
-    const voteAllocTimeStartOffset = 50;
-    const voteAllocTimeDifference = 100;
-
-    const user1BalanceE = getRandomInt(1000000000);
-    const user2BalanceE = getRandomInt(1000000000);
-
-    // vote power
-    const user1VotePowerE = user1BalanceE.sqrt().floor();
-    const user2VotePowerE = user2BalanceE.sqrt().floor();
-    const totalVotePowerE = user1VotePowerE.plus(user2VotePowerE);
-    const user1PercentVotePowerE = user1VotePowerE.dividedBy(totalVotePowerE);
-
     it('works start to finish', async () => {
       let d;
 
+      const voteAllocTimeStartOffset = 50;
+      const voteAllocTimeDifference = 100;
+      
+      const user1BalanceE = getRandomInt(1000000000);
+      const user2BalanceE = getRandomInt(1000000000);
+      
+      // vote power
+      const user1VotePowerE = user1BalanceE.sqrt().floor();
+      const user2VotePowerE = user2BalanceE.sqrt().floor();
+      const totalVotePowerE = user1VotePowerE.plus(user2VotePowerE);
+      const user1PercentVotePowerE = user1VotePowerE.dividedBy(totalVotePowerE);
+
       // ICO coin
-      icoTokenSupply = genNumEth(10);
-      icoTokenName = 'ico token';
-      icoTokenSymbol = 'ico';
-      icoTokenDecimals = new BigNumber(18);
+      let icoTokenSupply = genNumEth(10);
+      let icoTokenName = 'ico token';
+      let icoTokenSymbol = 'ico';
+      let icoTokenDecimals = new BigNumber(18);
 
       // Stable coin
-      scTokenSupply = genNumEth(10);
-      scTokenName = 'stable coin';
-      scTokenSymbol = 'sc';
-      scTokenDecimals = new BigNumber(18);
+      let scTokenSupply = genNumEth(10);
+      let scTokenName = 'stable coin';
+      let scTokenSymbol = 'sc';
+      let scTokenDecimals = new BigNumber(18);
+      
+      let companyStableCoinInEscrow = 10000000;
 
       dailyLimit = genNumEth(1); 
       const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
       const allocEndTime = allocStartTime + voteAllocTimeDifference;
 
       icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
-      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: company});
+      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
+      let mswf = await MSWF.new();
 
       // Alloc tokens
       await icoToken.transfer(user1, user1BalanceE, {from: company}); 
@@ -200,16 +194,16 @@ contract('TokenPoll', function (accounts) {
 
       // ********************************************************************************
       //                            Start token poll
-
       tokenPoll = await tpi.createTokenPoll({from: doGood});
+      msw = await MSW.at((await mswf.create([tokenPoll.address], 1, true)).logs[0].args.instantiation);
+      await scToken.transfer(msw.address, companyStableCoinInEscrow, {from: scOwner});
 
       // *******************************
       eq(await tpi.getState(tokenPoll), 'Uninitialized');
       // ********* STATE - Uninitialized
 
-
       // *******************************
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, escrow, allocStartTime, allocEndTime, {from: doGood, gas: 200000});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, allocEndTime, {from: doGood, gas: 200000});
       eq(await tpi.getState(tokenPoll), 'Initialized');
       // ********* STATE - Initialized
 
@@ -221,7 +215,7 @@ contract('TokenPoll', function (accounts) {
       await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
 
       eq( (await tpi.getUserVotePower(tokenPoll, user1))
-        , user1VotePowerE.toString(10));      
+        , user1VotePowerE.toString(10));
       eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
         , user2VotePowerE.toString(10));      
 
@@ -233,7 +227,6 @@ contract('TokenPoll', function (accounts) {
       await tpi.setupNextRound(tokenPoll, 30 + t, {from: doGood});  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
-
 
       // *******************************
       await tpi.startRound(tokenPoll, {from: company});
@@ -256,14 +249,15 @@ contract('TokenPoll', function (accounts) {
       // *******************************
       d = await tpi.approveNewRound(tokenPoll);
       debug(d.event);
-      
-      
-      // eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+      // verify wallet funds
+      // veirfy wallet funds left wallet to specified addr
+      // add wallet in here somehow
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       // ********* STATE - InRound
 
       // *******************************
       // ********* STATE - Finished
-      
+//*/      
 
     });    
   });
