@@ -48,6 +48,7 @@ contract TokenPoll is Ownable {
   bool public uninitializedFlag;     // if contract is un-initialized
 
   // Round variables
+  uint public constant allocationDuration = 2 minutes;
   uint public constant maxTimeBetweenRounds = 180 days;
   uint public constant roundDuration = 5 minutes;
   uint public constant numberOfRounds = 12;
@@ -97,13 +98,12 @@ contract TokenPoll is Ownable {
   //    1 tokenPollAddr = TokenPoll() 
   //    2 escrowAddr    = Escrow(tokenPollAddr)
   //    3                 TokenPoll.initialize(escrowAddress)
-  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _allocEndTime) public inState(State.Uninitialized) onlyOwner {
+  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
-    require(_allocEndTime > _allocStartTime);
     // todo, look more at error checking
 
     allocStartTime = _allocStartTime;
-    allocEndTime = _allocEndTime;
+    allocEndTime = _allocStartTime + allocationDuration;
 
     uninitializedFlag = false;
     nextRoundApprovedFlag = true;
@@ -117,7 +117,7 @@ contract TokenPoll is Ownable {
     uint lastEnd   = getRoundEndTime();
 
     require(lastEnd < now);                                // They can only do this once
-    require(newStartTime > now);
+    require(newStartTime >= now);
     // require(newStartTime < (now.safeAdd(roundDuration)));  // 
     NewRoundInfo(currentRoundNumber, newStartTime, newStartTime.safeAdd(roundDuration));
 

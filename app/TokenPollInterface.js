@@ -42,11 +42,11 @@ var createTokenPoll = async (web3Params) => {
   return await TokenPoll.at(event.tokenPoll);
 }
 
-var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, allocEndTime, web3Params) => {
+var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params) => {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Uninitialized');
 
-  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, allocEndTime, web3Params);
+  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params);
 }
 
 var setupNextRound = async (tokenPoll, newStartTime, web3Params) => {

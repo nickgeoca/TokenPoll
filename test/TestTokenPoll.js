@@ -55,7 +55,7 @@ contract('TokenPoll', function (accounts) {
     let scToken;
 
     const voteAllocTimeStartOffset = 50;
-    const voteAllocTimeDifference = 100;
+    const voteAllocTimeDifference = 120;
 
     // Create token polls
     beforeEach(async () => {
@@ -73,13 +73,12 @@ contract('TokenPoll', function (accounts) {
 
       dailyLimit = genNumEth(1); 
       const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
-      const allocEndTime = allocStartTime + voteAllocTimeDifference;
 
       icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
       scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: company});
 
       tokenPoll = await tpi.createTokenPoll({from: doGood});
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, allocEndTime, {from: doGood, gas: 200000});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, {from: doGood, gas: 200000});
     });
 
     it('allocates votes', async () => {
@@ -155,7 +154,7 @@ contract('TokenPoll', function (accounts) {
       let d;
 
       const voteAllocTimeStartOffset = 50;
-      const voteAllocTimeDifference = 100;
+      const voteAllocTimeDifference = 120;
       
       const user1BalanceE = getRandomInt(1000000000);
       const user2BalanceE = getRandomInt(1000000000);
@@ -182,7 +181,6 @@ contract('TokenPoll', function (accounts) {
 
       dailyLimit = genNumEth(1); 
       const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
-      const allocEndTime = allocStartTime + voteAllocTimeDifference;
 
       icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
       scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
@@ -203,7 +201,7 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - Uninitialized
 
       // *******************************
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, allocEndTime, {from: doGood, gas: 200000});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, {from: doGood, gas: 200000});
       eq(await tpi.getState(tokenPoll), 'Initialized');
       // ********* STATE - Initialized
 
@@ -245,7 +243,7 @@ contract('TokenPoll', function (accounts) {
       eq(await tpi.getState(tokenPoll), 'PostRoundDecision');
       // ********* STATE - PostRoundDecision
 
-
+/*
       // *******************************
       d = await tpi.approveNewRound(tokenPoll);
       debug(d.event);
