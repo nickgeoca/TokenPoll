@@ -43,9 +43,9 @@ contract TokenPoll is Ownable {
   // =====
 
   // State variables
-  bool refundFlag;                   // keep track of state
-  bool nextRoundApprovedFlag;        // "
-  bool uninitializedFlag;            // if contract is un-initialized
+  bool public refundFlag;            // keep track of state
+  bool public nextRoundApprovedFlag; // "
+  bool public uninitializedFlag;     // if contract is un-initialized
 
   // Round variables
   uint public constant maxTimeBetweenRounds = 180 days;
@@ -279,10 +279,8 @@ contract TokenPoll is Ownable {
   // Sends funds to owner if approved
   // todo, vote params (qorem),
   function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
-    bool notEnoughVotes = quadraticYesVotes < quadraticNoVotes;
-    bool enoughVotes = !notEnoughVotes;
-    uint newRoundStrikeNumber = notEnoughVotes ? roundStrikeNumber.safeAdd(1) : roundStrikeNumber;
-    bool threeStrikes = 3 == newRoundStrikeNumber;
+    bool enoughVotes = quadraticYesVotes >= quadraticNoVotes;
+    bool threeStrikes = 2 == roundStrikeNumber;
 
     if (threeStrikes) {
       putInRefundState();
@@ -294,14 +292,17 @@ contract TokenPoll is Ownable {
     }
 
     // State changes
-    RoundResult(currentRoundNumber, enoughVotes, quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes, newRoundStrikeNumber);
+    RoundResult(currentRoundNumber, enoughVotes
+                , quadraticYesVotes, quadraticNoVotes
+                , yesVotes, noVotes
+                , enoughVotes ? roundStrikeNumber : roundStrikeNumber.safeAdd(1));
 
-    if (notEnoughVotes) {    // One more strike
-      roundStrikeNumber = newRoundStrikeNumber;
-    }
-    else {                   // No strikes, approved next round
+    if (enoughVotes) {
       roundStrikeNumber = 0;
       currentRoundNumber = currentRoundNumber.safeAdd(1);
+    }
+    else {
+      roundStrikeNumber = roundStrikeNumber.safeAdd(1);
     }
 
     nextRoundApprovedFlag = true;
