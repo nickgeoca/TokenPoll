@@ -171,7 +171,7 @@ contract TokenPoll is Ownable {
     require(userTokenBalance[msg.sender] != 0);
     address user = msg.sender;
     uint userTokenCount = userTokenBalance[user];
-    uint refundSize = totalRefund.safeMul(userTokenCount).safeDiv(totalTokenCount);
+    uint refundSize = totalRefund.safeMul(userTokenCount) / totalTokenCount;
 
     userTokenBalance[user] = 0;
     stableCoin.transfer(user, refundSize);
@@ -287,7 +287,7 @@ contract TokenPoll is Ownable {
     }
     else if (enoughVotes) {
       uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
-      uint approvedFunds = stableCoin.balanceOf(escrow).safeDiv(remainingRounds);
+      uint approvedFunds = stableCoin.balanceOf(escrow) / remainingRounds;
       escrowTransferTokens(getOwner(), approvedFunds);
     }
 
