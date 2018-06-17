@@ -75,10 +75,10 @@ contract('TokenPoll', function (accounts) {
       const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
 
       icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
-      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: company});
+      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
 
-      tokenPoll = await tpi.createTokenPoll({from: doGood});
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, {from: doGood, gas: 200000});
+      tokenPoll = await tpi.createTokenPoll({from: company});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, {from: company, gas: 200000});
     });
 
     it('allocates votes', async () => {
@@ -129,7 +129,7 @@ contract('TokenPoll', function (accounts) {
 
       // Setup next round then start the round
       let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, {from: doGood});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, {from: company});  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       await tpi.startRound(tokenPoll, {from: company});
@@ -177,7 +177,7 @@ contract('TokenPoll', function (accounts) {
       let scTokenSymbol = 'sc';
       let scTokenDecimals = new BigNumber(18);
       
-      let companyStableCoinInEscrow = 10000000;
+      let companyInitialFunding = 10000000;
 
       dailyLimit = genNumEth(1); 
       const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
@@ -192,16 +192,16 @@ contract('TokenPoll', function (accounts) {
 
       // ********************************************************************************
       //                            Start token poll
-      tokenPoll = await tpi.createTokenPoll({from: doGood});
+      tokenPoll = await tpi.createTokenPoll({from: company});
       msw = await MSW.at((await mswf.create([tokenPoll.address], 1, true)).logs[0].args.instantiation);
-      await scToken.transfer(msw.address, companyStableCoinInEscrow, {from: scOwner});
+      await scToken.transfer(msw.address, companyInitialFunding, {from: scOwner});
 
       // *******************************
       eq(await tpi.getState(tokenPoll), 'Uninitialized');
       // ********* STATE - Uninitialized
 
       // *******************************
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, {from: doGood, gas: 200000});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, {from: company, gas: 200000});
       eq(await tpi.getState(tokenPoll), 'Initialized');
       // ********* STATE - Initialized
 
@@ -222,7 +222,7 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - NextRoundApproved
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, {from: doGood});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, {from: company});  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
 
@@ -243,20 +243,24 @@ contract('TokenPoll', function (accounts) {
       eq(await tpi.getState(tokenPoll), 'PostRoundDecision');
       // ********* STATE - PostRoundDecision
 
-/*
       // *******************************
+      debug('msw bal: '+(await scToken.balanceOf(msw.address)).toString(10));
+      debug('co bal: '+(await scToken.balanceOf(company)).toString(10));
       d = await tpi.approveNewRound(tokenPoll);
-      debug(d.event);
-      // verify wallet funds
-      // veirfy wallet funds left wallet to specified addr
-      // add wallet in here somehow
+      debug('msw bal: '+(await scToken.balanceOf(msw.address)).toString(10));
+      debug('co bal: '+(await scToken.balanceOf(company)).toString(10));
+
+      // Check wallet and company stable coin balances
+      let releasedFunds = Math.trunc(companyInitialFunding / 12);
+      eq( (await scToken.balanceOf(msw.address)).toString(10)
+        , (companyInitialFunding - releasedFunds).toString(10));
+      eq( (await scToken.balanceOf(company)).toString(10)
+        , (releasedFunds).toString(10));
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       // ********* STATE - InRound
 
       // *******************************
       // ********* STATE - Finished
-//*/      
-
     });    
   });
 });
