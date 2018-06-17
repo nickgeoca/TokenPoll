@@ -250,13 +250,18 @@ contract TokenPoll is Ownable {
 
   // Call through escrow -- "erc20.transfer(to, amount)"
   function escrowTransferTokens(address _to, uint _amount) private {
-    bytes memory data = new bytes(4 + 20 + 32);
-    uint i = 0;
-    for (; i < 4; i++)  data[i] = bytes4(0x06b091f9)[i];
-    for (; i < 24; i++) data[i] = bytes20(_to)[i];
-    for (; i < 56; i++) data[i] = bytes32(_amount)[i];
+    bytes memory data = new bytes(4 + 32 + 32);
+    uint i;
 
-    Escrow(escrow).submitTransaction(escrow, 0, data);    
+    // Clear memory
+    for (i = 0; i < (4+32+32); i++) data[i] = 0;
+    
+    // Write to data for wallet - erc20.transfer(to, amount);
+    for (i = 0   ; i < 4        ; i++) data[i] = bytes4(0xa9059cbb)[i];
+    for (i = 4+12; i < (4+32)   ; i++) data[i] = bytes20(_to)[i - (4+12)];
+    for (i = 4+32; i < (4+32+32); i++) data[i] = bytes32(_amount)[i - (4+32)];
+
+    Escrow(escrow).submitTransaction(stableCoin, 0, data);
   }
 
   function putInRefundState() private {
@@ -286,16 +291,16 @@ contract TokenPoll is Ownable {
       putInRefundState();
     }
     else if (enoughVotes) {
-      uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber).safeSub(1);
+      uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber);
       uint approvedFunds = stableCoin.balanceOf(escrow) / remainingRounds;
       escrowTransferTokens(getOwner(), approvedFunds);
     }
 
     // State changes
-    RoundResult(currentRoundNumber, enoughVotes
-                , quadraticYesVotes, quadraticNoVotes
-                , yesVotes, noVotes
-                , enoughVotes ? roundStrikeNumber : roundStrikeNumber.safeAdd(1));
+    RoundResult( currentRoundNumber, enoughVotes
+               , quadraticYesVotes, quadraticNoVotes
+               , yesVotes, noVotes
+               , enoughVotes ? roundStrikeNumber : roundStrikeNumber.safeAdd(1));
 
     if (enoughVotes) {
       roundStrikeNumber = 0;
