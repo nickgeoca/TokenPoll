@@ -111,6 +111,7 @@ contract TokenPoll is Ownable {
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
     escrow = _escrow;
+    currentRoundNumber = 1;
   }
 
   function setupNextRound(uint newStartTime) inState(State.NextRoundApproved) onlyOwner {
@@ -236,9 +237,9 @@ contract TokenPoll is Ownable {
   function if_haventCalledNewRoundSoonEnough_then_refund() private inState(State.NextRoundApproved) {
     uint end   = getRoundEndTime();
     uint timeLimit;
-    bool isRoundZero = currentRoundNumber == 0;
+    bool isRoundOne = currentRoundNumber == 1;
 
-    if (isRoundZero) 
+    if (isRoundOne) 
       timeLimit = allocEndTime.safeAdd(maxTimeBetweenRounds);
     else 
       timeLimit = end.safeAdd(maxTimeBetweenRounds);
@@ -291,7 +292,7 @@ contract TokenPoll is Ownable {
       putInRefundState();
     }
     else if (enoughVotes) {
-      uint remainingRounds = numberOfRounds.safeSub(currentRoundNumber);
+      uint remainingRounds = numberOfRounds.safeAdd(1).safeSub(currentRoundNumber);
       uint approvedFunds = stableCoin.balanceOf(escrow) / remainingRounds;
       escrowTransferTokens(getOwner(), approvedFunds);
     }
