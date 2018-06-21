@@ -174,6 +174,8 @@ var getTotalVotePower = async(tokenPoll) => { return await tokenPoll.totalVotePo
 // Total count of potential voters
 var getUserCount = async(tokenPoll) => { return await tokenPoll.userCount(); };
 
+var getCurrentRoundNumber = async(tokenPoll) => { return await tokenPoll.currentRoundNumber(); };
+
 var getUserVotePowerPercentage = async(tokenPoll, user) => {
   await verifyTokenPoll(tokenPoll);
   const vp = await tokenPoll.getUserVotePower(user);
@@ -205,6 +207,7 @@ module.exports =
   , getAllocationTimeFrame
   , getRoundTimeFrame
   , getState
+  , getCurrentRoundNumber
 
   // Vote stats 1
   , getUserHasVoted
