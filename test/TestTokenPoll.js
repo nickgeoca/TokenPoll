@@ -141,9 +141,10 @@ contract('TokenPoll', function (accounts) {
         , vp1E.toString(10));      
       eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
         , vp2E.toString(10));      
-      eq( await tpi.getUserHasVoted(tokenPoll, user1, 0)
+
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1)
         , true);
-      eq( await tpi.getUserHasVoted(tokenPoll, user2, 0)
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1)
         , true);
     });
   });
@@ -233,9 +234,9 @@ contract('TokenPoll', function (accounts) {
       await tpi.castVote(tokenPoll, true, {from: user1});
       await tpi.castVote(tokenPoll, true, {from: user2});
 
-      eq( await tpi.getUserHasVoted(tokenPoll, user1, 0)
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1)
         , true);
-      eq( await tpi.getUserHasVoted(tokenPoll, user2, 0)
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1)
         , true);
 
       // *******************************
