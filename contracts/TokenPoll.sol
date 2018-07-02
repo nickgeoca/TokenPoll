@@ -183,9 +183,9 @@ contract TokenPoll is Ownable {
   // Getters
   // =======
 
-  function getRoundStartTime () returns (uint) { return currentRoundStartTime; }
+  function getRoundStartTime () view returns (uint) { return currentRoundStartTime; }
 
-  function getRoundEndTime() returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
+  function getRoundEndTime() view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
 
   function getVoteChoice(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum]; }
 
