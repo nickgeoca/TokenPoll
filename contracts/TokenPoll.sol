@@ -7,7 +7,6 @@ import "./SafeMath.sol";
 
 contract Escrow {
   function submitTransaction(address destination, uint value, bytes data) public returns (uint transactionId);
-  address public erc20;
 }
 
 // https://www.stellar.org/developers/guides/issuing-assets.html
@@ -71,10 +70,10 @@ contract TokenPoll is Ownable {
   uint public totalVotePower;        // Total voting power of users
   mapping (address => mapping (uint => bool)) public voteChoice;
   mapping (address => mapping (uint => bool)) public hasVoted;
-  uint public yesVotes;
-  uint public noVotes;
-  uint public quadraticYesVotes;
-  uint public quadraticNoVotes;
+  mapping (uint => uint) public yesVotes;           // round number -> number of yes votes
+  mapping (uint => uint) public noVotes;            // round number -> number of no votes
+  mapping (uint => uint) public quadraticYesVotes;  // round number -> quadratic yes votes
+  mapping (uint => uint) public quadraticNoVotes;   // round number -> quadratic no votes
 
   // ======================
   // Constructor & fallback
@@ -152,12 +151,12 @@ contract TokenPoll is Ownable {
     voteChoice[msg.sender][currentRoundNumber] = vote;
 
     if (vote) {
-      yesVotes = yesVotes.safeAdd(1);
-      quadraticYesVotes = quadraticYesVotes.safeAdd(getUserVotePower(msg.sender));
+      yesVotes[currentRoundNumber] = yesVotes[currentRoundNumber].safeAdd(1);
+      quadraticYesVotes[currentRoundNumber] = quadraticYesVotes[currentRoundNumber].safeAdd(getUserVotePower(msg.sender));
     }
     else {
-      noVotes = noVotes.safeAdd(1);
-      quadraticNoVotes = quadraticNoVotes.safeAdd(getUserVotePower(msg.sender));
+      noVotes[currentRoundNumber] = noVotes[currentRoundNumber].safeAdd(1);
+      quadraticNoVotes[currentRoundNumber] = quadraticNoVotes[currentRoundNumber].safeAdd(getUserVotePower(msg.sender));
     }
 
     Vote(msg.sender, vote);
@@ -280,7 +279,7 @@ contract TokenPoll is Ownable {
   // Sends funds to owner if approved
   // todo, vote params (qorem),
   function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
-    bool enoughVotes = quadraticYesVotes >= quadraticNoVotes;
+    bool enoughVotes = quadraticYesVotes[currentRoundNumber] >= quadraticNoVotes[currentRoundNumber];
     bool threeStrikes = 2 == roundStrikeNumber;
 
     if (threeStrikes) {
@@ -294,8 +293,8 @@ contract TokenPoll is Ownable {
 
     // State changes
     RoundResult( currentRoundNumber, enoughVotes
-               , quadraticYesVotes, quadraticNoVotes
-               , yesVotes, noVotes
+               , quadraticYesVotes[currentRoundNumber], quadraticNoVotes[currentRoundNumber]
+               , yesVotes[currentRoundNumber], noVotes[currentRoundNumber]
                , enoughVotes ? roundStrikeNumber : roundStrikeNumber.safeAdd(1));
 
     if (enoughVotes) {
@@ -307,10 +306,6 @@ contract TokenPoll is Ownable {
     }
 
     nextRoundApprovedFlag = true;
-    quadraticYesVotes = 0;
-    quadraticNoVotes = 0;
-    noVotes = 0;
-    yesVotes = 0;
   }
 
   // ================

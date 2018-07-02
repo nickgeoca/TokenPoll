@@ -143,11 +143,11 @@ var getUserHasVoted = async(tokenPoll, user, roundNum) => { return await tokenPo
 var getUserVoteChoice = async(tokenPoll, user, roundNum) => { return await tokenPoll.getVoteChoice(user, roundNum); };
 var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUserVotePower(user); };
 
-var getYesVotes = async (tokenPoll, roundNum) => {   await verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(); };
-var getNoVotes = async (tokenPoll, roundNum) => {   await verifyTokenPoll(tokenPoll); return tokenPoll.noVotes(); };
-var getTotalVotes = async (tokenPoll, roundNum) => {   await verifyTokenPoll(tokenPoll); return (await getYesVotes(tokenPoll)) + (await getNoVotes(tokenPoll)); };
-var getQuadraticYesVotes = async (tokenPoll) => {   await verifyTokenPoll(tokenPoll); return tokenPoll.quadraticYesVotes(); }
-var getQuadraticNoVotes = async (tokenPoll) => {   await verifyTokenPoll(tokenPoll); return tokenPoll.quadraticNoVotes(); }
+var getYesVotes = async (tokenPoll, roundNum) =>    { await verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(roundNum); };
+var getNoVotes = async (tokenPoll, roundNum) =>     { await verifyTokenPoll(tokenPoll); return tokenPoll.noVotes(roundNum); };
+var getTotalVotes = async (tokenPoll, roundNum) =>  { await verifyTokenPoll(tokenPoll); return (await getYesVotes(tokenPoll, roundNum)) + (await getNoVotes(tokenPoll, roundNum)); };
+var getQuadraticYesVotes = async (tokenPoll, roundNum) => { await verifyTokenPoll(tokenPoll); return tokenPoll.quadraticYesVotes(roundNum); };
+var getQuadraticNoVotes = async (tokenPoll, roundNum) =>  { await verifyTokenPoll(tokenPoll); return tokenPoll.quadraticNoVotes(roundNum); };
 
 // Returns time in seconds
 var getAllocationTimeFrame = async (tokenPoll) => {
