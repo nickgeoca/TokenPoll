@@ -142,13 +142,23 @@ contract('TokenPoll', function (accounts) {
       eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
         , vp2E.toString(10));      
 
-      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
         , true);
-      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1, 1)
         , true);
+
+      eq( await tpi.getYesVotes(tokenPoll, 1, 1)
+        , '1');
+      eq( await tpi.getNoVotes(tokenPoll, 1, 1)
+        , '1');
+
+      eq( await tpi.getQuadraticYesVotes(tokenPoll, 1, 1)
+        , vp1E.toString(10));
+      eq( await tpi.getQuadraticNoVotes(tokenPoll, 1, 1)
+        , vp2E.toString(10));
+
     });
   });
-
 
   describe('token poll start to finish', async () => {
     it('works start to finish', async () => {
@@ -234,9 +244,9 @@ contract('TokenPoll', function (accounts) {
       await tpi.castVote(tokenPoll, true, {from: user1});
       await tpi.castVote(tokenPoll, true, {from: user2});
 
-      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
         , true);
-      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1, 1)
         , true);
 
       // *******************************
@@ -245,11 +255,7 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - PostRoundDecision
 
       // *******************************
-      debug('msw bal: '+(await scToken.balanceOf(msw.address)).toString(10));
-      debug('co bal: '+(await scToken.balanceOf(company)).toString(10));
       d = await tpi.approveNewRound(tokenPoll);
-      debug('msw bal: '+(await scToken.balanceOf(msw.address)).toString(10));
-      debug('co bal: '+(await scToken.balanceOf(company)).toString(10));
 
       // Check wallet and company stable coin balances
       let releasedFunds = Math.trunc(companyInitialFunding / 12);
@@ -257,13 +263,33 @@ contract('TokenPoll', function (accounts) {
         , (companyInitialFunding - releasedFunds).toString(10));
       eq( (await scToken.balanceOf(company)).toString(10)
         , (releasedFunds).toString(10));
+
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+      t = web3.eth.getBlock('latest').timestamp; 
+      await tpi.setupNextRound(tokenPoll, 30 + t, {from: company});  // 30 seconds from now
+      await util.forwardEVMTime(120);
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+
+      // *******************************
+      await tpi.startRound(tokenPoll, {from: company});
+      eq(await tpi.getState(tokenPoll), 'InRound');
       // ********* STATE - InRound
+      await tpi.castVote(tokenPoll, false, {from: user1});
+      await tpi.castVote(tokenPoll, false, {from: user2});
+
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
+        , true);
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1, 1)
+        , true);
+
+      console.log(await tpi.getResultHistory(tokenPoll));
 
       // *******************************
       // ********* STATE - Finished
+
     });    
   });
+// */
 });
 
 

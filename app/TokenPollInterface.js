@@ -139,15 +139,130 @@ var getState = async(tokenPoll) => {
   return states[state.toString(10)];
 }
 
-var getUserHasVoted = async(tokenPoll, user, roundNum) => { return await tokenPoll.getHasVoted(user, roundNum); };
-var getUserVoteChoice = async(tokenPoll, user, roundNum) => { return await tokenPoll.getVoteChoice(user, roundNum); };
+var getUserHasVoted = async(tokenPoll, user, roundNum, voteNum) =>  tokenPoll.getHasVoted(user, roundNum, voteNum); 
+
+const getUserVoteHistory = (tokenPoll, user) => {
+  return new Promise(resolve => {
+    tokenPoll.Vote({voter:user}, {fromBlock: 0, toBlock: 'latest' })
+      .get((error, logs) => { 
+        assert(!error);
+        const ls = logs.map(l => {return{ round: l.args.round.toString()
+                                        , votingRoundNumber: l.args.votingRoundNumber.toString()
+                                        , vote: l.args.vote
+                                        };});
+        resolve(ls);
+      });
+  });
+};
+
+const getUserVoteChoice = (tokenPoll, user, fundRound, voteRound) => {
+  return new Promise(resolve => {
+    tokenPoll.Vote({voter:user, round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
+      .get((error, logs) => { 
+        assert(!error);
+        if (logs.length === 0) resolve(undefined);
+        else             resolve(logs[0].args.vote);
+      });
+  });
+};
+      
 var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUserVotePower(user); };
 
-var getYesVotes = async (tokenPoll, roundNum) =>    { await verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(roundNum); };
-var getNoVotes = async (tokenPoll, roundNum) =>     { await verifyTokenPoll(tokenPoll); return tokenPoll.noVotes(roundNum); };
-var getTotalVotes = async (tokenPoll, roundNum) =>  { await verifyTokenPoll(tokenPoll); return (await getYesVotes(tokenPoll, roundNum)) + (await getNoVotes(tokenPoll, roundNum)); };
-var getQuadraticYesVotes = async (tokenPoll, roundNum) => { await verifyTokenPoll(tokenPoll); return tokenPoll.quadraticYesVotes(roundNum); };
-var getQuadraticNoVotes = async (tokenPoll, roundNum) =>  { await verifyTokenPoll(tokenPoll); return tokenPoll.quadraticNoVotes(roundNum); };
+// var getCurrentYesVotes = async (tokenPoll) =>    { await verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(); };
+
+const getYesVotes = async(tokenPoll, fundRound, voteRound) => {
+  const state = await getState(tokenPoll);
+  if (state === 'InRound' || state === 'PostRoundDecision')
+    return tokenPoll.yesVotes();
+
+  return new Promise(resolve => {
+    tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
+      .get((error, logs) => { 
+        assert(!error);
+        if (logs.length === 0) resolve(undefined);
+        else                   resolve(logs[0].args.yesVoters.toString())
+      });
+  });
+};
+
+const getNoVotes = async(tokenPoll, fundRound, voteRound) => {
+  const state = await getState(tokenPoll);
+  if (state === 'InRound' || state === 'PostRoundDecision')
+    return tokenPoll.noVotes();
+
+  return new Promise(resolve => {
+    tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
+      .get((error, logs) => { 
+        assert(!error);
+        if (logs.length === 0) resolve(undefined);
+        else                   resolve(logs[0].args.noVoters.toString())
+      });
+  });
+};
+
+var getTotalVotes = async (tokenPoll, fundRound, voteRound) =>  { await verifyTokenPoll(tokenPoll); return (await getYesVotes(tokenPoll, fundRound, voteRound)) + (await getNoVotes(tokenPoll, fundRound, voteRound)); };
+
+const getQuadraticYesVotes = async(tokenPoll, fundRound, voteRound) => {
+  const state = await getState(tokenPoll);
+  if (state === 'InRound' || state === 'PostRoundDecision')
+    return tokenPoll.quadraticYesVotes();
+
+  return new Promise(resolve => {
+    tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
+      .get((error, logs) => { 
+        assert(!error);
+        if (logs.length === 0) resolve(undefined);
+        else                   resolve(logs[0].args.weightedYesVotes.toString())
+      });
+  });
+};
+
+const getQuadraticNoVotes = async(tokenPoll, fundRound, voteRound) => {
+  const state = await getState(tokenPoll);
+  if (state === 'InRound' || state === 'PostRoundDecision')
+    return tokenPoll.quadraticNoVotes();
+
+  return new Promise(resolve => {
+    tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
+      .get((error, logs) => { 
+        assert(!error);
+        if (logs.length === 0) resolve(undefined);
+        else                   resolve(logs[0].args.weightedNoVotes.toString())
+      });
+  });
+};
+
+
+const getResultHistory = async(tokenPoll) => {
+  const state = await getState(tokenPoll);
+  let moreData = [];
+  if (state === 'InRound' || state === 'PostRoundDecision')
+    moreData = [{ roundFinished: false
+                , round: (await tokenPoll.currentRoundNumber()).toString()
+                , votingRoundNumber: (await tokenPoll.votingRoundNumber()).toString()
+                , weightedNoVotes: (await tokenPoll.quadraticNoVotes()).toString()
+                , weightedYesVotes: (await tokenPoll.quadraticYesVotes()).toString()
+                , yesVoters: (await tokenPoll.yesVotes()).toString()
+                , noVoters: (await tokenPoll.noVotes()).toString()
+                }];
+
+  return new Promise(resolve => {
+    tokenPoll.RoundResult({}, {fromBlock: 0, toBlock: 'latest' })
+      .get((error, logs) => { 
+        assert(!error);
+        const ls = logs.map(l => {return{ roundFinished: true
+                                        , round: l.args.round.toString()
+                                        , votingRoundNumber: l.args.votingRoundNumber.toString()
+                                        , approvedFunding: l.args.approvedFunding
+                                        , weightedNoVotes: l.args.weightedNoVotes.toString()
+                                        , weightedYesVotes: l.args.weightedYesVotes.toString()
+                                        , yesVoters: l.args.yesVoters.toString()
+                                        , noVoters: l.args.noVoters.toString()
+                                        };});
+        resolve(ls.concat(moreData));
+      });
+  });
+};
 
 // Returns time in seconds
 var getAllocationTimeFrame = async (tokenPoll) => {
@@ -211,14 +326,17 @@ module.exports =
 
   // Vote stats 1
   , getUserHasVoted
+  , getUserVoteHistory
   , getUserVoteChoice
   , getUserVotePower
-
   , getYesVotes
+
   , getNoVotes
   , getTotalVotes
   , getQuadraticYesVotes
   , getQuadraticNoVotes
+
+  , getResultHistory
 
   // Vote stats 2
   , getTotalVotePower

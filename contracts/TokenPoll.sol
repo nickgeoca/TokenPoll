@@ -31,8 +31,8 @@ contract TokenPoll is Ownable {
              , UnknownState
              }
 
-  event Vote(address indexed voter, bool vote);
-  event RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yetVoters, uint noVoters);
+  event Vote(address indexed voter, uint indexed round, uint indexed votingRoundNumber, bool vote);
+  event RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yesVoters, uint noVoters);
   event NewRoundInfo(uint indexed round, uint indexed votingRoundNumber, uint startTime, uint endTime);
 
   // =====
@@ -162,7 +162,7 @@ contract TokenPoll is Ownable {
       quadraticNoVotes = quadraticNoVotes.safeAdd(getUserVotePower(msg.sender));
     }
 
-    Vote(msg.sender, vote);
+    Vote(msg.sender, currentRoundNumber, votingRoundNumber, vote);
   }
 
   function userRefund() public inState(State.Refund) {
