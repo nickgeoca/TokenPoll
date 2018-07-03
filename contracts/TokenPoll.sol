@@ -32,16 +32,14 @@ contract TokenPoll is Ownable {
              }
 
   event Vote(address indexed voter, bool vote);
-
-  event RoundResult(uint round, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yetVoters, uint noVoters, uint strikeNumber);
-
-  event NewRoundInfo(uint round, uint startTime, uint endTime);
+  event RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yetVoters, uint noVoters);
+  event NewRoundInfo(uint indexed round, uint indexed votingRoundNumber, uint startTime, uint endTime);
 
   // =====
   // State
   // =====
 
-  // State variables
+    // State variables
   bool public refundFlag;            // keep track of state
   bool public nextRoundApprovedFlag; // "
   bool public uninitializedFlag;     // if contract is un-initialized
@@ -51,11 +49,14 @@ contract TokenPoll is Ownable {
   uint public constant maxTimeBetweenRounds = 180 days;
   uint public constant roundDuration = 5 minutes;
   uint public constant numberOfRounds = 12;
+
   uint public currentRoundNumber;
+  uint public votingRoundNumber;
+
   uint public allocStartTime;        // Start/end of voting allocation
   uint public allocEndTime;          // "
+
   uint public currentRoundStartTime; // ...
-  uint public roundStrikeNumber;
 
   // Fund variables
   ERC20 public stableCoin;           // Location of funds
@@ -68,12 +69,14 @@ contract TokenPoll is Ownable {
   uint public userCount;             // Used for keeping track of quorum
   uint public totalTokenCount;       // Count of all tokens registered for vote
   uint public totalVotePower;        // Total voting power of users
-  mapping (address => mapping (uint => bool)) public voteChoice;
-  mapping (address => mapping (uint => bool)) public hasVoted;
-  mapping (uint => uint) public yesVotes;           // round number -> number of yes votes
-  mapping (uint => uint) public noVotes;            // round number -> number of no votes
-  mapping (uint => uint) public quadraticYesVotes;  // round number -> quadratic yes votes
-  mapping (uint => uint) public quadraticNoVotes;   // round number -> quadratic no votes
+  mapping (address =>                // Address ->
+           mapping (uint =>          // RoundNumber ->
+                    mapping (uint => // StrikeNumber ->
+                             bool))) public hasVoted;
+  uint public yesVotes;          
+  uint public noVotes;           
+  uint public quadraticYesVotes; 
+  uint public quadraticNoVotes;  
 
   // ======================
   // Constructor & fallback
@@ -111,6 +114,7 @@ contract TokenPoll is Ownable {
     stableCoin = ERC20(_stableCoin);
     escrow = _escrow;
     currentRoundNumber = 1;
+    votingRoundNumber = 1;
   }
 
   function setupNextRound(uint startTime) inState(State.NextRoundApproved) onlyOwner {
@@ -145,18 +149,17 @@ contract TokenPoll is Ownable {
   }
 
   function castVote(bool vote) public inState(State.InRound) validVoter() {
-    require(!getHasVoted(msg.sender, currentRoundNumber));
+    require(!getHasVoted(msg.sender, currentRoundNumber, votingRoundNumber));
 
-    hasVoted[msg.sender][currentRoundNumber] = true;
-    voteChoice[msg.sender][currentRoundNumber] = vote;
+    hasVoted[msg.sender][currentRoundNumber][votingRoundNumber] = true;
 
     if (vote) {
-      yesVotes[currentRoundNumber] = yesVotes[currentRoundNumber].safeAdd(1);
-      quadraticYesVotes[currentRoundNumber] = quadraticYesVotes[currentRoundNumber].safeAdd(getUserVotePower(msg.sender));
+      yesVotes = yesVotes.safeAdd(1);
+      quadraticYesVotes = quadraticYesVotes.safeAdd(getUserVotePower(msg.sender));
     }
     else {
-      noVotes[currentRoundNumber] = noVotes[currentRoundNumber].safeAdd(1);
-      quadraticNoVotes[currentRoundNumber] = quadraticNoVotes[currentRoundNumber].safeAdd(getUserVotePower(msg.sender));
+      noVotes = noVotes.safeAdd(1);
+      quadraticNoVotes = quadraticNoVotes.safeAdd(getUserVotePower(msg.sender));
     }
 
     Vote(msg.sender, vote);
@@ -186,9 +189,8 @@ contract TokenPoll is Ownable {
 
   function getRoundEndTime() view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
 
-  function getVoteChoice(address user, uint _roundNum) view returns (bool) { return voteChoice[user][_roundNum]; }
-
-  function getHasVoted(address user, uint _roundNum) view returns (bool) { return hasVoted[user][_roundNum]; }
+  // todo change to funding round, strike round
+  function getHasVoted(address user, uint _fundingRoundNum, uint _votingRoundNum) view returns (bool) { return hasVoted[user][_fundingRoundNum][_votingRoundNum]; }
 
   function getState() public view returns (State) {
     uint roundStart = getRoundStartTime();
@@ -279,8 +281,8 @@ contract TokenPoll is Ownable {
   // Sends funds to owner if approved
   // todo, vote params (qorem),
   function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
-    bool enoughVotes = quadraticYesVotes[currentRoundNumber] >= quadraticNoVotes[currentRoundNumber];
-    bool threeStrikes = 2 == roundStrikeNumber;
+    bool enoughVotes = quadraticYesVotes >= quadraticNoVotes;
+    bool threeStrikes = 3 == votingRoundNumber;
 
     if (threeStrikes) {
       putInRefundState();
@@ -292,20 +294,25 @@ contract TokenPoll is Ownable {
     }
 
     // State changes
-    RoundResult( currentRoundNumber, enoughVotes
-               , quadraticYesVotes[currentRoundNumber], quadraticNoVotes[currentRoundNumber]
-               , yesVotes[currentRoundNumber], noVotes[currentRoundNumber]
-               , enoughVotes ? roundStrikeNumber : roundStrikeNumber.safeAdd(1));
+    RoundResult( currentRoundNumber
+               , votingRoundNumber
+               , enoughVotes
+               , quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes
+               );
 
     if (enoughVotes) {
-      roundStrikeNumber = 0;
+      votingRoundNumber = 1;
       currentRoundNumber = currentRoundNumber.safeAdd(1);
     }
     else {
-      roundStrikeNumber = roundStrikeNumber.safeAdd(1);
+      votingRoundNumber = votingRoundNumber.safeAdd(1);
     }
 
     nextRoundApprovedFlag = true;
+    quadraticYesVotes = 0;
+    quadraticNoVotes = 0;
+    yesVotes = 0;
+    noVotes = 0;
   }
 
   // ================
