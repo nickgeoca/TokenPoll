@@ -139,13 +139,15 @@ var getState = async(tokenPoll) => {
   return states[state.toString(10)];
 }
 
+const throwIfError = (e) => if (e) throw e;
+
 var getUserHasVoted = async(tokenPoll, user, roundNum, voteNum) =>  tokenPoll.getHasVoted(user, roundNum, voteNum); 
 
 const getUserVoteHistory = (tokenPoll, user) => {
   return new Promise(resolve => {
     tokenPoll.Vote({voter:user}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
-        assert(!error);
+        throwIfError(error);
         const ls = logs.map(l => {return{ round: l.args.round.toString()
                                         , votingRoundNumber: l.args.votingRoundNumber.toString()
                                         , vote: l.args.vote
@@ -159,7 +161,7 @@ const getUserVoteChoice = (tokenPoll, user, fundRound, voteRound) => {
   return new Promise(resolve => {
     tokenPoll.Vote({voter:user, round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
-        assert(!error);
+        throwIfError(error);
         if (logs.length === 0) resolve(undefined);
         else             resolve(logs[0].args.vote);
       });
@@ -178,9 +180,9 @@ const getYesVotes = async(tokenPoll, fundRound, voteRound) => {
   return new Promise(resolve => {
     tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
-        assert(!error);
+        throwIfError(error);
         if (logs.length === 0) resolve(undefined);
-        else                   resolve(logs[0].args.yesVoters.toString())
+        else                   resolve(logs[0].args.yesVoters)
       });
   });
 };
@@ -193,9 +195,9 @@ const getNoVotes = async(tokenPoll, fundRound, voteRound) => {
   return new Promise(resolve => {
     tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
-        assert(!error);
+        throwIfError(error);
         if (logs.length === 0) resolve(undefined);
-        else                   resolve(logs[0].args.noVoters.toString())
+        else                   resolve(logs[0].args.noVoters)
       });
   });
 };
@@ -210,9 +212,9 @@ const getQuadraticYesVotes = async(tokenPoll, fundRound, voteRound) => {
   return new Promise(resolve => {
     tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
-        assert(!error);
+        throwIfError(error);
         if (logs.length === 0) resolve(undefined);
-        else                   resolve(logs[0].args.weightedYesVotes.toString())
+        else                   resolve(logs[0].args.weightedYesVotes)
       });
   });
 };
@@ -225,9 +227,9 @@ const getQuadraticNoVotes = async(tokenPoll, fundRound, voteRound) => {
   return new Promise(resolve => {
     tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
-        assert(!error);
+        throwIfError(error);
         if (logs.length === 0) resolve(undefined);
-        else                   resolve(logs[0].args.weightedNoVotes.toString())
+        else                   resolve(logs[0].args.weightedNoVotes)
       });
   });
 };
@@ -249,7 +251,7 @@ const getResultHistory = async(tokenPoll) => {
   return new Promise(resolve => {
     tokenPoll.RoundResult({}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
-        assert(!error);
+        throwIfError(error);
         const ls = logs.map(l => {return{ roundFinished: true
                                         , round: l.args.round.toString()
                                         , votingRoundNumber: l.args.votingRoundNumber.toString()
