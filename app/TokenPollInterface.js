@@ -289,7 +289,8 @@ var getTotalVotePower = async(tokenPoll) => { return await tokenPoll.totalVotePo
 // Total count of potential voters
 var getUserCount = async(tokenPoll) => { return await tokenPoll.userCount(); };
 
-var getCurrentRoundNumber = async(tokenPoll) => { return await tokenPoll.currentRoundNumber(); };
+var getFundingRoundNumber = async(tokenPoll) => { return await tokenPoll.currentRoundNumber(); };
+var getVotingRoundNumber = async(tokenPoll) => { return await tokenPoll.votingRoundNumber(); };
 
 var getUserVotePowerPercentage = async(tokenPoll, user) => {
   await verifyTokenPoll(tokenPoll);
@@ -322,15 +323,16 @@ module.exports =
   , getAllocationTimeFrame
   , getRoundTimeFrame
   , getState
-  , getCurrentRoundNumber
+  , getFundingRoundNumber
+  , getVotingRoundNumber
 
   // Vote stats 1
   , getUserHasVoted
   , getUserVoteHistory
   , getUserVoteChoice
   , getUserVotePower
-  , getYesVotes
 
+  , getYesVotes
   , getNoVotes
   , getTotalVotes
   , getQuadraticYesVotes
