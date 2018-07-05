@@ -173,8 +173,8 @@ var getUserVotePower = async(tokenPoll, user) => { return await tokenPoll.getUse
 // var getCurrentYesVotes = async (tokenPoll) =>    { await verifyTokenPoll(tokenPoll); return tokenPoll.yesVotes(); };
 
 const getYesVotes = async(tokenPoll, fundRound, voteRound) => {
-  const isCurrentRound = getFundingRoundNumber(tokenPoll).toString() === fundRound.toString()
-                      && getVotingRoundNumber(tokenPoll).toString() === voteRound.toString();
+  const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
+                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.yesVotes();
 
@@ -189,8 +189,8 @@ const getYesVotes = async(tokenPoll, fundRound, voteRound) => {
 };
 
 const getNoVotes = async(tokenPoll, fundRound, voteRound) => {
-  const isCurrentRound = getFundingRoundNumber(tokenPoll).toString() === fundRound.toString()
-                      && getVotingRoundNumber(tokenPoll).toString() === voteRound.toString();
+  const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
+                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.noVotes();
 
@@ -207,8 +207,8 @@ const getNoVotes = async(tokenPoll, fundRound, voteRound) => {
 var getTotalVotes = async (tokenPoll, fundRound, voteRound) =>  { await verifyTokenPoll(tokenPoll); return (await getYesVotes(tokenPoll, fundRound, voteRound)) + (await getNoVotes(tokenPoll, fundRound, voteRound)); };
 
 const getQuadraticYesVotes = async(tokenPoll, fundRound, voteRound) => {
-  const isCurrentRound = getFundingRoundNumber(tokenPoll).toString() === fundRound.toString()
-                      && getVotingRoundNumber(tokenPoll).toString() === voteRound.toString();
+  const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
+                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.quadraticYesVotes();
 
@@ -223,8 +223,8 @@ const getQuadraticYesVotes = async(tokenPoll, fundRound, voteRound) => {
 };
 
 const getQuadraticNoVotes = async(tokenPoll, fundRound, voteRound) => {
-  const isCurrentRound = getFundingRoundNumber(tokenPoll).toString() === fundRound.toString()
-                      && getVotingRoundNumber(tokenPoll).toString() === voteRound.toString();
+  const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
+                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.quadraticNoVotes();
 
