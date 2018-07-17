@@ -24,16 +24,15 @@ contract TokenPoll is Ownable {
              , PostRoundDecision
              , NextRoundApproved
 
-             // End states
+             // End state
              , Refund            // Users can withdraw remaining balance
-             , Finished          // End of polls
 
              , UnknownState
              }
 
   event Vote(address indexed voter, uint indexed round, uint indexed votingRoundNumber, bool vote);
-  event RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yesVoters, uint noVoters);
-  event NewRoundInfo(uint indexed round, uint indexed votingRoundNumber, uint startTime, uint endTime);
+  event RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yesVoters, uint noVoters, uint fundSize);
+  event NewRoundInfo(uint indexed round, uint indexed votingRoundNumber, uint startTime, uint endTime, uint fundSize);
 
   // =====
   // State
@@ -48,8 +47,8 @@ contract TokenPoll is Ownable {
   uint public constant allocationDuration = 2 minutes;
   uint public constant maxTimeBetweenRounds = 180 days;
   uint public constant roundDuration = 5 minutes;
-  uint public constant numberOfRounds = 12;
 
+  uint public currentRoundFundSize;
   uint public currentRoundNumber;
   uint public votingRoundNumber;
 
@@ -117,10 +116,12 @@ contract TokenPoll is Ownable {
     votingRoundNumber = 1;
   }
 
-  function setupNextRound(uint startTime) inState(State.NextRoundApproved) onlyOwner {
+  function setupNextRound(uint startTime, uint fundSize) inState(State.NextRoundApproved) onlyOwner {
     require(startTime >= now);
-    NewRoundInfo(currentRoundNumber, votingRoundNumber, startTime, startTime.safeAdd(roundDuration));
+    require(stableCoin.balanceOf(escrow) > fundSize);
+    NewRoundInfo(currentRoundNumber, votingRoundNumber, startTime, startTime.safeAdd(roundDuration), fundSize);
     currentRoundStartTime = startTime;
+    currentRoundFundSize = fundSize;
   }
 
   // must be inState(State.NextRoundApproved)
@@ -198,8 +199,6 @@ contract TokenPoll is Ownable {
 
     if (uninitializedFlag)     return State.Uninitialized;
     if (refundFlag)            return State.Refund;
-    if (currentRoundNumber
-        > numberOfRounds)      return State.Finished;
     if (now < allocStartTime)  return State.Initialized;
     if (allocStartTime < now 
         && now < allocEndTime) return State.VoteAllocation;
@@ -288,9 +287,7 @@ contract TokenPoll is Ownable {
       putInRefundState();
     }
     else if (enoughVotes) {
-      uint remainingRounds = numberOfRounds.safeAdd(1).safeSub(currentRoundNumber);
-      uint approvedFunds = stableCoin.balanceOf(escrow) / remainingRounds;
-      escrowTransferTokens(getOwner(), approvedFunds);
+      escrowTransferTokens(getOwner(), currentRoundFundSize);
     }
 
     // State changes
@@ -298,6 +295,7 @@ contract TokenPoll is Ownable {
                , votingRoundNumber
                , enoughVotes
                , quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes
+               , currentRoundFundSize
                );
 
     if (enoughVotes) {

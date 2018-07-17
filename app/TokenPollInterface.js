@@ -49,11 +49,11 @@ var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, esc
   return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params);
 }
 
-var setupNextRound = async (tokenPoll, newStartTime, web3Params) => {
+var setupNextRound = async (tokenPoll, newStartTime, fundSize, web3Params) => {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'NextRoundApproved');
 
-  let tx = await tokenPoll.setupNextRound(newStartTime, web3Params);
+  let tx = await tokenPoll.setupNextRound(newStartTime, fundSize, web3Params);
   return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
 }
 
@@ -131,7 +131,6 @@ var getState = async(tokenPoll) => {
       , 'NextRoundApproved'
 
       , 'Refund'             // Users can withdraw remaining balance
-      , 'Finished'           // End of polls
                  
       , 'UnknownState'
       ];
