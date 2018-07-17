@@ -249,6 +249,7 @@ const getResultHistory = async(tokenPoll) => {
                 , weightedYesVotes: (await tokenPoll.quadraticYesVotes()).toString()
                 , yesVoters: (await tokenPoll.yesVotes()).toString()
                 , noVoters: (await tokenPoll.noVotes()).toString()
+                , fundSize: l.args.fundSize.toString()
                 }];
 
   return new Promise(resolve => {
@@ -263,6 +264,7 @@ const getResultHistory = async(tokenPoll) => {
                                         , weightedYesVotes: l.args.weightedYesVotes.toString()
                                         , yesVoters: l.args.yesVoters.toString()
                                         , noVoters: l.args.noVoters.toString()
+                                        , fundSize: l.args.fundSize.toString()
                                         };});
         resolve(ls.concat(moreData));
       });
