@@ -1,9 +1,8 @@
 pragma solidity ^0.4.15;
 
-import "./Ownable.sol";
-import "./ERC20.sol";
-import "./SafeMath.sol";
-
+import "./../lib/Ownable.sol";
+import "./../lib/ERC20.sol";
+import "./../lib/SafeMath.sol";
 
 contract Escrow {
   function submitTransaction(address destination, uint value, bytes data) public returns (uint transactionId);
@@ -81,7 +80,8 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  function TokenPoll () public Ownable() {
+  function TokenPoll (address _escrow) public Ownable() {
+    escrow = _escrow;
     uninitializedFlag = true;
   }
 
@@ -99,7 +99,7 @@ contract TokenPoll is Ownable {
   //    1 tokenPollAddr = TokenPoll() 
   //    2 escrowAddr    = Escrow(tokenPollAddr)
   //    3                 TokenPoll.initialize(escrowAddress)
-  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
+  function initialize(address _icoToken, address _stableCoin, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
     // todo, look more at error checking
 
@@ -111,7 +111,6 @@ contract TokenPoll is Ownable {
 
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
-    escrow = _escrow;
     currentRoundNumber = 1;
     votingRoundNumber = 1;
   }

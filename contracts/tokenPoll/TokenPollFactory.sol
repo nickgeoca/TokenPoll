@@ -9,9 +9,11 @@ contract TokenPollFactory {
 
   function TokenPollFactory () {}
 
-  function createTokenPoll() {
-    TokenPoll tp = new TokenPoll();
+  function createTokenPoll(address escrow) returns (address) {
+    TokenPoll tp = new TokenPoll(escrow);
     tp.transferOwnership(msg.sender);
     TokenPollCreated(msg.sender, tp);
+
+    return tp;
   }
 }
