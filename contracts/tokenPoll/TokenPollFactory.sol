@@ -1,7 +1,7 @@
 pragma solidity ^0.4.15;
 
 import "./TokenPoll.sol";
-import "./Ownable.sol";
+import "./../lib/Ownable.sol";
 
 // Voting is quadratic
 contract TokenPollFactory {

@@ -20,7 +20,7 @@ contract CreateStash is Ownable {
 
   // Setters
   function setTokenPollFee(uint fee) public onlyOwner { tokenPollFee = fee; }
-  function setFeeToken(address t) public onlyOwner { setFeeToken = t; }
+  function setFeeToken(address t) public onlyOwner { feeToken = ERC20(t); }
 
   // Constructor
   function CreateStash (address _tpFact, address _walletFact, address _feeToken, uint _fee) {
@@ -34,9 +34,12 @@ contract CreateStash is Ownable {
   function createStash() returns (address) {
     require(feeToken.transferFrom(msg.sender, this, tokenPollFee));
 
+    address[] memory walletOwners = new address[](1);
+    walletOwners[0] = this;
+
     // Create stash/tokenpoll
-    MultiSigWallet w = walletFact.create([this], 1, true);
-    TokenPoll tp = tpFact.createTokenPoll(w);
+    MultiSigWallet w = MultiSigWallet(walletFact.create(walletOwners, 1));
+    TokenPoll tp = TokenPoll(tpFact.createTokenPoll(w));
 
     // Transfer owner
     w.addOwner(tp);
