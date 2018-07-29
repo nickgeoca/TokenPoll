@@ -104,7 +104,7 @@ contract TokenPoll is Ownable {
     // todo, look more at error checking
 
     allocStartTime = _allocStartTime;
-    allocEndTime = _allocStartTime + allocationDuration;
+    allocEndTime = _allocStartTime.safeAdd(allocationDuration);
 
     uninitializedFlag = false;
     nextRoundApprovedFlag = true;
