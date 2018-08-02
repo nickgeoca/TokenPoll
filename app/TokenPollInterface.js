@@ -1,6 +1,7 @@
-var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
-var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
-var tokenpoll = undefined;
+let MSW = artifacts.require('build/contracts/MultiSigWallet.sol');
+let TokenPoll = artifacts.require('./../contracts/tokenPoll/TokenPoll.sol');
+let CreateStash = artifacts.require('./../build/contracts/CreateStash.sol');
+let tokenpoll = undefined;
 
 // ==============
 // Misc
@@ -14,8 +15,9 @@ const pullEvent = (result, eventType) => {
 }
 
 var init = async (web3) => {
-  await TokenPollFactory.setProvider(web3.currentProvider);
   await TokenPoll.setProvider(web3.currentProvider);
+  await CreateStash.setProvider(web3.currentProvider);
+  await MSW.setProvider(web3.currentProvider);
 }
 
 var getTokenPollWithAddress = async (address) => {return await TokenPoll.at(address);};
@@ -34,19 +36,21 @@ var verifyTokenPoll = (tp) => { return; }
 // =============
 
 var createTokenPoll = async (web3Params) => {
-  let fact = await TokenPollFactory.deployed();
-  let tx = await fact.createTokenPoll(web3Params);
+  let createStash = CreateStash.deployed();
+  let tx = await createStash.createStash(web3Params);
 
-  let event = pullEvent(tx, 'TokenPollCreated');
+  let event = pullEvent(tx, 'StashCreated');
 
-  return await TokenPoll.at(event.tokenPoll);
-}
+  return { tokenPoll : await TokenPoll.at(event.tokenPoll)
+         ,  wallet   : await MSW.at(event.wallet) 
+         }
+};
 
-var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params) => {
+var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, allocStartTime, web3Params) => {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Uninitialized');
 
-  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params);
+  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, allocStartTime, web3Params);
 }
 
 var setupNextRound = async (tokenPoll, newStartTime, fundSize, web3Params) => {
@@ -249,7 +253,7 @@ const getResultHistory = async(tokenPoll) => {
                 , weightedYesVotes: (await tokenPoll.quadraticYesVotes()).toString()
                 , yesVoters: (await tokenPoll.yesVotes()).toString()
                 , noVoters: (await tokenPoll.noVotes()).toString()
-                , fundSize: l.args.fundSize.toString()
+                , fundSize: (await tokenPoll.currentRoundFundSize()).toString()
                 }];
 
   return new Promise(resolve => {
