@@ -12,6 +12,9 @@ import "./tokenPoll/TokenPoll.sol";
 // Voting is quadratic
 contract CreateStash is Ownable {
 
+  // Event
+  event StashCreated(address tokenPoll, address wallet);
+
   // State
   uint tokenPollFee;
   ERC20 feeToken;
@@ -22,8 +25,11 @@ contract CreateStash is Ownable {
   function setTokenPollFee(uint fee) public onlyOwner { tokenPollFee = fee; }
   function setFeeToken(address t) public onlyOwner { feeToken = ERC20(t); }
 
+  // Getters
+  function getOwner() public view returns (address) { return _getOwner(); }
+
   // Constructor
-  function CreateStash (address _tpFact, address _walletFact, address _feeToken, uint _fee) {
+  function CreateStash (address _tpFact, address _walletFact, address _feeToken, uint _fee) public  Ownable() {
     setFeeToken(_feeToken);
     setTokenPollFee(_fee);
     tpFact = TokenPollFactory(tpFact);
@@ -46,8 +52,12 @@ contract CreateStash is Ownable {
     w.removeOwner(this);    
     tp.transferOwnership(msg.sender);
 
+    StashCreated(tp, w);
+
     return tp;
   }
+
+  function transferOwnership(address newOwner) public { _transferOwnership(newOwner); } 
 
   function withdraw(address token, address to, uint amount) public onlyOwner { require(ERC20(token).transfer(to, amount)); }
 }
