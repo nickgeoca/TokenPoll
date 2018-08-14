@@ -23,7 +23,7 @@ library SafeMath {
 
   function safeDiv(uint a, uint b) internal pure returns (uint) {
     uint c = a / b;
-    require(safeMul(c,b) == a);
+    assert(b > 0);
     return c;
   }
 

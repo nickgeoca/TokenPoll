@@ -43,7 +43,7 @@
     "solidity-sha3": "^0.4.1",
     "style-loader": "^0.13.1",
     "truffle-contract": "^3.0.0",
-    "web3": "^0.18.2",
+    "web3": "1.0.0-beta.34",
     "webpack": "^2.7.0",
     "webpack-dev-middleware": "^1.2.0",
     "webpack-dev-server": "^2.3.0",
