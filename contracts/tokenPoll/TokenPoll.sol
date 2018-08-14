@@ -80,8 +80,10 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  function TokenPoll (address _escrow) public Ownable() {
+  function TokenPoll (address _escrow, address _stableCoin, address _icoToken) public Ownable() {
     escrow = _escrow;
+    stableCoin = ERC20(_stableCoin);
+    icoCoin = ERC20(_icoToken);
     uninitializedFlag = true;
   }
 
@@ -95,11 +97,7 @@ contract TokenPoll is Ownable {
 
   function transferOwnership(address newOwner) public { _transferOwnership(newOwner); } 
 
-  // This is used b/c order of creating contracts:
-  //    1 tokenPollAddr = TokenPoll() 
-  //    2 escrowAddr    = Escrow(tokenPollAddr)
-  //    3                 TokenPoll.initialize(escrowAddress)
-  function initialize(address _icoToken, address _stableCoin, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
+  function initialize(uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
     // todo, look more at error checking
 
@@ -109,8 +107,6 @@ contract TokenPoll is Ownable {
     uninitializedFlag = false;
     nextRoundApprovedFlag = true;
 
-    icoCoin = ERC20(_icoToken);
-    stableCoin = ERC20(_stableCoin);
     currentRoundNumber = 1;
     votingRoundNumber = 1;
   }
@@ -122,6 +118,34 @@ contract TokenPoll is Ownable {
     NewRoundInfo(currentRoundNumber, votingRoundNumber, startTime, startTime.safeAdd(roundDuration), fundSize);
     currentRoundStartTime = startTime;
     currentRoundFundSize = fundSize;
+
+    
+    /*
+        function delayedPayment(
+        address _scheduler,
+        uint    _numBlocks,
+        address _recipient
+    )  public payable {
+        scheduler = SchedulerInterface(_scheduler);
+        lockedUntil = block.number + _numBlocks;
+        recipient = _recipient;
+
+        scheduledTransaction = scheduler.schedule.value(0.1 ETHER)( // 0.1 ether is to pay for gas, bounty and fee
+            this,                   // send to self
+            "",                     // and trigger fallback function
+            [ 200000             // The amount of gas to be sent with the transaction.
+            , 0                  // The amount of wei to be sent.
+            , 255                // The size of the execution window.
+            , lockedUntil        // The start of the execution window.
+            , 20000000000 wei    // The gasprice for the transaction (aka 30 gwei)
+            , 20000000000 wei    // The fee included in the transaction.
+            , 20000000000 wei    // The bounty that awards the executor of the transaction.
+            , 30000000000 wei    // The required amount of wei the claimer must send as deposit.
+            ]
+        );
+    }
+        */
+
   }
 
   // must be inState(State.NextRoundApproved)
