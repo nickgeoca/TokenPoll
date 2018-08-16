@@ -20,32 +20,34 @@ contract CreateStash is Ownable {
   // CreateStash changes event?
 
   // State
-  uint tokenPollFee;
-  ERC20 feeToken;
+  TokenPollFactory public tpFact;
+  MultiSigWalletFactory public walletFact;
 
-  TokenPollFactory tpFact;
-  MultiSigWalletFactory walletFact;
+  address public feeToken;
+  uint public fee;
 
   address[] public fundingTokenWhiteList;
-  mapping (address => uint) indexOfFTWL;
+  mapping (address => uint) private indexOfFTWL;
 
   // Getters
   function getOwner() public view returns (address) { return _getOwner(); }
 
+  function getFundingTokens() public view returns (address[]) { return fundingTokenWhiteList; }
+
   // Constructor
-  function CreateStash (address _tpFact, address _walletFact, address _feeToken, uint _fee, address[] _whiteListFundingTokens) public  Ownable() {
+  function CreateStash (address _tpFact, address _walletFact, address[] _whiteListFundingTokens) public  Ownable() {
     tpFact = TokenPollFactory(tpFact);
     walletFact = MultiSigWalletFactory(_walletFact);
 
     _addFundingTokensToWhiteList(_whiteListFundingTokens);
-    tokenPollFee = _fee;
-    feeToken = ERC20(_feeToken);
   }
 
   // Functions
-  function createStash(address _fundingToken, address _icoToken) returns (address) {
-    require(feeToken.transferFrom(msg.sender, this, tokenPollFee));
+  function createStash(address _fundingToken, address _icoToken) public returns (address) {
     require(isAFundingToken(_fundingToken));
+    require(ERC20(feeToken).transferFrom(msg.sender, this, fee));
+    require(_fundingToken != address(0));
+    require(_icoToken != address(0));
 
     address[] memory walletOwners = new address[](1);
     walletOwners[0] = this;
@@ -64,21 +66,15 @@ contract CreateStash is Ownable {
     return tp;
   }
 
-  function isAFundingToken(address token) public returns(bool) {
-    return fundingTokenWhiteList[indexOfFTWL[token]] != address(0);
-  }
+  function isAFundingToken(address token) public returns(bool) { return fundingTokenWhiteList[indexOfFTWL[token]] == token; }
 
   // Only owner
   function transferOwnership(address newOwner) public { _transferOwnership(newOwner); } 
 
   function withdraw(address token, address to, uint amount) public onlyOwner { require(ERC20(token).transfer(to, amount)); }
-
-  function setTokenPollFee(uint fee) public onlyOwner { tokenPollFee = fee; }
-
-  function setFeeToken(address t) public onlyOwner { feeToken = ERC20(t); }
-
+  
   function addFundingTokensToWhiteList(address[] fundingTokens) public onlyOwner { _addFundingTokensToWhiteList(fundingTokens); }
-
+  
   function removeFundingTokensFromWhiteList(address[] fundingTokens) public onlyOwner { _removeFundingTokensFromWhiteList(fundingTokens); }
 
   // Private functions
@@ -90,14 +86,14 @@ contract CreateStash is Ownable {
     for (uint i = 0; i < fundingTokens.length; i++) _removeFundingToken(fundingTokens[i]);
   }
 
-  function _addFundingToken(address token) {
+  function _addFundingToken(address token) private {
     if (token == 0) return;
 
     indexOfFTWL[token] = fundingTokenWhiteList.length;
     fundingTokenWhiteList.push(token);
   }
 
-  function _removeFundingToken(address token) {
+  function _removeFundingToken(address token) private {
     if (!isAFundingToken(token)) return;
 
     uint index = indexOfFTWL[token];
@@ -112,3 +108,4 @@ contract CreateStash is Ownable {
     fundingTokenWhiteList.length--;
   }
 }
+
