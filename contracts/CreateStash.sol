@@ -16,7 +16,6 @@ contract CreateStash is Ownable {
 
   // Event
   event StashCreated(address tokenPoll, address wallet);
-  // event WhiteListChanges(address[] additions, address[] removals);
   // CreateStash changes event?
 
   // State
@@ -35,14 +34,16 @@ contract CreateStash is Ownable {
   function getFundingTokens() public view returns (address[]) { return fundingTokenWhiteList; }
 
   // Constructor
-  function CreateStash (address _tpFact, address _walletFact, address[] _whiteListFundingTokens) public  Ownable() {
+  function CreateStash (address _tpFact, address _walletFact, address[] _whiteListFundingTokens, address _feeToken, uint _fee) public  Ownable() {
     tpFact = TokenPollFactory(tpFact);
     walletFact = MultiSigWalletFactory(_walletFact);
 
     _addFundingTokensToWhiteList(_whiteListFundingTokens);
+    feeToken = _feeToken;
+    fee = _fee;
   }
 
-  // Functions
+  // Functions1
   function createStash(address _fundingToken, address _icoToken, uint roundOneFunding) public returns (address) {
     require(isAFundingToken(_fundingToken));
     require(ERC20(feeToken).transferFrom(msg.sender, this, fee));

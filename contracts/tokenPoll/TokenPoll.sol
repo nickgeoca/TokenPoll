@@ -114,8 +114,9 @@ contract TokenPoll is Ownable {
   }
 
   // Round 1- no voting
+  // todo
   bool private onlyOnce = true;
-  function getFundsAndSendInitialSumToOwner(address bank) onlyOwner {
+  function receiveFunds_sendRound1Funds(address bank) onlyOwner {
     require(onlyOnce); onlyOnce = false;
     require(stableCoin.transferFrom(bank, this, roundOneFunding));
     require(stableCoin.transfer(escrow, stableCoin.balanceOf(this)));

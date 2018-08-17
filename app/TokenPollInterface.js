@@ -1,7 +1,6 @@
 let MSW = artifacts.require('build/contracts/MultiSigWallet.sol');
 let TokenPoll = artifacts.require('./../contracts/tokenPoll/TokenPoll.sol');
 let CreateStash = artifacts.require('./../build/contracts/CreateStash.sol');
-let tokenpoll = undefined;
 
 // ==============
 // Misc
@@ -35,9 +34,9 @@ var verifyTokenPoll = (tp) => { return; }
 // ICO Functions
 // =============
 
-var createTokenPoll = async (web3Params) => {
+var createTokenPoll = async (fundingToken, icoToken, roundOneFunding, web3Params) => {
   let createStash = CreateStash.deployed();
-  let tx = await createStash.createStash(web3Params);
+  let tx = await createStash.createStash(fundingToken, icoToken, roundOneFunding, web3Params);
 
   let event = pullEvent(tx, 'StashCreated');
 
@@ -45,6 +44,12 @@ var createTokenPoll = async (web3Params) => {
          ,  wallet   : await MSW.at(event.wallet) 
          }
 };
+
+
+var receiveFunds_sendRound1Funds = async (tokenPoll, fundingAddress, web3Params) => {
+  let tx = await tokenPoll.receiveFunds_sendRound1Funds(fundingAddress, web3Params);
+  return tx;
+}
 
 var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, allocStartTime, web3Params) => {
   await verifyTokenPoll(tokenPoll);
@@ -318,6 +323,7 @@ module.exports =
   // ICO fns
   { init
   , createTokenPoll
+  , receiveFunds_sendRound1Funds
   , initializeTokenPoll
   , setupNextRound
   , startRound

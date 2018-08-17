@@ -12,7 +12,11 @@ module.exports = function(deployer, network, accounts) {
     await deployer.deploy(MultiSigWalletFactory);
 
     // Use rinkeby erc20
-    await deployer.deploy(CreateStash, TokenPollFactory.address, MultiSigWalletFactory.address, '0xB03b5ad79e59dc60974021059C85D3BC397C8EDa', '0');
+    const fundTokenWhiteList = ['0xB03b5ad79e59dc60974021059C85D3BC397C8EDa'];
+    const feeToken = '0xB03b5ad79e59dc60974021059C85D3BC397C8EDa';
+    const fee = 0;
+    
+    await deployer.deploy(CreateStash, TokenPollFactory.address, MultiSigWalletFactory.address, fundTokenWhiteList, feeToken, fee);
   });
 }
 
