@@ -43,7 +43,7 @@ contract CreateStash is Ownable {
   }
 
   // Functions
-  function createStash(address _fundingToken, address _icoToken) public returns (address) {
+  function createStash(address _fundingToken, address _icoToken, uint roundOneFunding) public returns (address) {
     require(isAFundingToken(_fundingToken));
     require(ERC20(feeToken).transferFrom(msg.sender, this, fee));
     require(_fundingToken != address(0));
@@ -54,7 +54,7 @@ contract CreateStash is Ownable {
 
     // Create stash/tokenpoll
     MultiSigWallet w = MultiSigWallet(walletFact.create(walletOwners, 1));
-    TokenPoll tp = TokenPoll(tpFact.createTokenPoll(w, _fundingToken, _icoToken));
+    TokenPoll tp = TokenPoll(tpFact.createTokenPoll(w, _fundingToken, _icoToken, roundOneFunding));
 
     // Transfer owner
     w.addOwner(tp);

@@ -60,6 +60,7 @@ contract TokenPoll is Ownable {
   ERC20 public stableCoin;           // Location of funds
   address public escrow;             // Initiate escrow to send funds to ICO wallet
   uint public totalRefund;           // Total size of refund
+  uint public roundOneFunding;       // When the funds are received, this amount is sent right away to the ICO wallet
 
   // Voting variables
   ERC20 public icoCoin;              // Voting power is based on token ownership count
@@ -80,11 +81,12 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  function TokenPoll (address _escrow, address _stableCoin, address _icoToken) public Ownable() {
+  function TokenPoll (address _escrow, address _stableCoin, address _icoToken, uint _roundOneFunding) public Ownable() {
     escrow = _escrow;
     stableCoin = ERC20(_stableCoin);
     icoCoin = ERC20(_icoToken);
     uninitializedFlag = true;
+    roundOneFunding = _roundOneFunding;
   }
 
   function () public { require(false); return; }
@@ -109,6 +111,14 @@ contract TokenPoll is Ownable {
 
     currentRoundNumber = 1;
     votingRoundNumber = 1;
+  }
+
+  // Round 1- no voting
+  bool private onlyOnce = true;
+  function getFundsAndSendInitialSumToOwner(address bank) onlyOwner {
+    require(onlyOnce); onlyOnce = false;
+    require(stableCoin.transferFrom(bank, this, roundOneFunding));
+    require(stableCoin.transfer(escrow, stableCoin.balanceOf(this)));
   }
 
   function setupNextRound(uint startTime, uint fundSize) inState(State.NextRoundApproved) onlyOwner {
