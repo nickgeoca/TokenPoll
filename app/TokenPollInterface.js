@@ -361,4 +361,7 @@ module.exports =
   , getTotalVotePower
   , getUserCount
   , getUserVotePowerPercentage
+
+  // dev
+//  , set
   };

@@ -67,7 +67,7 @@ contract CreateStash is Ownable {
     return tp;
   }
 
-  function isAFundingToken(address token) public returns(bool) { return fundingTokenWhiteList[indexOfFTWL[token]] == token; }
+  function isAFundingToken(address token) public view returns(bool) { return fundingTokenWhiteList[indexOfFTWL[token]] == token; }
 
   // Only owner
   function transferOwnership(address newOwner) public { _transferOwnership(newOwner); } 
