@@ -34,8 +34,18 @@ var verifyTokenPoll = (tp) => { return; }
 // ICO Functions
 // =============
 
+
+const dev_createTokenPoll = async (cs, fundingToken, icoToken, roundOneFunding, web3Params) => {
+  let tx = await cs.createStash(fundingToken, icoToken, roundOneFunding, web3Params);
+  let event = pullEvent(tx, 'StashCreated');
+
+  return { tokenPoll : await TokenPoll.at(event.tokenPoll)
+         ,  wallet   : await MSW.at(event.wallet) 
+         }
+};
+
 var createTokenPoll = async (fundingToken, icoToken, roundOneFunding, web3Params) => {
-  let createStash = CreateStash.deployed();
+  let createStash = await CreateStash.deployed();
   let tx = await createStash.createStash(fundingToken, icoToken, roundOneFunding, web3Params);
 
   let event = pullEvent(tx, 'StashCreated');
@@ -45,17 +55,15 @@ var createTokenPoll = async (fundingToken, icoToken, roundOneFunding, web3Params
          }
 };
 
-
-var receiveFunds_sendRound1Funds = async (tokenPoll, fundingAddress, web3Params) => {
-  let tx = await tokenPoll.receiveFunds_sendRound1Funds(fundingAddress, web3Params);
-  return tx;
+var receiveFunds_sendRound1Funds = async (tokenPoll, crowdFundBank, web3Params) => {
+  return await tokenPoll.receiveFunds_sendRound1Funds(crowdFundBank, web3Params);
 }
 
-var initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, allocStartTime, web3Params) => {
+var initializeTokenPoll = async (tokenPoll, allocStartTime, web3Params) => {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Uninitialized');
 
-  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, allocStartTime, web3Params);
+  return await tokenPoll.initialize(allocStartTime, web3Params);
 }
 
 var setupNextRound = async (tokenPoll, newStartTime, fundSize, web3Params) => {
@@ -130,6 +138,7 @@ var getState = async(tokenPoll) => {
   await verifyTokenPoll(tokenPoll);
 
   let state = await tokenPoll.getState();
+
   const states = 
       [ 'Uninitialized'      // Waits token poll is parameterized
       , 'Initialized'        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
@@ -147,7 +156,7 @@ var getState = async(tokenPoll) => {
   return states[state.toString(10)];
 }
 
-const throwIfError = (e) => if (e) throw e;
+const throwIfError = e => { if (e) throw e;};
 
 var getUserHasVoted = async(tokenPoll, user, roundNum, voteNum) =>  tokenPoll.getHasVoted(user, roundNum, voteNum); 
 
@@ -315,6 +324,10 @@ var getUserVotePowerPercentage = async(tokenPoll, user) => {
   return vp.dividedBy(tvp);
 }
 
+// ----------------------------
+const getTPFAddress = async()  => await (await CreateStash.deployed()).tpFact();
+const getMSWFAddress = async() => await (await CreateStash.deployed()).walletFact();
+
 // =================
 //       API
 // =================
@@ -363,5 +376,8 @@ module.exports =
   , getUserVotePowerPercentage
 
   // dev
-//  , set
+  , dev_createTokenPoll
+  , getTPFAddress
+  , getMSWFAddress
+  , getTokenPollWithAddress
   };

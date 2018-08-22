@@ -114,12 +114,12 @@ contract TokenPoll is Ownable {
   }
 
   // Round 1- no voting
-  // todo
-  bool private onlyOnce = true;
+  bool private onlyOnce = true;   // todo , improve this or make part of state flow
   function receiveFunds_sendRound1Funds(address bank) onlyOwner {
-    require(onlyOnce); onlyOnce = false;
-    require(stableCoin.transferFrom(bank, this, roundOneFunding));
-    require(stableCoin.transfer(escrow, stableCoin.balanceOf(this)));
+    require(onlyOnce); 
+    require(stableCoin.transferFrom(bank, getOwner(), roundOneFunding));
+    require(stableCoin.transferFrom(bank, escrow, stableCoin.allowance(bank, this)));
+    onlyOnce = false;
   }
 
   function setupNextRound(uint startTime, uint fundSize) inState(State.NextRoundApproved) onlyOwner {

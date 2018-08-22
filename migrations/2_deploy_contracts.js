@@ -10,7 +10,8 @@ module.exports = function(deployer, network, accounts) {
 
     await deployer.deploy(TokenPollFactory);
     await deployer.deploy(MultiSigWalletFactory);
-
+    console.log('TPF>', TokenPollFactory.address);
+    console.log('MSWF>', MultiSigWalletFactory.address);
     // Use rinkeby erc20
     const fundTokenWhiteList = ['0xB03b5ad79e59dc60974021059C85D3BC397C8EDa'];
     const feeToken = '0xB03b5ad79e59dc60974021059C85D3BC397C8EDa';

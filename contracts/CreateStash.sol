@@ -35,7 +35,7 @@ contract CreateStash is Ownable {
 
   // Constructor
   function CreateStash (address _tpFact, address _walletFact, address[] _whiteListFundingTokens, address _feeToken, uint _fee) public  Ownable() {
-    tpFact = TokenPollFactory(tpFact);
+    tpFact = TokenPollFactory(_tpFact);
     walletFact = MultiSigWalletFactory(_walletFact);
 
     _addFundingTokensToWhiteList(_whiteListFundingTokens);
@@ -43,10 +43,9 @@ contract CreateStash is Ownable {
     fee = _fee;
   }
 
-  // Functions1
+  // Functions
   function createStash(address _fundingToken, address _icoToken, uint roundOneFunding) public returns (address) {
     require(isAFundingToken(_fundingToken));
-    require(ERC20(feeToken).transferFrom(msg.sender, this, fee));
     require(_fundingToken != address(0));
     require(_icoToken != address(0));
 
@@ -57,15 +56,28 @@ contract CreateStash is Ownable {
     MultiSigWallet w = MultiSigWallet(walletFact.create(walletOwners, 1));
     TokenPoll tp = TokenPoll(tpFact.createTokenPoll(w, _fundingToken, _icoToken, roundOneFunding));
 
-    // Transfer owner
-    w.addOwner(tp);
-    w.removeOwner(this);    
+    // Transfer ownership
     tp.transferOwnership(msg.sender);
+    replaceWalletOwner(w, tp);
 
     StashCreated(tp, w);
-
-    return tp;
+    return address(tp);
   }
+
+  function replaceWalletOwner(address wallet, address newOwner) private {
+    bytes memory data = new bytes(4 + 32 + 32);
+    uint i;
+
+    // Clear memory
+    for (i = 0; i < (4+32+32); i++) data[i] = 0;
+    
+    // Write to data for wallet - MultiSigWallet.replaceOwner(address owner, address newOwner)
+    for (i = 0   ; i < 4        ; i++) data[i] = bytes4(0xe20056e6)[i];
+    for (i = 4+12; i < (4+32)   ; i++) data[i] = bytes20(address(this))[i - (4+12)];
+    for (i = 4+32+12; i < (4+32+32); i++) data[i] = bytes20(newOwner)[i - (4+32+12)];
+    MultiSigWallet(wallet).submitTransaction(wallet, 0, data);
+  }
+
 
   function isAFundingToken(address token) public view returns(bool) { return fundingTokenWhiteList[indexOfFTWL[token]] == token; }
 

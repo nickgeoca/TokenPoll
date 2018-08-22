@@ -2,9 +2,10 @@ const util = require("./util.js");
 
 const tpi = require("../app/TokenPollInterface.js");
 
-var ERC20 = artifacts.require('ERC20.sol');
+var ERC20 = artifacts.require('./lib/ERC20.sol');
 var MSW = artifacts.require('./wallet/MultiSigWallet.sol');
 var MSWF = artifacts.require('./wallet/MultiSigWalletFactory.sol');
+let CreateStash = artifacts.require('./CreateStash.sol');
 
 var chai = require('chai')
 
@@ -31,12 +32,14 @@ contract('TokenPoll', function (accounts) {
   const user3 = accounts[2];
   const user4 = accounts[3];
   const user5 = accounts[4];
-  const user6 = accounts[5];
-  const doGood  = accounts[6];
-  const company = accounts[7];
-  const fundTokenOwner = accounts[8];
+  const fundraiseBank = accounts[5];
+  const company = accounts[6];
+  const doGood  = accounts[7];
+  const feeTokenOwner = accounts[8];
+  const fundTokenOwner = accounts[9];
 
   let tokenPoll;
+  let msw;
 
   tpi.init(web3);
 
@@ -59,6 +62,9 @@ contract('TokenPoll', function (accounts) {
     let feeTokenDecimals;
     let feeToken;
 
+    const icoFundingSupply = genNumEth(5);
+    const stashFee = 0;
+    const roundOneFunding = genNumEth(1);
     const voteAllocTimeStartOffset = 50;
     const voteAllocTimeDifference = 120;
 
@@ -76,20 +82,43 @@ contract('TokenPoll', function (accounts) {
       fundTokenSymbol = 'fund';
       fundTokenDecimals = new BigNumber(18);
 
-      // Stable coin
-      fundTokenSupply = genNumEth(10);
-      fundTokenName = 'fund coin';
-      fundTokenSymbol = 'fee';
-      fundTokenDecimals = new BigNumber(18);
-
-      const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
+      // Fee token
+      feeTokenSupply = genNumEth(10);
+      feeTokenName = 'fee coin';
+      feeTokenSymbol = 'fee';
+      feeTokenDecimals = new BigNumber(18);
 
       icoToken  = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
       fundToken = await ERC20.new(fundTokenSupply, fundTokenName, fundTokenDecimals, fundTokenSymbol, {from: fundTokenOwner});
       feeToken  = await ERC20.new(feeTokenSupply, feeTokenName, feeTokenDecimals, feeTokenSymbol, {from: feeTokenOwner});
 
-      tokenPoll = await tpi.createTokenPoll(fundingToken.address, icoToken.address, roundOneFunding, {from: company});
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, fundToken.address, '0x0', allocStartTime, {from: company, gas: 200000});
+      await fundToken.transfer(fundraiseBank, icoFundingSupply, {from: fundTokenOwner});
+
+      // dev purposes only
+      const tpfa = await tpi.getTPFAddress();
+      const mswfa = await tpi.getMSWFAddress();
+      console.log('TPF>', tpfa);
+      console.log('MSWF>', mswfa);
+      const cs = await CreateStash.new( tpfa
+                                      , mswfa
+                                      , [ fundToken.address ]
+                                      , feeToken.address
+                                      , stashFee);
+      let contracts = await tpi.dev_createTokenPoll(cs, fundToken.address, icoToken.address, roundOneFunding, {from: company, gas: 5000000});
+      tokenPoll = contracts.tokenPoll;
+      msw = contracts.wallet;
+      console.log('TP>', tokenPoll.address);
+      console.log('MSW>', msw.address);
+      const allocStartTime = (await web3.eth.getBlock('latest').timestamp) + voteAllocTimeStartOffset;
+      console.log('start time> ', allocStartTime.toString(10));
+      console.log('time now> ', (await web3.eth.getBlock('latest').timestamp).toString(10));
+      await tpi.initializeTokenPoll(tokenPoll, allocStartTime, {from: company, gas: 200000});
+      await fundToken.approve(tokenPoll.address, icoFundingSupply, {from: fundraiseBank, gas: 200000});
+      await tpi.receiveFunds_sendRound1Funds(tokenPoll, fundraiseBank, {from: company, gas: 200000});
+
+      // Make sure balances add up
+      eq((await fundToken.balanceOf(msw.address)).toString(10), icoFundingSupply.minus(roundOneFunding).toString(10));
+      eq((await fundToken.balanceOf(msw.address)).toString(10), icoFundingSupply.minus(roundOneFunding).toString(10));
     });
 
     it('allocates votes', async () => {
@@ -115,6 +144,8 @@ contract('TokenPoll', function (accounts) {
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user2}));
     });
+  });
+});
 /*
     it('test cast vote', async () => {
       const bal1 = getRandomInt(1000000000);
@@ -298,11 +329,9 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - Finished
 
     });    
-
   });
-// */
 });
-
+// */
 
 /*
       // E is expected
