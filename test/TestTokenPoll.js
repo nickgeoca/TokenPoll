@@ -144,9 +144,6 @@ contract('TokenPoll', function (accounts) {
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user2}));
     });
-  });
-});
-/*
     it('test cast vote', async () => {
       const bal1 = getRandomInt(1000000000);
       const bal2 = getRandomInt(1000000000);
@@ -171,7 +168,7 @@ contract('TokenPoll', function (accounts) {
 
       // Setup next round then start the round
       let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, {from: company});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, 1000, {from: company});  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       await tpi.startRound(tokenPoll, {from: company});
@@ -182,7 +179,7 @@ contract('TokenPoll', function (accounts) {
       eq( (await tpi.getUserVotePower(tokenPoll, user1))
           , vp1E.toString(10));      
       eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
-          , vp2E.toString(10));      
+          , vp2E.toString(10));  
 
       eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
           , true);
@@ -198,10 +195,28 @@ contract('TokenPoll', function (accounts) {
           , vp1E.toString(10));
       eq( await tpi.getQuadraticNoVotes(tokenPoll, 1, 1)
           , vp2E.toString(10));
-
     });
   });
 
+});
+// */
+
+/*
+      // E is expected
+      // A is actual
+      
+      // Expected values
+      const userBalancesE
+            = [ 1000000000,1000000000,1000000000,1000000000
+              , 1000000000,1000000000,1000000000,1000000000].map(getRandomInt);
+      const votePowerE = userBalancesE.map(x=> x.sqrt().floor())
+      const totalVotePowerE = votePowerE.reduce((accum,x)=>(accum+x));
+      const percentVotePowerE = votePowerE.map(x=>x.dividedBy(totalVotePowerE));
+
+*/
+
+
+/*
   describe('token poll start to finish', async () => {
     it('works start to finish', async () => {
       let d;
@@ -329,20 +344,5 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - Finished
 
     });    
-  });
-});
-// */
-
-/*
-      // E is expected
-      // A is actual
-      
-      // Expected values
-      const userBalancesE
-            = [ 1000000000,1000000000,1000000000,1000000000
-              , 1000000000,1000000000,1000000000,1000000000].map(getRandomInt);
-      const votePowerE = userBalancesE.map(x=> x.sqrt().floor())
-      const totalVotePowerE = votePowerE.reduce((accum,x)=>(accum+x));
-      const percentVotePowerE = votePowerE.map(x=>x.dividedBy(totalVotePowerE));
 
 */
