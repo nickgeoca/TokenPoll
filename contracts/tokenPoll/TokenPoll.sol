@@ -3,10 +3,8 @@ pragma solidity ^0.4.15;
 import "./../lib/Ownable.sol";
 import "./../lib/ERC20.sol";
 import "./../lib/SafeMath.sol";
+import "./../stash/MultiSigWallet.sol";
 
-contract Escrow {
-  function submitTransaction(address destination, uint value, bytes data) public returns (uint transactionId);
-}
 
 // https://www.stellar.org/developers/guides/issuing-assets.html
 // https://www.stellar.org/blog/tokens-on-stellar/
@@ -292,7 +290,7 @@ contract TokenPoll is Ownable {
     for (i = 4+12; i < (4+32)   ; i++) data[i] = bytes20(_to)[i - (4+12)];
     for (i = 4+32; i < (4+32+32); i++) data[i] = bytes32(_amount)[i - (4+32)];
 
-    Escrow(escrow).submitTransaction(stableCoin, 0, data);
+    MultiSigWallet(escrow).submitTransaction(stableCoin, 0, data);
   }
 
   function putInRefundState() private {
