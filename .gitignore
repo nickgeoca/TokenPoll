@@ -23,6 +23,6 @@ dist
 # key file
 keys.js
 
-build
+build/*
 
 _*
