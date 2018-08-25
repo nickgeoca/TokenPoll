@@ -119,7 +119,7 @@ contract TokenPoll is Ownable {
   function setupNextRound(uint startTime, uint fundSize) inState(State.NextRoundApproved) onlyOwner {
     require(startTime <= (now.safeAdd(maxTimeBetweenRounds)));
     require(startTime >= now);
-    require(stableCoin.balanceOf(escrow) > fundSize);
+    require(stableCoin.balanceOf(escrow) >= fundSize);
     NewRoundInfo(currentRoundNumber, votingRoundNumber, startTime, startTime.safeAdd(roundDuration), fundSize);
     currentRoundStartTime = startTime;
     currentRoundFundSize = fundSize;
