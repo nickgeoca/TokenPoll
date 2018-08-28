@@ -5,12 +5,14 @@ import "./ERC20.sol";
 import "./SafeMath.sol";
 
 
+/**
+@title TokenPoll
+@author Nick Geoca
+*/
+
 contract Escrow {
   function submitTransaction(address destination, uint value, bytes data) public returns (uint transactionId);
 }
-
-// https://www.stellar.org/developers/guides/issuing-assets.html
-// https://www.stellar.org/blog/tokens-on-stellar/
 
 // Voting is quadratic
 contract TokenPoll is Ownable {
@@ -81,7 +83,7 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  function TokenPoll () public Ownable() {
+  constructor () public Ownable() {
     uninitializedFlag = true;
   }
 
@@ -93,12 +95,25 @@ contract TokenPoll is Ownable {
 
   function getOwner() public view returns (address) { return _getOwner(); }
 
-  function transferOwnership(address newOwner) public { _transferOwnership(newOwner); } 
+  /**
+     @notice Change owner of token poll
+     @param _newOwner New owner of token poll
+  */
+  function transferOwnership(address _newOwner) public { _transferOwnership(_newOwner); } 
 
   // This is used b/c order of creating contracts:
   //    1 tokenPollAddr = TokenPoll() 
   //    2 escrowAddr    = Escrow(tokenPollAddr)
   //    3                 TokenPoll.initialize(escrowAddress)
+
+  /**
+     @notice Initialize the token poll. This also sets the voter allocation time period.
+     @dev Start allocation one week from now- initialize(0x123.., 0x321, 0x222, current unix time (seconds) + 1 week);
+     @param _icoToken The ICO's ERC20 token. Get the voters from this contract
+     @param _stableCoin The ERC20 funding token held in escrow. Vote yes to release funds to ico, no to refund users
+     @param _escrow The escrow address. This is a multisig wallet address
+     @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
+  */
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
     // todo, look more at error checking
@@ -116,19 +131,29 @@ contract TokenPoll is Ownable {
     votingRoundNumber = 1;
   }
 
-  function setupNextRound(uint startTime, uint fundSize) inState(State.NextRoundApproved) onlyOwner {
-    require(startTime <= (now.safeAdd(maxTimeBetweenRounds)));
-    require(startTime >= now);
-    require(stableCoin.balanceOf(escrow) >= fundSize);
-    NewRoundInfo(currentRoundNumber, votingRoundNumber, startTime, startTime.safeAdd(roundDuration), fundSize);
-    currentRoundStartTime = startTime;
-    currentRoundFundSize = fundSize;
+  /**
+     @notice Sets up the next round to vote on approving ICO funding. Must be in state NextRoundApproved
+     @dev start one week from now with one unit of erc20 funding - setupNextRound(now + 1 week, 1 * 10**stableCoin.decimals());
+     @param _startTime Start of the voting period. Typically a week before closed. Unix time stamp in seconds. After this time, startRound must be called to start the round.
+     @param _fundSize Amount of funding attempting to release. This is a big number to web3. There are typically decimal places in ERC20 tokens too.
+  */
+  function setupNextRound(uint _startTime, uint _fundSize) public inState(State.NextRoundApproved) onlyOwner {
+    require(_startTime <= (now.safeAdd(maxTimeBetweenRounds)));
+    require(_startTime >= now);
+    require(stableCoin.balanceOf(escrow) >= _fundSize);
+    emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
+    currentRoundStartTime = _startTime;
+    currentRoundFundSize = _fundSize;
   }
 
-  // must be inState(State.NextRoundApproved)
+  /**
+     @notice Starts the round. Must be manually called to start the round. (called after round _startTime. see setupNextRound).
+  */
   function startRound() public { transitionFromState_NextRoundApproved(); }
 
-  // must be inState(State.PostRoundDecision)
+  /**
+     @notice After round is over, this tallies votes and either refunds users or funds the ICO.
+  */
   function approveNewRound() public {  transitionFromState_PostRoundDecision(); }
 
   // ===============
@@ -164,7 +189,7 @@ contract TokenPoll is Ownable {
       quadraticNoVotes = quadraticNoVotes.safeAdd(getUserVotePower(msg.sender));
     }
 
-    Vote(msg.sender, currentRoundNumber, votingRoundNumber, vote);
+    emit Vote(msg.sender, currentRoundNumber, votingRoundNumber, vote);
   }
 
   function userRefund() public inState(State.Refund) {
@@ -187,12 +212,12 @@ contract TokenPoll is Ownable {
   // Getters
   // =======
 
-  function getRoundStartTime () view returns (uint) { return currentRoundStartTime; }
+  function getRoundStartTime () public view returns (uint) { return currentRoundStartTime; }
 
-  function getRoundEndTime() view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
+  function getRoundEndTime() public view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
 
   // todo change to funding round, strike round
-  function getHasVoted(address user, uint _fundingRoundNum, uint _votingRoundNum) view returns (bool) { return hasVoted[user][_fundingRoundNum][_votingRoundNum]; }
+  function getHasVoted(address user, uint _fundingRoundNum, uint _votingRoundNum) public view returns (bool) { return hasVoted[user][_fundingRoundNum][_votingRoundNum]; }
 
   function getState() public view returns (State) {
     uint roundStart = getRoundStartTime();
@@ -251,7 +276,7 @@ contract TokenPoll is Ownable {
     uint i;
 
     // Clear memory
-    for (i = 0; i < (4+32+32); i++) data[i] = 0;
+    for (i = 0; i < (4+32+32); i++) data[i] = byte(0);
     
     // Write to data for wallet - erc20.transfer(to, amount);
     for (i = 0   ; i < 4        ; i++) data[i] = bytes4(0xa9059cbb)[i];
@@ -292,12 +317,12 @@ contract TokenPoll is Ownable {
     }
 
     // State changes
-    RoundResult( currentRoundNumber
-               , votingRoundNumber
-               , enoughVotes
-               , quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes
-               , currentRoundFundSize
-               );
+    emit RoundResult( currentRoundNumber
+                    , votingRoundNumber
+                    , enoughVotes
+                    , quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes
+                    , currentRoundFundSize
+                    );
 
     if (enoughVotes) {
       votingRoundNumber = 1;
