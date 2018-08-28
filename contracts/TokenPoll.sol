@@ -106,14 +106,12 @@ contract TokenPoll is Ownable {
   //    2 escrowAddr    = Escrow(tokenPollAddr)
   //    3                 TokenPoll.initialize(escrowAddress)
 
-  /**
-     @notice Initialize the token poll. This also sets the voter allocation time period.
-     @dev Start allocation one week from now- initialize(0x123.., 0x321, 0x222, current unix time (seconds) + 1 week);
-     @param _icoToken The ICO's ERC20 token. Get the voters from this contract
-     @param _stableCoin The ERC20 funding token held in escrow. Vote yes to release funds to ico, no to refund users
-     @param _escrow The escrow address. This is a multisig wallet address
-     @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
-  */
+  /// @notice Initialize the token poll. This also sets the voter allocation time period.
+  /// @dev Start allocation one week from now- initialize(0x123.., 0x321, 0x222, current unix time (seconds) + 1 week);
+  /// @param _icoToken The ICO's ERC20 token. Get the voters from this contract
+  /// @param _stableCoin The ERC20 funding token held in escrow. Vote yes to release funds to ico, no to refund users
+  /// @param _escrow The escrow address. This is a multisig wallet address
+  /// @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
     // todo, look more at error checking
@@ -131,12 +129,10 @@ contract TokenPoll is Ownable {
     votingRoundNumber = 1;
   }
 
-  /**
-     @notice Sets up the next round to vote on approving ICO funding. Must be in state NextRoundApproved
-     @dev start one week from now with one unit of erc20 funding - setupNextRound(now + 1 week, 1 * 10**stableCoin.decimals());
-     @param _startTime Start of the voting period. Typically a week before closed. Unix time stamp in seconds. After this time, startRound must be called to start the round.
-     @param _fundSize Amount of funding attempting to release. This is a big number to web3. There are typically decimal places in ERC20 tokens too.
-  */
+  /// @notice Sets up the next round to vote on approving ICO funding. Must be in state NextRoundApproved
+  /// @dev start one week from now with one unit of erc20 funding - setupNextRound(now + 1 week, 1 * 10**stableCoin.decimals());
+  /// @param _startTime Start of the voting period. Typically a week before closed. Unix time stamp in seconds. After this time, startRound must be called to start the round.
+  /// @param _fundSize Amount of funding attempting to release. This is a big number to web3. There are typically decimal places in ERC20 tokens too.
   function setupNextRound(uint _startTime, uint _fundSize) public inState(State.NextRoundApproved) onlyOwner {
     require(_startTime <= (now.safeAdd(maxTimeBetweenRounds)));
     require(_startTime >= now);
@@ -146,21 +142,17 @@ contract TokenPoll is Ownable {
     currentRoundFundSize = _fundSize;
   }
 
-  /**
-     @notice Starts the round. Must be manually called to start the round. (called after round _startTime. see setupNextRound).
-  */
+  /// @notice Starts the round. Must be manually called to start the round. (called after round _startTime. see setupNextRound).
   function startRound() public { transitionFromState_NextRoundApproved(); }
 
-  /**
-     @notice After round is over, this tallies votes and either refunds users or funds the ICO.
-  */
+  /// @notice After round is over, this tallies votes and either refunds users or funds the ICO.
   function approveNewRound() public {  transitionFromState_PostRoundDecision(); }
 
   // ===============
   // Voter Functions
   // ===============
 
-  // Users
+  /// @notice Each user calls this to allocate their votes. Must be in allocation time-period/state (see initialize)
   function allocVotes() public inState(State.VoteAllocation) {
     bool notYetAllocated = userTokenBalance[msg.sender] == 0;
     uint userTokens = icoCoin.balanceOf(msg.sender);
@@ -175,12 +167,14 @@ contract TokenPoll is Ownable {
     userCount       = userCount.safeAdd(1);
   }
 
-  function castVote(bool vote) public inState(State.InRound) validVoter() {
+  /// @notice Each user calls this to vote on ICO funding or get a refund. Must be in InRound state (see setupNextRound)
+  /// @param _vote Vote true to fund the ICO. False to get a refund.
+  function castVote(bool _vote) public inState(State.InRound) validVoter() {
     require(!getHasVoted(msg.sender, currentRoundNumber, votingRoundNumber));
 
     hasVoted[msg.sender][currentRoundNumber][votingRoundNumber] = true;
 
-    if (vote) {
+    if (_vote) {
       yesVotes = yesVotes.safeAdd(1);
       quadraticYesVotes = quadraticYesVotes.safeAdd(getUserVotePower(msg.sender));
     }
@@ -189,9 +183,10 @@ contract TokenPoll is Ownable {
       quadraticNoVotes = quadraticNoVotes.safeAdd(getUserVotePower(msg.sender));
     }
 
-    emit Vote(msg.sender, currentRoundNumber, votingRoundNumber, vote);
+    emit Vote(msg.sender, currentRoundNumber, votingRoundNumber, _vote);
   }
 
+  /// @notice Each user calls this to get a refund. This happens after users successfully voted to refund. Must be in Refund state.
   function userRefund() public inState(State.Refund) {
     require(userTokenBalance[msg.sender] != 0);
     address user = msg.sender;
@@ -202,23 +197,26 @@ contract TokenPoll is Ownable {
     stableCoin.transfer(user, refundSize);
   }
 
-  // must be inState(State.NextRoundApproved)
+  /// @notice This starts the refund after a refund was voted for. It only needs to be called once, then the refund starts. Must be in PostRoundDecision state.
   function startRefund_voteFailed() public { transitionFromState_PostRoundDecision(); }
 
-  // must be inState(State.NextRoundApproved) 
+  /// @notice This starts the refund if there was no funding for too long a time. It only needs to be called once to be put in refund state. Must be in NextRoundApproved state. 
   function startRefund_illegalRoundDelay() public {  if_haventCalledNewRoundSoonEnough_then_refund(); }
 
   // =======
   // Getters
   // =======
 
+  /// @notice Gets the current round start time
   function getRoundStartTime () public view returns (uint) { return currentRoundStartTime; }
 
+  /// @notice Gets the current round end time
   function getRoundEndTime() public view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
 
-  // todo change to funding round, strike round
+  /// @notice Gets if the user has voted, for given funding-round and voting-round number
   function getHasVoted(address user, uint _fundingRoundNum, uint _votingRoundNum) public view returns (bool) { return hasVoted[user][_fundingRoundNum][_votingRoundNum]; }
 
+  /// @notice Gets the current state 
   function getState() public view returns (State) {
     uint roundStart = getRoundStartTime();
     uint roundEnd   = getRoundEndTime();
@@ -236,9 +234,10 @@ contract TokenPoll is Ownable {
     return State.UnknownState;
   }
 
+  /// @notice Gets user vote power. Based on square root of vote allocation
   function getUserVotePower(address user) public view returns (uint) { return sqrt(userTokenBalance[user]); }
 
-  // y = floor(sqrt(x))
+  /// @notice y = floor(sqrt(x))
   function sqrt(uint256 x) public pure returns (uint) {
     uint z = x.safeAdd(1) / 2;
     uint y = x;
