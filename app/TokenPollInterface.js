@@ -131,14 +131,14 @@ var getState = async(tokenPoll) => {
       , 'NextRoundApproved'
 
       , 'Refund'             // Users can withdraw remaining balance
-                 
+
       , 'UnknownState'
       ];
 
   return states[state.toString(10)];
 }
 
-const throwIfError = (e) => if (e) throw e;
+const throwIfError = e => {if (e) throw e;}
 
 var getUserHasVoted = async(tokenPoll, user, roundNum, voteNum) =>  tokenPoll.getHasVoted(user, roundNum, voteNum); 
 
