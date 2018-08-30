@@ -114,7 +114,7 @@ contract TokenPoll is Ownable {
   /// @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
     require(_allocStartTime > now);
-    // todo, look more at error checking
+    // todo, look more at error checking. Like time limit on allocation start
 
     allocStartTime = _allocStartTime;
     allocEndTime = _allocStartTime + allocationDuration;
@@ -125,8 +125,9 @@ contract TokenPoll is Ownable {
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
     escrow = _escrow;
-    currentRoundNumber = 1;
+    currentRoundNumber = 2;
     votingRoundNumber = 1;
+    currentRoundStartTime = allocEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
   }
 
   /// @notice Sets up the next round to vote on approving ICO funding. Must be in state NextRoundApproved
@@ -256,13 +257,7 @@ contract TokenPoll is Ownable {
 
   function if_haventCalledNewRoundSoonEnough_then_refund() private inState(State.NextRoundApproved) {
     uint end   = getRoundEndTime();
-    uint timeLimit;
-    bool isRoundOne = currentRoundNumber == 1;
-
-    if (isRoundOne) 
-      timeLimit = allocEndTime.safeAdd(maxTimeBetweenRounds);
-    else 
-      timeLimit = end.safeAdd(maxTimeBetweenRounds);
+    uint timeLimit = end.safeAdd(maxTimeBetweenRounds);
 
     require(timeLimit > now);
     nextRoundApprovedFlag = false;
