@@ -1,4 +1,32 @@
-/// @file TokenPollInterface.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: TokenPollInterface.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: TokenPollInterface.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/// @file TokenPollInterface.js
 
 var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
 var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
@@ -9,7 +37,7 @@ var tokenpoll = undefined;
 // ==============
 
 const pullEvent = (result, eventType) => {
- for (let i = 0; i < result.logs.length; i++) {
+ for (let i = 0; i &lt; result.logs.length; i++) {
       let log = result.logs[i];
       if (log.event == eventType) return log.args;
     }
@@ -191,16 +219,16 @@ const startRefund_illegalRoundDelay = async(tokenPoll, web3Params, eFn) => { try
 
 /**
  * Get the state of the token poll.
- * <ul>
- * <li>Uninitialized: If in this state, call <b>initializeTokenPoll</b>.</li>
- * <li>Initialized: If in this state, it is waiting until the vote allocation has started. </li>
- * <li>VoteAllocation: This is when users allocate their votes, call <b>allocVotes</b>. The ICO token balances should be frozen during this time.</li>
- * <li>InRound: Users vote during this time.</li>
- * <li>PostRoundDecision: If in this state, call <b>approveNewRound</b></li>
- * <li>NextRoundApproved: If in this state, the ico call's <b>setupNextRound</b></li>
- * <li>Refund: Users can withdraw their remaining balances. This happens if in PostRoundDecision state and refund occurs.</li>
- * <li>UnknownState</li>
- * </ul>
+ * &lt;ul>
+ * &lt;li>Uninitialized: If in this state, call &lt;b>initializeTokenPoll&lt;/b>.&lt;/li>
+ * &lt;li>Initialized: If in this state, it is waiting until the vote allocation has started. &lt;/li>
+ * &lt;li>VoteAllocation: This is when users allocate their votes, call &lt;b>allocVotes&lt;/b>. The ICO token balances should be frozen during this time.&lt;/li>
+ * &lt;li>InRound: Users vote during this time.&lt;/li>
+ * &lt;li>PostRoundDecision: If in this state, call &lt;b>approveNewRound&lt;/b>&lt;/li>
+ * &lt;li>NextRoundApproved: If in this state, the ico call's &lt;b>setupNextRound&lt;/b>&lt;/li>
+ * &lt;li>Refund: Users can withdraw their remaining balances. This happens if in PostRoundDecision state and refund occurs.&lt;/li>
+ * &lt;li>UnknownState&lt;/li>
+ * &lt;/ul>
  * 
  * @example 
  * // See if in refund state
@@ -221,7 +249,7 @@ const getState = async(tokenPoll, eFn) => { try {
       , 'Initialized'        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
       , 'VoteAllocation'     // Token balances should be frozen and users allocate votes during this period.
 
-      , 'InRound'            // Voting period. Follows VoteAllocation & NextRoundApproved
+      , 'InRound'            // Voting period. Follows VoteAllocation &amp; NextRoundApproved
       , 'PostRoundDecision'
       , 'NextRoundApproved'
 
@@ -268,7 +296,7 @@ const getUserVotePower = async(tokenPoll, user, eFn) => { try {
 
 const getYesVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
   const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
-                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
+                      &amp;&amp; (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.yesVotes();
 
@@ -284,7 +312,7 @@ const getYesVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
 
 const getNoVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
   const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
-                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
+                      &amp;&amp; (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.noVotes();
 
@@ -305,7 +333,7 @@ const getTotalVotes = async (tokenPoll, fundRound, voteRound, eFn) =>  { try {
 
 const getQuadraticYesVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
   const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
-                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
+                      &amp;&amp; (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.quadraticYesVotes();
 
@@ -321,7 +349,7 @@ const getQuadraticYesVotes = async(tokenPoll, fundRound, voteRound, eFn) => { tr
 
 const getQuadraticNoVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
   const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
-                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
+                      &amp;&amp; (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
   if (isCurrentRound) 
     return tokenPoll.quadraticNoVotes();
 
@@ -458,3 +486,26 @@ module.exports =
   , getUserCount
   , getUserVotePowerPercentage
   };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#createTokenPoll">createTokenPoll</a></li><li><a href="global.html#getState">getState</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initializeTokenPoll">initializeTokenPoll</a></li><li><a href="global.html#setupNextRound">setupNextRound</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Sep 04 2018 17:27:36 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

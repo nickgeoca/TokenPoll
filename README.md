@@ -1,3 +1,9 @@
+#
+Create javascript interface documentation.
+```bash
+jsdoc -d ./docs/ app/TokenPollInterface.js 
+```
+
 # todo
 Interface.foo(param1, param2,..., paramn);
  - Interface can be any file: TokenPollInterface, ERC20Interface, MultiEscrowInterface etc.
@@ -9,4 +15,3 @@ Interface.foo(param1, param2,..., paramn);
   If it is returning a promise then I have a Promise error handler that will take care of showing an error message.
  - Add error handlers in all the functions, if anything goes wrong we will have the error message with us and we will not spend more time in debugging.
  - If you are changing/updating anything, please update the docs as well. Also, mention which modules will get affected due to the change.
-

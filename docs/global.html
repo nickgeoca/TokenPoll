@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Global</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Global</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2></h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="createTokenPoll"><span class="type-signature">(async) </span>createTokenPoll<span class="signature">(web3Params, eFn)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Creates the token poll.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>web3Params</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Etherem parameters. The address in 'from' will be the owner of the contract.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eFn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Error handler</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="TokenPollInterface.js.html">TokenPollInterface.js</a>, <a href="TokenPollInterface.js.html#line56">line 56</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The Token Poll as a truffle smart contract object. Other functions in this library rely on it as a parameter 'tokenPoll'.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>await createTokenPoll({from: user1}, errorFn);     // Create a token poll with user1 as owner</code></pre>
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getState"><span class="type-signature">(async) </span>getState<span class="signature">(web3, eFn)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Get the state of the token poll.
+<ul>
+<li>Uninitialized: If in this state, call <b>initializeTokenPoll</b>.</li>
+<li>Initialized: If in this state, it is waiting until the vote allocation has started. </li>
+<li>VoteAllocation: This is when users allocate their votes, call <b>allocVotes</b>. The ICO token balances should be frozen during this time.</li>
+<li>InRound: Users vote during this time.</li>
+<li>PostRoundDecision: If in this state, call <b>approveNewRound</b></li>
+<li>NextRoundApproved: If in this state, the ico call's <b>setupNextRound</b></li>
+<li>Refund: Users can withdraw their remaining balances. This happens if in PostRoundDecision state and refund occurs.</li>
+<li>UnknownState</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>web3</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Pass in web3 object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eFn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Error handler</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="TokenPollInterface.js.html">TokenPollInterface.js</a>, <a href="TokenPollInterface.js.html#line192">line 192</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>// See if in refund state
+const inRefundState = (await getState(tokenPoll, eFn)) == 'Refund';
+if (inRefundState) console.log('TokenPoll is refunding users');</code></pre>
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="init"><span class="type-signature">(async) </span>init<span class="signature">(web3, eFn)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Call this once before calling any other functions to initialize the file.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>web3</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Pass in web3 object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eFn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Error handler</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="TokenPollInterface.js.html">TokenPollInterface.js</a>, <a href="TokenPollInterface.js.html#line34">line 34</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var Web3 = require('web3');
+var web3 = new Web3();
+await init(web3, errorFn);</code></pre>
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="initializeTokenPoll"><span class="type-signature">(async) </span>initializeTokenPoll<span class="signature">(tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStarTime, web3Params, eFn)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Initializes the token poll. Including the vote allocation time- it is hard coded to one week duration.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>tokenPoll</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The token poll that was created in createTokenPoll.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>icoTokenAddress</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">address</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The address of the ico token</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>scTokenAddress</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">address</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The address of the funding token</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>escrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">address</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Address of the multi-sig wallet</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>allocStarTime</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BigNum</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Unix time stamp in seconds. Start of vote allocation period. Must be greater than the current block time when excuted on the blockchain.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>web3Params</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Etherem parameters. The address in 'from' will be the owner of the contract.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eFn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Error handler</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="TokenPollInterface.js.html">TokenPollInterface.js</a>, <a href="TokenPollInterface.js.html#line77">line 77</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Etheruem transaction result.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>const tokenPoll = await createTokenPoll({from: user1}, errorFn);     // Create a token poll with user1 as owner
+const msw = await createMSW();   // This will be added to a future version of this library
+const allocationStartTime = current unix time seconds + 3 days;
+await initializeTokenPoll(tokenPoll, icoToken, fundToken, msw.address, allocationStartTime, {from: user1}, errorFn);</code></pre>
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="setupNextRound"><span class="type-signature">(async) </span>setupNextRound<span class="signature">(tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStarTime, web3Params, eFn)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Setups the next round of funding.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>tokenPoll</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The token poll that was created in createTokenPoll.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>icoTokenAddress</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">address</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The address of the ico token</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>scTokenAddress</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">address</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The address of the funding token</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>escrow</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">address</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Address of the multi-sig wallet</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>allocStarTime</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BigNum</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Unix time stamp in seconds. Start of vote allocation period. Must be greater than the current block time when excuted on the blockchain.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>web3Params</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Etherem parameters. The address in 'from' will be the owner of the contract.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eFn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Error handler</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="TokenPollInterface.js.html">TokenPollInterface.js</a>, <a href="TokenPollInterface.js.html#line104">line 104</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Etheruem transaction result.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>const tokenPoll = await createTokenPoll({from: user1}, errorFn);     // Create a token poll with user1 as owner
+const msw = await createMSW();   // This will be added to a future version of this library
+const allocationStartTime = current unix time seconds + 3 days;
+await initializeTokenPoll(tokenPoll, icoToken, fundToken, msw.address, allocationStartTime, {from: user1}, errorFn);</code></pre>
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#createTokenPoll">createTokenPoll</a></li><li><a href="global.html#getState">getState</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initializeTokenPoll">initializeTokenPoll</a></li><li><a href="global.html#setupNextRound">setupNextRound</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Sep 04 2018 17:27:36 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
