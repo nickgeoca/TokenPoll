@@ -1,4 +1,8 @@
-/// @file TokenPollInterface.js
+/**
+ * @author Nick Geoca <nickgeoca@gmail.com>
+ * @file Web interface to TokenPoll.sol
+ */
+
 
 var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
 var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
