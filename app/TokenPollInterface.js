@@ -3,9 +3,9 @@
  * @file Web interface to TokenPoll.sol
  */
 
-
 var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
 var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
+var ERC20 = artifacts.require('./../contracts/ERC20.sol');
 var tokenpoll = undefined;
 
 // ==============
@@ -237,6 +237,16 @@ const getState = async(tokenPoll, eFn) => { try {
   return states[state.toString(10)];
 } catch (e) { eFn(e); }}
 
+const getRemainingFunds = async(tokenPoll, eFn) => { try {
+  const escrowAddress = await tokenPoll.escrow();
+  const stableCoinAddress = await tokenPoll.stableCoin();
+  return await ERC20.at(stableCoinAddress).balanceOf(escrowAddress); 
+} catch (e) { eFn(e); }}
+
+const currentRoundFundSize = async(tokenPoll, eFn) => { try {
+  return await tokenPoll.currentRoundFundSize();
+} catch (e) { eFn(e); }}
+
 const getUserHasVoted = async(tokenPoll, user, roundNum, voteNum, eFn) => { try {
   return await tokenPoll.getHasVoted(user, roundNum, voteNum); 
 } catch (e) { eFn(e); }}
@@ -440,6 +450,8 @@ module.exports =
   , getAllocationTimeFrame
   , getRoundTimeFrame
   , getState
+  , currentRoundFundSize
+  , getRemainingFunds
   , getFundingRoundNumber
   , getVotingRoundNumber
 
