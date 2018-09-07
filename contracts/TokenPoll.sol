@@ -208,6 +208,9 @@ contract TokenPoll is Ownable {
   // Getters
   // =======
 
+  /// @notice Gets user's refund size. Assumes they were not refunded yet
+  function getUserRefundSize (address user) public inState(State.InRound) view returns (uint) { return totalRefund.safeMul(userTokenBalance[user]) / totalTokenCount; }
+
   /// @notice Gets the current round start time
   function getRoundStartTime () public view returns (uint) { return currentRoundStartTime; }
 

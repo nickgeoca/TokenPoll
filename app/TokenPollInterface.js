@@ -168,11 +168,11 @@ const castVote = async(tokenPoll, vote, web3Params, eFn) => { try {
   return tokenPoll.castVote(vote, web3Params); 
 } catch (e) { eFn(e); }}
 
-const userRefund = async(tokenPoll, vote, web3Params, eFn) => { try {
+const userRefund = async(tokenPoll, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Refund');
 
-  return tokenPoll.userRefund(vote, web3Params); 
+  return tokenPoll.userRefund(web3Params); 
 } catch (e) { eFn(e); }}
 
 const startRefund_voteFailed = async(tokenPoll, web3Params, eFn) => { try {
@@ -235,6 +235,34 @@ const getState = async(tokenPoll, eFn) => { try {
       ];
 
   return states[state.toString(10)];
+} catch (e) { eFn(e); }}
+
+const getEndOfRefundDate = async(tokenPoll, eFn) => { try {
+  await verifyTokenPoll(tokenPoll);
+  await verifyInState(tokenPoll, 'Refund');
+
+  const sixMonths = new BigNumber(60*60*24*30*6);
+  return web3.eth.getBlock("latest").timestamp.add(sixMonths); 
+} catch (e) { eFn(e); }}
+
+const getUserRefundSize = async(tokenPoll, user, eFn) => { try {
+  await verifyTokenPoll(tokenPoll);
+  await verifyInState(tokenPoll, 'Refund');
+
+  return await tokenPoll.getUserRefundSize(user);
+} catch (e) { eFn(e); }}
+
+const getUserRefundStatus = async(tokenPoll, user, eFn) => { try {
+  await verifyTokenPoll(tokenPoll);
+  await verifyInState(tokenPoll, 'Refund');
+  
+  const refundSize = (await tokenPoll.getUserRefundSize(user)).toString(10);
+  let status;
+
+  if (refundSize == '0') status = 'UserRefunded';
+  else                   status = 'UserNotRefunded';
+
+  return status;
 } catch (e) { eFn(e); }}
 
 const getRemainingFunds = async(tokenPoll, eFn) => { try {
@@ -450,6 +478,9 @@ module.exports =
   , getAllocationTimeFrame
   , getRoundTimeFrame
   , getState
+  , getUserRefundStatus
+  , getUserRefundSize
+  , getEndOfRefundDate
   , currentRoundFundSize
   , getRemainingFunds
   , getFundingRoundNumber
