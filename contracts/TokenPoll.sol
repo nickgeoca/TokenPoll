@@ -113,7 +113,7 @@ contract TokenPoll is Ownable {
   /// @param _escrow The escrow address. This is a multisig wallet address
   /// @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
-    require(_allocStartTime > now);
+    // require(_allocStartTime > now);
     // todo, look more at error checking. Like time limit on allocation start
 
     allocStartTime = _allocStartTime;
@@ -136,7 +136,7 @@ contract TokenPoll is Ownable {
   /// @param _fundSize Amount of funding attempting to release. This is a big number to web3. There are typically decimal places in ERC20 tokens too.
   function setupNextRound(uint _startTime, uint _fundSize) public inState(State.NextRoundApproved) onlyOwner {
     require(_startTime <= (now.safeAdd(maxTimeBetweenRounds)));
-    require(_startTime >= now);
+    // require(_startTime >= now);
     require(stableCoin.balanceOf(escrow) >= _fundSize);
     emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
     currentRoundStartTime = _startTime;
