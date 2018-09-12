@@ -27,6 +27,12 @@ const transfer = async (token, to, value, web3Params, eFn) => { try {
   return (await ERC20.at(token)).transfer(to, value, web3Params);
 } catch (e) { eFn(e); }}
 
+const balanceOf = async (token, address, eFn) => { try {
+  return (await ERC20.at(token)).balanceOf(address);
+} catch (e) { eFn(e); }}
+
+const getERC20WithAddress = async address => await ERC20.at(address);
+
 // =================
 //       API
 // =================
@@ -34,4 +40,6 @@ const transfer = async (token, to, value, web3Params, eFn) => { try {
 module.exports = 
   { init
   , transfer
+  , balanceOf
+  , getERC20WithAddress
   };
