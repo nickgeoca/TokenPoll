@@ -1,0 +1,37 @@
+var ERC20 = artifacts.require('./../contracts/ERC20.sol');
+
+// ==============
+// Misc
+// ==============
+
+const pullEvent = (result, eventType) => {
+ for (let i = 0; i < result.logs.length; i++) {
+      let log = result.logs[i];
+      if (log.event == eventType) return log.args;
+    }
+}
+
+const throwIfError = e => {if (e) throw e;}
+
+// =========
+// Functions
+// =========
+
+// Call this once before calling any other functions to initialize the file.
+const init = async (web3, eFn) => { try {
+  await TokenPollFactory.setProvider(web3.currentProvider);
+  await TokenPoll.setProvider(web3.currentProvider);
+} catch (e) { eFn(e); }}
+
+const transfer = async (token, to, value, web3Params, eFn) => { try {
+  return (await ERC20.at(token)).transfer(to, value, web3Params);
+} catch (e) { eFn(e); }}
+
+// =================
+//       API
+// =================
+
+module.exports = 
+  { init
+  , transfer
+  };
