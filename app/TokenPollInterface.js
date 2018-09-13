@@ -308,12 +308,14 @@ const getUserVotePower = async(tokenPoll, user, eFn) => { try {
   return await tokenPoll.getUserVotePower(user); 
 } catch (e) { eFn(e); }}
 
-const getYesVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
+const getYesVotes = async(tokenPoll, eFn) => { try {
+/*
   const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
                       && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
-  if (isCurrentRound) 
+*/
+//  if (isCurrentRound) 
     return tokenPoll.yesVotes();
-
+/*
   return new Promise(resolve => {
     tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
@@ -322,14 +324,16 @@ const getYesVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
         else                   resolve(logs[0].args.yesVoters)
       });
   });
+*/
 } catch (e) { eFn(e); }}
 
-const getNoVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
-  const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
-                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
-  if (isCurrentRound) 
+const getNoVotes = async(tokenPoll, eFn) => { try {
+//  const isCurrentRound = (await getFundingRoundNumber(tokenPoll)).toString() === fundRound.toString()
+//                      && (await getVotingRoundNumber(tokenPoll)).toString() === voteRound.toString();
+//  if (isCurrentRound) 
     return tokenPoll.noVotes();
 
+/*
   return new Promise(resolve => {
     tokenPoll.RoundResult({round:fundRound, votingRoundNumber:voteRound}, {fromBlock: 0, toBlock: 'latest' })
       .get((error, logs) => { 
@@ -338,6 +342,7 @@ const getNoVotes = async(tokenPoll, fundRound, voteRound, eFn) => { try {
         else                   resolve(logs[0].args.noVoters)
       });
   });
+*/
 } catch (e) { eFn(e); }}
 
 const getTotalVotes = async (tokenPoll, fundRound, voteRound, eFn) =>  { try { 
