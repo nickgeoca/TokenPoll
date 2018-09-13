@@ -19,8 +19,7 @@ const throwIfError = e => {if (e) throw e;}
 
 // Call this once before calling any other functions to initialize the file.
 const init = async (web3, eFn) => { try {
-  await TokenPollFactory.setProvider(web3.currentProvider);
-  await TokenPoll.setProvider(web3.currentProvider);
+  await ERC20.setProvider(web3.currentProvider);
 } catch (e) { eFn(e); }}
 
 const transfer = async (token, to, value, web3Params, eFn) => { try {
