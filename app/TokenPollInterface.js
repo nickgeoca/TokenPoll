@@ -383,7 +383,7 @@ const getResultHistory = async(tokenPoll, eFn) => { try {
   let moreData = [];
   if (state === 'InRound' || state === 'PostRoundDecision')
     moreData = [{ roundFinished: false
-                , round: (await tokenPoll.currentRoundNumber()).toString()
+                , fundingRoundNumber: (await tokenPoll.currentRoundNumber()).toString()
                 , votingRoundNumber: (await tokenPoll.votingRoundNumber()).toString()
                 , weightedNoVotes: (await tokenPoll.quadraticNoVotes()).toString()
                 , weightedYesVotes: (await tokenPoll.quadraticYesVotes()).toString()
@@ -397,7 +397,7 @@ const getResultHistory = async(tokenPoll, eFn) => { try {
       .get((error, logs) => { 
         throwIfError(error);
         const ls = logs.map(l => {return{ roundFinished: true
-                                        , round: l.args.round.toString()
+                                        , fundingRoundNumber: l.args.round.toString()
                                         , votingRoundNumber: l.args.votingRoundNumber.toString()
                                         , approvedFunding: l.args.approvedFunding
                                         , weightedNoVotes: l.args.weightedNoVotes.toString()
