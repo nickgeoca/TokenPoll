@@ -389,7 +389,7 @@ const getResultHistory = async(tokenPoll, eFn) => { try {
                 , weightedYesVotes: (await tokenPoll.quadraticYesVotes()).toString()
                 , yesVoters: (await tokenPoll.yesVotes()).toString()
                 , noVoters: (await tokenPoll.noVotes()).toString()
-                , fundSize: l.args.fundSize.toString()
+                , fundSize: (await tokenPoll.currentRoundFundSize()).toString()
                 }];
 
   return new Promise(resolve => {
