@@ -7,6 +7,7 @@ var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.
 var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
 var ERC20 = artifacts.require('./../contracts/ERC20.sol');
 var tokenpoll = undefined;
+var BigNumber = require('bignumber.js');
 
 // ==============
 // Misc
@@ -242,7 +243,7 @@ const getEndOfRefundDate = async(tokenPoll, eFn) => { try {
   await verifyInState(tokenPoll, 'Refund');
 
   const sixMonths = new BigNumber(60*60*24*30*6);
-  return web3.eth.getBlock("latest").timestamp.add(sixMonths); 
+  return await web3.eth.getBlock("latest").timestamp.add(sixMonths); 
 } catch (e) { eFn(e); }}
 
 const getUserRefundSize = async(tokenPoll, user, eFn) => { try {
