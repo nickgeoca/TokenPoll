@@ -242,8 +242,7 @@ const getEndOfRefundDate = async(tokenPoll, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Refund');
 
-  const sixMonths = new BigNumber(60*60*24*30*6);
-  return await web3.eth.getBlock("latest").timestamp.add(sixMonths); 
+  return new BigNumber(60*60*24*30*6 + Math.round(new Date() / 1000));
 } catch (e) { eFn(e); }}
 
 const getUserRefundSize = async(tokenPoll, user, eFn) => { try {
