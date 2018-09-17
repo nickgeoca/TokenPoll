@@ -173,7 +173,8 @@ const userRefund = async(tokenPoll, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Refund');
 
-  return tokenPoll.userRefund(web3Params); 
+  let tx = await tokenPoll.userRefund(web3Params); 
+  return {tx: tx, event: pullEvent(tx, 'Transfer')};
 } catch (e) { eFn(e); }}
 
 const startRefund_voteFailed = async(tokenPoll, web3Params, eFn) => { try {
