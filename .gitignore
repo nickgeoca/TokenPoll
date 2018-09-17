@@ -16,6 +16,10 @@ config/test/contracts.json
 build
 dist
 
+package-lock.json
+*.swp
+*.swo
+
 # emacs
 *~
 *[#]*

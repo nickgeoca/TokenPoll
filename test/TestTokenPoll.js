@@ -8,7 +8,7 @@ var MSWF = artifacts.require('./wallet/MultiSigWalletFactory.sol');
 
 var chai = require('chai')
 
-const BigNumber = web3.BigNumber;
+const BigNumber = require("bignumber.js"); // web3.BigNumber;
 
 const assert = require("chai").use(require("chai-as-promised")).assert;
 const eq = assert.equal.bind(assert);
@@ -39,7 +39,9 @@ contract('TokenPoll', function (accounts) {
 
   let tokenPoll;
 
-  tpi.init(web3);
+  const eFn = console.log;
+
+  tpi.init(web3, eFn);
 
   describe('token poll', async () => {
     let icoTokenSupply;
@@ -77,8 +79,9 @@ contract('TokenPoll', function (accounts) {
       icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
       scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
 
-      tokenPoll = await tpi.createTokenPoll({from: company});
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, {from: company, gas: 200000});
+      tokenPoll = await tpi.createTokenPoll(eFn, {from: company});
+      //MSFW.
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, eFn, {from: company, gas: 200000});  // note, the escrow address looks incorrect
     });
 
     it('allocates votes', async () => {
@@ -203,7 +206,7 @@ contract('TokenPoll', function (accounts) {
 
       // ********************************************************************************
       //                            Start token poll
-      tokenPoll = await tpi.createTokenPoll({from: company});
+      tokenPoll = await tpi.createTokenPoll(eFn, {from: company});
       msw = await MSW.at((await mswf.create([tokenPoll.address], 1, true)).logs[0].args.instantiation);
       await scToken.transfer(msw.address, companyInitialFunding, {from: scOwner});
 
@@ -212,7 +215,7 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - Uninitialized
 
       // *******************************
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, {from: company, gas: 200000});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, eFn, {from: company, gas: 200000});
       eq(await tpi.getState(tokenPoll), 'Initialized');
       // ********* STATE - Initialized
 
