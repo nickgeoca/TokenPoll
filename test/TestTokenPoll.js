@@ -117,6 +117,8 @@ contract('TokenPoll', function (accounts) {
       const vp2E = bal2.sqrt().floor();
       const percentVp1e = vp1E.dividedBy(vp1E.plus(vp2E));
 
+      const fundSize = getRandomInt(100000);
+
       // Alloc tokens
       await icoToken.transfer(user1, bal1, {from: company}); 
       await icoToken.transfer(user2, bal2, {from: company}); 
@@ -132,10 +134,11 @@ contract('TokenPoll', function (accounts) {
 
       // Setup next round then start the round
       let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, {from: company});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, eFn, {from: company});  // 30 seconds from now
       await util.forwardEVMTime(120);
+
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
-      await tpi.startRound(tokenPoll, {from: company});
+      await tpi.startRound(tokenPoll, eFn, {from: company});
       eq(await tpi.getState(tokenPoll), 'InRound');
       await tpi.castVote(tokenPoll, true, {from: user1});
       await tpi.castVote(tokenPoll, false, {from: user2});
@@ -236,12 +239,12 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - NextRoundApproved
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, {from: company});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, eFn, {from: company});  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
 
       // *******************************
-      await tpi.startRound(tokenPoll, {from: company});
+      await tpi.startRound(tokenPoll, eFn, {from: company});
       eq(await tpi.getState(tokenPoll), 'InRound');
       // ********* STATE - InRound
       await tpi.castVote(tokenPoll, true, {from: user1});
@@ -269,12 +272,12 @@ contract('TokenPoll', function (accounts) {
 
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, {from: company});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, eFn, {from: company});  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
 
       // *******************************
-      await tpi.startRound(tokenPoll, {from: company});
+      await tpi.startRound(tokenPoll, eFn, {from: company});
       eq(await tpi.getState(tokenPoll), 'InRound');
       // ********* STATE - InRound
       await tpi.castVote(tokenPoll, false, {from: user1});
