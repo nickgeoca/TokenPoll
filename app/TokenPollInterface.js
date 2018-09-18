@@ -70,7 +70,7 @@ const init = async (web3, eFn) => { try {
  * @param {callback} eFn Error handler
  * @returns {Object} The Token Poll as a truffle smart contract object. Other functions in this library rely on it as a parameter 'tokenPoll'.
 */
-const createTokenPoll = async (eFn, web3Params) => { try {
+const createTokenPoll = async (web3Params, eFn) => { try {
   let fact = await TokenPollFactory.deployed();
   let tx = await fact.createTokenPoll(web3Params);
 
@@ -99,7 +99,7 @@ const createTokenPoll = async (eFn, web3Params) => { try {
  * @param {callback} eFn Error handler
  * @returns {Object} Etheruem transaction result.
 */
-const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, eFn, web3Params) => { try {
+const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Uninitialized');
 
@@ -126,7 +126,7 @@ const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, e
  * @param {callback} eFn Error handler
  * @returns {Object} Etheruem transaction result.
 */
-const setupNextRound = async (tokenPoll, newStartTime, fundSize, eFn, web3Params) => { try {
+const setupNextRound = async (tokenPoll, newStartTime, fundSize, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'NextRoundApproved');
 
@@ -134,7 +134,7 @@ const setupNextRound = async (tokenPoll, newStartTime, fundSize, eFn, web3Params
   return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
 } catch (e) { eFn(e); }}
 
-const startRound = async (tokenPoll, eFn, web3Params) => { try {
+const startRound = async (tokenPoll, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'NextRoundApproved');
 
@@ -177,14 +177,14 @@ const userRefund = async(tokenPoll, web3Params, eFn) => { try {
   return {tx: tx, event: pullEvent(tx, 'Transfer')};
 } catch (e) { eFn(e); }}
 
-const startRefund_voteFailed = async(tokenPoll, eFn, web3Params) => { try {
+const startRefund_voteFailed = async(tokenPoll, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'NextRoundApproved');
 
   return tokenPoll.startRefund_voteFailed(web3Params); 
 } catch (e) { eFn(e); }}
 
-const startRefund_illegalRoundDelay = async(tokenPoll, eFn, web3Params) => { try {
+const startRefund_illegalRoundDelay = async(tokenPoll, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'NextRoundApproved');
 

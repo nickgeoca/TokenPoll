@@ -8,12 +8,15 @@ var MSWF = artifacts.require('./wallet/MultiSigWalletFactory.sol');
 
 var chai = require('chai')
 
-const BigNumber = require("bignumber.js"); // web3.BigNumber;
+const BigNumber = web3.BigNumber;
+//BigNumber.config({ ROUNDING_MODE: 3 });
 
 const assert = require("chai").use(require("chai-as-promised")).assert;
-const eq = assert.equal.bind(assert);
+const eq  = assert.equal.bind(assert);
+const eqb = (a,b) => eq(a.toString(10), b.toString(10));
 
-const getRandomInt = (max) =>  new BigNumber( Math.floor(Math.random() * Math.floor(max)) );
+const getRandomInt = (max) => new BigNumber( 
+Math.floor(Math.random() * Math.floor(max)) );
 
 const genNumEth = (n) => (new BigNumber(10)).pow(18).times(n);
 
@@ -42,7 +45,7 @@ contract('TokenPoll', function (accounts) {
   const eFn = console.log;
 
   tpi.init(web3, eFn);
-
+/*
   describe('token poll', async () => {
     let icoTokenSupply;
     let icoTokenName;
@@ -134,7 +137,7 @@ contract('TokenPoll', function (accounts) {
 
       // Setup next round then start the round
       let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, eFn, {from: company});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, {from: company}, eFn);  // 30 seconds from now
       await util.forwardEVMTime(120);
 
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
@@ -165,6 +168,7 @@ contract('TokenPoll', function (accounts) {
 
     });
   });
+*/
 
   describe('token poll start to finish', async () => {
     it('works start to finish', async () => {
@@ -193,8 +197,10 @@ contract('TokenPoll', function (accounts) {
       let scTokenName = 'stable coin';
       let scTokenSymbol = 'sc';
       let scTokenDecimals = new BigNumber(18);
-      
+
       let companyInitialFunding = 10000000;
+
+      let firstRoundFunds = 12345;
 
       dailyLimit = genNumEth(1); 
       const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
@@ -209,7 +215,7 @@ contract('TokenPoll', function (accounts) {
 
       // ********************************************************************************
       //                            Start token poll
-      tokenPoll = await tpi.createTokenPoll(eFn, {from: company});
+      tokenPoll = await tpi.createTokenPoll({from: company}, eFn);
       msw = await MSW.at((await mswf.create([tokenPoll.address], 1, true)).logs[0].args.instantiation);
       await scToken.transfer(msw.address, companyInitialFunding, {from: scOwner});
 
@@ -218,9 +224,10 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - Uninitialized
 
       // *******************************
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, eFn, {from: company, gas: 200000});
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, {from: company}, eFn);
       eq(await tpi.getState(tokenPoll), 'Initialized');
       // ********* STATE - Initialized
+
 
       // *******************************
       await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
@@ -228,33 +235,34 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - VoteAllocation
       await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
       await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
-
-      eq( (await tpi.getUserVotePower(tokenPoll, user1))
-        , user1VotePowerE.toString(10));
-      eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
-        , user2VotePowerE.toString(10));      
-
+      
+      eqb( await tpi.getUserVotePower(tokenPoll, user1)
+         , user1VotePowerE);
+      eqb( await tpi.getUserVotePower(tokenPoll, user2)
+         , user2VotePowerE);
+//
       // *******************************
       await util.forwardEVMTime(voteAllocTimeDifference);      
       // ********* STATE - NextRoundApproved
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, eFn, {from: company});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, firstRoundFunds, {from: company}, eFn);  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
 
       // *******************************
-      await tpi.startRound(tokenPoll, eFn, {from: company});
+      await tpi.startRound(tokenPoll, {from: company}, eFn);
       eq(await tpi.getState(tokenPoll), 'InRound');
       // ********* STATE - InRound
       await tpi.castVote(tokenPoll, true, {from: user1});
       await tpi.castVote(tokenPoll, true, {from: user2});
 
-      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 2, 1)
         , true);
-      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 2, 1)
         , true);
 
+      // STRIKE 1
       // *******************************
       await util.forwardEVMTime(3000);      
       eq(await tpi.getState(tokenPoll), 'PostRoundDecision');
@@ -264,34 +272,125 @@ contract('TokenPoll', function (accounts) {
       d = await tpi.approveNewRound(tokenPoll);
 
       // Check wallet and company stable coin balances
-      let releasedFunds = Math.trunc(companyInitialFunding / 12);
-      eq( (await scToken.balanceOf(msw.address)).toString(10)
-        , (companyInitialFunding - releasedFunds).toString(10));
-      eq( (await scToken.balanceOf(company)).toString(10)
-        , (releasedFunds).toString(10));
+      eqb( await scToken.balanceOf(msw.address)
+         , companyInitialFunding - firstRoundFunds);
+      eqb( await scToken.balanceOf(company)
+         , firstRoundFunds);
 
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
       t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, eFn, {from: company});  // 30 seconds from now
+      await tpi.setupNextRound(tokenPoll, 30 + t, firstRoundFunds, {from: company}, eFn);  // 30 seconds from now
       await util.forwardEVMTime(120);
       eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
 
       // *******************************
-      await tpi.startRound(tokenPoll, eFn, {from: company});
+      await tpi.startRound(tokenPoll, {from: company}, eFn);
       eq(await tpi.getState(tokenPoll), 'InRound');
       // ********* STATE - InRound
       await tpi.castVote(tokenPoll, false, {from: user1});
       await tpi.castVote(tokenPoll, false, {from: user2});
 
-      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 3, 1)
         , true);
-      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1, 1)
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 3, 1)
         , true);
 
-      console.log(await tpi.getResultHistory(tokenPoll));
+
+      // STRIKE 2
+      // *******************************
+      await util.forwardEVMTime(3000);      
+      eq(await tpi.getState(tokenPoll), 'PostRoundDecision');
+      // ********* STATE - PostRoundDecision
 
       // *******************************
-      // ********* STATE - Finished
+      d = await tpi.approveNewRound(tokenPoll);
+
+      // Check wallet and company stable coin balances
+      eqb( await scToken.balanceOf(msw.address)
+         , companyInitialFunding - firstRoundFunds);
+      eqb( await scToken.balanceOf(company)
+         , firstRoundFunds);
+
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+      t = web3.eth.getBlock('latest').timestamp; 
+      await tpi.setupNextRound(tokenPoll, 30 + t, firstRoundFunds, {from: company}, eFn);  // 30 seconds from now
+      await util.forwardEVMTime(120);
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+
+      // *******************************
+      await tpi.startRound(tokenPoll, {from: company}, eFn);
+      eq(await tpi.getState(tokenPoll), 'InRound');
+      // ********* STATE - InRound
+      await tpi.castVote(tokenPoll, false, {from: user1});
+      await tpi.castVote(tokenPoll, false, {from: user2});
+
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 3, 2)
+        , true);
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 3, 2)
+        , true);
+
+
+      // STRIKE 3
+      // *******************************
+      await util.forwardEVMTime(3000);      
+      eq(await tpi.getState(tokenPoll), 'PostRoundDecision');
+      // ********* STATE - PostRoundDecision
+
+      // *******************************
+      d = await tpi.approveNewRound(tokenPoll);
+
+      // Check wallet and company stable coin balances
+      eqb( await scToken.balanceOf(msw.address)
+         , companyInitialFunding - firstRoundFunds);
+      eqb( await scToken.balanceOf(company)
+         , firstRoundFunds);
+
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+      t = web3.eth.getBlock('latest').timestamp; 
+      await tpi.setupNextRound(tokenPoll, 30 + t, firstRoundFunds, {from: company}, eFn);  // 30 seconds from now
+      await util.forwardEVMTime(120);
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+
+      // *******************************
+      await tpi.startRound(tokenPoll, {from: company}, eFn);
+      eq(await tpi.getState(tokenPoll), 'InRound');
+      // ********* STATE - InRound
+      await tpi.castVote(tokenPoll, false, {from: user1});
+      await tpi.castVote(tokenPoll, false, {from: user2});
+
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 3, 3)
+        , true);
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 3, 3)
+        , true);
+
+
+      // USER REFUND
+      // *******************************
+      await util.forwardEVMTime(3000);      
+      eq(await tpi.getState(tokenPoll), 'PostRoundDecision');
+      // ********* STATE - PostRoundDecision
+
+      // *******************************
+      d = await tpi.approveNewRound(tokenPoll);
+      eq(await tpi.getState(tokenPoll), 'Refund');
+      // ********* STATE - Refund
+
+      // before
+      // get balance user 1
+      // get balance user 2
+      // get balance escrow
+      // get balance token poll
+
+      tpi.userRefund(tokenPoll, {from: user1});
+      tpi.userRefund(tokenPoll, {from: user2});
+
+      // after
+      // get balance user 1
+      // get balance user 2
+      // get balance escrow
+      // get balance token poll
+
+      console.log(await tpi.getResultHistory(tokenPoll));
 
     });    
   });
