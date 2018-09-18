@@ -9,16 +9,17 @@ var MSWF = artifacts.require('./wallet/MultiSigWalletFactory.sol');
 var chai = require('chai')
 
 const BigNumber = web3.BigNumber;
+const bn = x => new BigNumber(x);
 //BigNumber.config({ ROUNDING_MODE: 3 });
 
 const assert = require("chai").use(require("chai-as-promised")).assert;
 const eq  = assert.equal.bind(assert);
 const eqb = (a,b) => eq(a.toString(10), b.toString(10));
 
-const getRandomInt = (max) => new BigNumber( 
+const getRandomInt = (max) => bn( 
 Math.floor(Math.random() * Math.floor(max)) );
 
-const genNumEth = (n) => (new BigNumber(10)).pow(18).times(n);
+const genNumEth = (n) => (bn(10)).pow(18).times(n);
 
 const debug = (s) => { console.log(s) };
 
@@ -190,13 +191,13 @@ contract('TokenPoll', function (accounts) {
       let icoTokenSupply = genNumEth(10);
       let icoTokenName = 'ico token';
       let icoTokenSymbol = 'ico';
-      let icoTokenDecimals = new BigNumber(18);
+      let icoTokenDecimals = bn(18);
 
       // Stable coin
       let scTokenSupply = genNumEth(10);
       let scTokenName = 'stable coin';
       let scTokenSymbol = 'sc';
-      let scTokenDecimals = new BigNumber(18);
+      let scTokenDecimals = bn(18);
 
       let companyInitialFunding = 10000000;
 
@@ -240,7 +241,7 @@ contract('TokenPoll', function (accounts) {
          , user1VotePowerE);
       eqb( await tpi.getUserVotePower(tokenPoll, user2)
          , user2VotePowerE);
-//
+
       // *******************************
       await util.forwardEVMTime(voteAllocTimeDifference);      
       // ********* STATE - NextRoundApproved
@@ -374,21 +375,41 @@ contract('TokenPoll', function (accounts) {
       d = await tpi.approveNewRound(tokenPoll);
       eq(await tpi.getState(tokenPoll), 'Refund');
       // ********* STATE - Refund
+// todo truncation. 
+      const totalAlloc = user1BalanceE.plus(user2BalanceE);
+      const u1Refund   = user1BalanceE.mul(await scToken.balanceOf(tokenPoll.address)).div(totalAlloc).floor();
+      const u2Refund   = user2BalanceE.mul(await scToken.balanceOf(tokenPoll.address)).div(totalAlloc).floor();
 
-      // before
-      // get balance user 1
-      // get balance user 2
-      // get balance escrow
-      // get balance token poll
+      console.log('u1 alloc', user1BalanceE.toString());
+      console.log('u1 refund token bal', u1Refund.toString());
+      console.log('total alloc', totalAlloc.toString());
+      console.log('u2 refund token bal', u2Refund.toString());
 
-      tpi.userRefund(tokenPoll, {from: user1});
-      tpi.userRefund(tokenPoll, {from: user2});
+      eqb( await scToken.balanceOf(user1)
+         , bn(0));
+      eqb( await scToken.balanceOf(user2)
+         , bn(0));
+      eqb( await scToken.balanceOf(tokenPoll.address)
+         , companyInitialFunding - firstRoundFunds);
+      eqb( await scToken.balanceOf(msw.address)
+         , bn(0));
 
-      // after
-      // get balance user 1
-      // get balance user 2
-      // get balance escrow
-      // get balance token poll
+      console.log('token poll', (await scToken.balanceOf(tokenPoll.address)).toString());
+      await tpi.userRefund(tokenPoll, {from: user1});
+      console.log('token poll', (await scToken.balanceOf(tokenPoll.address)).toString());
+      await tpi.userRefund(tokenPoll, {from: user2});
+      console.log('token poll', (await scToken.balanceOf(tokenPoll.address)).toString());
+
+      eqb( await scToken.balanceOf(user1)
+         , u1Refund);
+      eqb( await scToken.balanceOf(user2)
+         , u2Refund);
+      eqb( await scToken.balanceOf(tokenPoll.address)
+         , bn(0));
+      eqb( await scToken.balanceOf(msw.address)
+         , bn(0));
+
+      // **************************************************
 
       console.log(await tpi.getResultHistory(tokenPoll));
 
