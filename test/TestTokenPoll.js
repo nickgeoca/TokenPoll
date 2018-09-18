@@ -394,9 +394,13 @@ contract('TokenPoll', function (accounts) {
       eqb( await scToken.balanceOf(msw.address)
          , bn(0));
 
+      const refundSize = await tpi.getUserRefundSize(tokenPoll, user1, eFn)
+      console.log("Size: " + refundSize);
+      //const refundStatus = await tpi.getUserRefundStatus(tokenPoll, user1, eFn);
+      //console.log("status: " + refundStatus);
       console.log('token poll', (await scToken.balanceOf(tokenPoll.address)).toString());
       const tx = await tpi.userRefund(tokenPoll, {from: user1});
-      console.log("transaction: " + JSON.stringify(tx));
+      //console.log("transaction: " + JSON.stringify(tx));
       console.log('token poll', (await scToken.balanceOf(tokenPoll.address)).toString());
       await tpi.userRefund(tokenPoll, {from: user2});
       console.log('token poll', (await scToken.balanceOf(tokenPoll.address)).toString());
