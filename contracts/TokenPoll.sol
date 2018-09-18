@@ -35,6 +35,7 @@ contract TokenPoll is Ownable {
   event Vote(address indexed voter, uint indexed round, uint indexed votingRoundNumber, bool vote);
   event RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yesVoters, uint noVoters, uint fundSize);
   event NewRoundInfo(uint indexed round, uint indexed votingRoundNumber, uint startTime, uint endTime, uint fundSize);
+  event Transfer(address indexed from, address indexed to, uint indexed quantity);
 
   // =====
   // State
@@ -196,6 +197,7 @@ contract TokenPoll is Ownable {
 
     userTokenBalance[user] = 0;
     stableCoin.transfer(user, refundSize);
+    Transfer(stableCoin.address, user, refundSize);
   }
 
   /// @notice This starts the refund after a refund was voted for. It only needs to be called once, then the refund starts. Must be in PostRoundDecision state.
