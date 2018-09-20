@@ -49,7 +49,7 @@ contract TokenPoll is Ownable {
   // Round variables
   uint public constant allocationDuration = 2 minutes;
   uint public constant maxTimeBetweenRounds = 180 days;
-  uint public constant roundDuration = 5 minutes;
+  uint public constant roundDuration = 10 minutes;
 
   uint public currentRoundFundSize;
   uint public currentRoundNumber;
@@ -196,7 +196,7 @@ contract TokenPoll is Ownable {
     uint refundSize = totalRefund.safeMul(userTokenCount) / totalTokenCount;
 
     userTokenBalance[user] = 0;
-    stableCoin.transfer(user, refundSize);
+    require(stableCoin.transfer(user, refundSize));
     address from = address(this);
     Transfer(from, user, refundSize);
   }
