@@ -47,9 +47,9 @@ contract TokenPoll is Ownable {
   bool public uninitializedFlag;     // if contract is un-initialized
 
   // Round variables
-  uint public constant allocationDuration = 2 minutes;
+  uint public constant allocationDuration = 1 seconds;
   uint public constant maxTimeBetweenRounds = 180 days;
-  uint public constant roundDuration = 10 minutes;
+  uint public constant roundDuration = 7 minutes;
 
   uint public currentRoundFundSize;
   uint public currentRoundNumber;
