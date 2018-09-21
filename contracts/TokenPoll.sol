@@ -41,7 +41,7 @@ contract TokenPoll is Ownable {
   // State
   // =====
 
-    // State variables
+  // State variables
   bool public refundFlag;            // keep track of state
   bool public nextRoundApprovedFlag; // "
   bool public uninitializedFlag;     // if contract is un-initialized
@@ -155,7 +155,7 @@ contract TokenPoll is Ownable {
   // ===============
 
   /// @notice Each user calls this to allocate their votes. Must be in allocation time-period/state (see initialize)
-  function allocVotes() public inState(State.VoteAllocation) {
+  function allocVotes() public { // {inState(State.VoteAllocation) {
     bool notYetAllocated = userTokenBalance[msg.sender] == 0;
     uint userTokens = icoCoin.balanceOf(msg.sender);
 
@@ -171,7 +171,7 @@ contract TokenPoll is Ownable {
 
   /// @notice Each user calls this to vote on ICO funding or get a refund. Must be in InRound state (see setupNextRound)
   /// @param _vote Vote true to fund the ICO. False to get a refund.
-  function castVote(bool _vote) public inState(State.InRound) validVoter() {
+  function castVote(bool _vote) public validVoter() { // inState(State.InRound) validVoter() {
     require(!getHasVoted(msg.sender, currentRoundNumber, votingRoundNumber));
 
     hasVoted[msg.sender][currentRoundNumber][votingRoundNumber] = true;
@@ -255,7 +255,7 @@ contract TokenPoll is Ownable {
     }
     
     return y;
-  }
+ }
 
   // ================
   // Private fns
