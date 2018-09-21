@@ -198,7 +198,7 @@ contract TokenPoll is Ownable {
     userTokenBalance[user] = 0;
     require(stableCoin.transfer(user, refundSize));
     address from = address(this);
-    Transfer(from, user, refundSize);
+    emit Transfer(from, user, refundSize);
   }
 
   /// @notice This starts the refund after a refund was voted for. It only needs to be called once, then the refund starts. Must be in PostRoundDecision state.
