@@ -96,7 +96,7 @@ var approveNewRound = async (tokenPoll, web3Params) => {
 // return successful, tx hash, ?
 var allocVotes = async(tokenPoll, web3Params) => {
   await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'VoteAllocation');
+  // await verifyInState(tokenPoll, 'VoteAllocation');
 
   return tokenPoll.allocVotes(web3Params);;
 }
