@@ -171,7 +171,7 @@ contract TokenPoll is Ownable {
 
   /// @notice Each user calls this to vote on ICO funding or get a refund. Must be in InRound state (see setupNextRound)
   /// @param _vote Vote true to fund the ICO. False to get a refund.
-  function castVote(bool _vote) public validVoter() { // inState(State.InRound) validVoter() {
+  function castVote(bool _vote) public inState(State.InRound) validVoter() {
     require(!getHasVoted(msg.sender, currentRoundNumber, votingRoundNumber));
 
     hasVoted[msg.sender][currentRoundNumber][votingRoundNumber] = true;
