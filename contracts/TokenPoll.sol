@@ -114,7 +114,7 @@ contract TokenPoll is Ownable {
   /// @param _escrow The escrow address. This is a multisig wallet address
   /// @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
   function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
-    require(_allocStartTime > now);
+    // require(_allocStartTime > now);
     // todo, look more at error checking. Like time limit on allocation start
 
     allocStartTime = _allocStartTime;
