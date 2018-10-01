@@ -156,7 +156,7 @@ const approveNewRound = async (tokenPoll, web3Params, eFn) => { try {
 // return successful, tx hash, ?
 const allocVotes = async(tokenPoll, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
-  //await verifyInState(tokenPoll, 'VoteAllocation');
+  // await verifyInState(tokenPoll, 'VoteAllocation');
 
   return tokenPoll.allocVotes(web3Params);;
 } catch (e) { eFn(e); }}
