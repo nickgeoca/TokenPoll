@@ -8,6 +8,7 @@ var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
 var ERC20 = artifacts.require('./../contracts/ERC20.sol');
 var tokenpoll = undefined;
 var BigNumber = require('bignumber.js');
+let web3;
 
 // ==============
 // Misc
@@ -49,7 +50,8 @@ const throwIfError = e => {if (e) throw e;}
  * @param {Object} web3 Pass in web3 object.
  * @param {callback} eFn Error handler
 */
-const init = async (web3, eFn) => { try {
+const init = async (_web3, eFn) => { try {
+  web3 = _web3;
   await TokenPollFactory.setProvider(web3.currentProvider);
   await TokenPoll.setProvider(web3.currentProvider);
 } catch (e) { eFn(e); }}
@@ -75,7 +77,18 @@ const createTokenPoll = async (web3Params, eFn) => { try {
   let tx = await fact.createTokenPoll(web3Params);
 
   let event = pullEvent(tx, 'TokenPollCreated');
+  const address = event.tokenPoll;
 
+  // See if there is code. Try 5 times, wait 1 second each
+  const delayP = time => result => new Promise(resolve => setTimeout(() => resolve(result), time));
+  for (let i = 0; i < 5; i++) {
+    await delayP(1000);
+    const code = await web3.eth.getCode(address);
+    const codeAvailable = code && code !== '0x0' && code !== '0x';
+    if (codeAvailable) return await TokenPoll.at(address);
+  }
+
+  // If no code, then try anyway
   return await TokenPoll.at(event.tokenPoll);
 } catch (e) { eFn(e); }}
 
@@ -156,7 +169,7 @@ const approveNewRound = async (tokenPoll, web3Params, eFn) => { try {
 // return successful, tx hash, ?
 const allocVotes = async(tokenPoll, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
-  //await verifyInState(tokenPoll, 'VoteAllocation');
+  // await verifyInState(tokenPoll, 'VoteAllocation');
 
   return tokenPoll.allocVotes(web3Params);;
 } catch (e) { eFn(e); }}
