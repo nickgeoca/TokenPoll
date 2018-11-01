@@ -4,12 +4,6 @@ import "./Ownable.sol";
 import "./ERC20.sol";
 import "./SafeMath.sol";
 
-/*
- - Voting on KPI-based targets (ETH)	NR
- - Security-based refund process flow (ETH)	NR
- - System-level Integration of ICO 1.0 workflow	NR
-*/
-
 /**
 @title TokenPoll
 @author Nick Geoca
