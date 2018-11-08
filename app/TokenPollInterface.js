@@ -72,7 +72,7 @@ const init = async (_web3, eFn) => { try {
  * @param {callback} eFn Error handler
  * @returns {Object} The Token Poll as a truffle smart contract object. Other functions in this library rely on it as a parameter 'tokenPoll'.
 */
-const createTokenPoll = async (web3Params, eFn) => { try {
+const createTokenPoll = async (web3Params, callback, eFn) => { try {
   let fact = await TokenPollFactory.deployed();
   let tx = await fact.createTokenPoll(web3Params);
 
@@ -81,10 +81,11 @@ const createTokenPoll = async (web3Params, eFn) => { try {
 
   // See if there is code. Try 5 times, wait 1 second each
   const delayP = time => result => new Promise(resolve => setTimeout(() => resolve(result), time));
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 15; i++) {
     await delayP(1000);
     const code = await web3.eth.getCode(address);
     const codeAvailable = code && code !== '0x0' && code !== '0x';
+    callback(codeAvailable, i, i*1000);
     if (codeAvailable) return await TokenPoll.at(address);
   }
 
