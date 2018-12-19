@@ -81,7 +81,7 @@ const createTokenPoll = async (web3Params, eFn) => { try {
 
   // See if there is code. Try 5 times, wait 1 second each
   const delayP = time => result => new Promise(resolve => setTimeout(() => resolve(result), time));
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 60; i++) {
     await delayP(1000);
     const code = await web3.eth.getCode(address);
     const codeAvailable = code && code !== '0x0' && code !== '0x';
