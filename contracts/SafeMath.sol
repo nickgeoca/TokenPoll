@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity >=0.4.8;
 
 // Got safemath from here: https://github.com/etheropt/etheropt.github.io/blob/master/smart_contract/etheropt.sol
 

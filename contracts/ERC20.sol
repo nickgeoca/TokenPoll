@@ -3,7 +3,7 @@ Implements EIP20 token standard: https://github.com/ethereum/EIPs/issues/20
 .*/
 
 
-pragma solidity ^0.4.18;
+pragma solidity >=0.4.18;
 
 
 contract ERC20Interface {
@@ -67,11 +67,11 @@ contract ERC20 is ERC20Interface {
     uint8 public decimals;                //How many decimals to show.
     string public symbol;                 //An identifier: eg SBX
 
-    function ERC20(
+    constructor(
         uint256 _initialAmount,
-        string _tokenName,
+        string memory _tokenName,
         uint8 _decimalUnits,
-        string _tokenSymbol
+        string memory _tokenSymbol
     ) public {
         balances[msg.sender] = _initialAmount;               // Give the creator all initial tokens
         totalSupply = _initialAmount;                        // Update total supply
@@ -84,7 +84,7 @@ contract ERC20 is ERC20Interface {
         require(balances[msg.sender] >= _value);
         balances[msg.sender] -= _value;
         balances[_to] += _value;
-        Transfer(msg.sender, _to, _value);
+        emit Transfer(msg.sender, _to, _value);
         return true;
     }
 
@@ -96,7 +96,7 @@ contract ERC20 is ERC20Interface {
         if (allowance < MAX_UINT256) {
             allowed[_from][msg.sender] -= _value;
         }
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
         return true;
     }
 
@@ -106,7 +106,7 @@ contract ERC20 is ERC20Interface {
 
     function approve(address _spender, uint256 _value) public returns (bool success) {
         allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
