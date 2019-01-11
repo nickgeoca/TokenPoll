@@ -4,7 +4,6 @@ import "./Ownable.sol";
 import "./ERC20.sol";
 import "./SafeMath.sol";
 
-
 /**
 @title TokenPoll
 @author Nick Geoca
@@ -84,7 +83,8 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  constructor () public Ownable() {
+  constructor (address _stableCoin) public Ownable() {
+    stableCoin = ERC20(_stableCoin);
     uninitializedFlag = true;
   }
 
@@ -110,11 +110,11 @@ contract TokenPoll is Ownable {
   /// @notice Initialize the token poll. This also sets the voter allocation time period.
   /// @dev Start allocation one week from now- initialize(0x123.., 0x321, 0x222, current unix time (seconds) + 1 week);
   /// @param _icoToken The ICO's ERC20 token. Get the voters from this contract
-  /// @param _stableCoin The ERC20 funding token held in escrow. Vote yes to release funds to ico, no to refund users
   /// @param _escrow The escrow address. This is a multisig wallet address
   /// @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
-  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
+  function initialize(address _icoToken, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
     // require(_allocStartTime > now);
+
     // todo, look more at error checking. Like time limit on allocation start
 
     allocStartTime = _allocStartTime;
@@ -124,7 +124,6 @@ contract TokenPoll is Ownable {
     nextRoundApprovedFlag = true;
 
     icoCoin = ERC20(_icoToken);
-    stableCoin = ERC20(_stableCoin);
     escrow = _escrow;
     currentRoundNumber = 2;
     votingRoundNumber = 1;

@@ -9,6 +9,7 @@ var ERC20 = artifacts.require('./../contracts/ERC20.sol');
 var tokenpoll = undefined;
 var BigNumber = require('bignumber.js');
 let web3;
+let tpFact;
 
 // ==============
 // Misc
@@ -54,7 +55,10 @@ const init = async (_web3, eFn) => { try {
   web3 = _web3;
   await TokenPollFactory.setProvider(web3.currentProvider);
   await TokenPoll.setProvider(web3.currentProvider);
+  tpFact = await TokenPollFactory.deployed();
 } catch (e) { eFn(e); }}
+
+const devSetTPF = tpf => { tpFact = tpf; }
 
 // =============
 // ICO Functions
@@ -73,8 +77,7 @@ const init = async (_web3, eFn) => { try {
  * @returns {Object} The Token Poll as a truffle smart contract object. Other functions in this library rely on it as a parameter 'tokenPoll'.
 */
 const createTokenPoll = async (web3Params, eFn) => { try {
-  let fact = await TokenPollFactory.deployed();
-  let tx = await fact.createTokenPoll(web3Params);
+  let tx = await tpFact.createTokenPoll(web3Params);
 
   let event = pullEvent(tx, 'TokenPollCreated');
   const address = event.tokenPoll;
@@ -105,18 +108,17 @@ const createTokenPoll = async (web3Params, eFn) => { try {
  * @async
  * @param {Object} tokenPoll The token poll that was created in createTokenPoll.
  * @param {address} icoTokenAddress The address of the ico token
- * @param {address} scTokenAddress The address of the funding token
  * @param {address} escrow Address of the multi-sig wallet
  * @param {BigNum} allocStarTime Unix time stamp in seconds. Start of vote allocation period. Must be greater than the current block time when excuted on the blockchain.
  * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
  * @param {callback} eFn Error handler
  * @returns {Object} Etheruem transaction result.
 */
-const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params, eFn) => { try {
+const initializeTokenPoll = async (tokenPoll, icoTokenAddress, escrow, allocStartTime, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Uninitialized');
 
-  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params);
+  return await tokenPoll.initialize(icoTokenAddress, escrow, allocStartTime, web3Params);
 } catch (e) { eFn(e); }}
 
 /**
@@ -474,8 +476,11 @@ const getUserVotePowerPercentage = async(tokenPoll, user, eFn) => { try {
 // =================
 
 module.exports = 
+  // Dev fns
+  { devSetTPF
+    
   // ICO fns
-  { init
+  , init
   , createTokenPoll
   , initializeTokenPoll
   , setupNextRound

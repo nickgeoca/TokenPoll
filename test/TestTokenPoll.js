@@ -5,6 +5,8 @@ const tpi = require("../app/TokenPollInterface.js");
 var ERC20 = artifacts.require('ERC20.sol');
 var MSW = artifacts.require('./wallet/MultiSigWallet.sol');
 var MSWF = artifacts.require('./wallet/MultiSigWalletFactory.sol');
+var TPF = artifacts.require('./../contracts/TokenPollFactory.sol');
+var SafeMath = artifacts.require('./../contracts/SafeMath.sol');
 
 var chai = require('chai')
 
@@ -29,7 +31,7 @@ const debug = (s) => { console.log(s) };
 // States
 // ['Start', 'VoteAllocation', 'Running', 'Refund', 'End']
 
-contract('TokenPoll', function (accounts) {
+contract('TokenPoll', async (accounts) => {
   const user1 = accounts[0];
   const user2 = accounts[1];
   const user3 = accounts[2];
@@ -40,138 +42,34 @@ contract('TokenPoll', function (accounts) {
   const company = accounts[7];
   const scOwner = accounts[8];
   //const  = accounts[9]; // Stable coin owner
-
   let tokenPoll;
 
-  const eFn = console.log;
+  const eFn = x => console.log(x);
+  
+  describe('initializes interface', async () => {
+    await tpi.init(web3, eFn);
 
-  tpi.init(web3, eFn);
-/*
-  describe('token poll', async () => {
-    let icoTokenSupply;
-    let icoTokenName;
-    let icoTokenSymbol;
-    let icoTokenDecimals;
-    let icoToken;
-
-    let scTokenSupply;
-    let scTokenName;
-    let scTokenSymbol;
-    let scTokenDecimals;
-    let scToken;
-
-    const voteAllocTimeStartOffset = 50;
-    const voteAllocTimeDifference = 120;
-
-    // Create token polls
-    beforeEach(async () => {
-      // ICO coin
-      icoTokenSupply = genNumEth(10);
-      icoTokenName = 'ico token';
-      icoTokenSymbol = 'ico';
-      icoTokenDecimals = new BigNumber(18);
-
-      // Stable coin
-      scTokenSupply = genNumEth(10);
-      scTokenName = 'stable coin';
-      scTokenSymbol = 'sc';
-      scTokenDecimals = new BigNumber(18);
-
-      dailyLimit = genNumEth(1); 
-      const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
-
-      icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
-      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
-
-      tokenPoll = await tpi.createTokenPoll(eFn, {from: company});
-      //MSFW.
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, eFn, {from: company, gas: 200000});  // note, the escrow address looks incorrect
-    });
-
-    it('allocates votes', async () => {
-      // Give user 1 some money
-      const bal1 = genNumEth(1);
-      const vp1E = bal1.sqrt().floor(); 
-
-      await icoToken.transfer(user1, bal1, {from: company}); // Alloc tokens
-      await icoToken.transfer(user2, bal1, {from: company}); // Alloc tokens
-
-      // Fails before
-      await util.forwardEVMTime(0);
-      eq(await tpi.getState(tokenPoll), 'Initialized');
-      await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user1}));
-
-      // Works during
-      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
-      eq(await tpi.getState(tokenPoll), 'VoteAllocation');
-      await tpi.allocVotes(tokenPoll, {from: user1});
-
-      // Fails after
-      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference + 5);
-      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
-      await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user2}));
-    });
-
-    it('test cast vote', async () => {
-      const bal1 = getRandomInt(1000000000);
-      const bal2 = getRandomInt(1000000000);
-
-      // vote power
-      const vp1E = bal1.sqrt().floor();
-      const vp2E = bal2.sqrt().floor();
-      const percentVp1e = vp1E.dividedBy(vp1E.plus(vp2E));
-
-      const fundSize = getRandomInt(100000);
-
-      // Alloc tokens
-      await icoToken.transfer(user1, bal1, {from: company}); 
-      await icoToken.transfer(user2, bal2, {from: company}); 
-
-      // Put in vote allocation state
-      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
-      eq(await tpi.getState(tokenPoll), 'VoteAllocation');
-
-      // Votes
-      await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
-      await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
-      await util.forwardEVMTime(voteAllocTimeDifference);
-
-      // Setup next round then start the round
-      let t = web3.eth.getBlock('latest').timestamp; 
-      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, {from: company}, eFn);  // 30 seconds from now
-      await util.forwardEVMTime(120);
-
-      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
-      await tpi.startRound(tokenPoll, eFn, {from: company});
-      eq(await tpi.getState(tokenPoll), 'InRound');
-      await tpi.castVote(tokenPoll, true, {from: user1});
-      await tpi.castVote(tokenPoll, false, {from: user2});
-
-      eq( (await tpi.getUserVotePower(tokenPoll, user1))
-        , vp1E.toString(10));      
-      eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
-        , vp2E.toString(10));      
-
-      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
-        , true);
-      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1, 1)
-        , true);
-
-      eq( await tpi.getYesVotes(tokenPoll, 1, 1)
-        , '1');
-      eq( await tpi.getNoVotes(tokenPoll, 1, 1)
-        , '1');
-
-      eq( await tpi.getQuadraticYesVotes(tokenPoll, 1, 1)
-        , vp1E.toString(10));
-      eq( await tpi.getQuadraticNoVotes(tokenPoll, 1, 1)
-        , vp2E.toString(10));
-
-    });
+    // *** This is test code ***
+    await SafeMath.new();
+    await TPF.link(SafeMath);
+    // ^^^ This is test code ^^^
   });
-*/
 
   describe('token poll start to finish', async () => {
+    // Make a stable coin
+    let scTokenSupply = genNumEth(10);
+    let scTokenName = 'stable coin';
+    let scTokenDecimals = bn(18);
+    let scTokenSymbol = 'sc';
+    let scToken;
+
+    before(async () => {
+      scToken = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
+      const tpf = await TPF.new(scToken.address);
+      await tpi.devSetTPF(tpf);
+    });
+
+    // Deploy a new factory using the stable coin we made
     it('works start to finish', async () => {
       let d;
 
@@ -193,12 +91,6 @@ contract('TokenPoll', function (accounts) {
       let icoTokenSymbol = 'ico';
       let icoTokenDecimals = bn(18);
 
-      // Stable coin
-      let scTokenSupply = genNumEth(10);
-      let scTokenName = 'stable coin';
-      let scTokenSymbol = 'sc';
-      let scTokenDecimals = bn(18);
-
       let companyInitialFunding = 10000000;
 
       let firstRoundFunds = 12345;
@@ -207,7 +99,6 @@ contract('TokenPoll', function (accounts) {
       const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
 
       icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
-      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
       let mswf = await MSWF.new();
 
       // Alloc tokens
@@ -225,7 +116,7 @@ contract('TokenPoll', function (accounts) {
       // ********* STATE - Uninitialized
 
       // *******************************
-      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, msw.address, allocStartTime, {from: company}, eFn);
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, msw.address, allocStartTime, {from: company}, eFn);
       eq(await tpi.getState(tokenPoll), 'Initialized');
       // ********* STATE - Initialized
 
@@ -438,4 +329,131 @@ contract('TokenPoll', function (accounts) {
       const totalVotePowerE = votePowerE.reduce((accum,x)=>(accum+x));
       const percentVotePowerE = votePowerE.map(x=>x.dividedBy(totalVotePowerE));
 
+*/
+
+
+
+/*
+  describe('token poll', async () => {
+    let icoTokenSupply;
+    let icoTokenName;
+    let icoTokenSymbol;
+    let icoTokenDecimals;
+    let icoToken;
+
+    let scTokenSupply;
+    let scTokenName;
+    let scTokenSymbol;
+    let scTokenDecimals;
+    let scToken;
+
+    const voteAllocTimeStartOffset = 50;
+    const voteAllocTimeDifference = 120;
+
+    // Create token polls
+    beforeEach(async () => {
+      // ICO coin
+      icoTokenSupply = genNumEth(10);
+      icoTokenName = 'ico token';
+      icoTokenSymbol = 'ico';
+      icoTokenDecimals = new BigNumber(18);
+
+      // Stable coin
+      scTokenSupply = genNumEth(10);
+      scTokenName = 'stable coin';
+      scTokenSymbol = 'sc';
+      scTokenDecimals = new BigNumber(18);
+
+      dailyLimit = genNumEth(1); 
+      const allocStartTime = await web3.eth.getBlock('latest').timestamp + voteAllocTimeStartOffset;
+
+      icoToken = await ERC20.new(icoTokenSupply, icoTokenName, icoTokenDecimals, icoTokenSymbol, {from: company});
+      scToken  = await ERC20.new(scTokenSupply, scTokenName, scTokenDecimals, scTokenSymbol, {from: scOwner});
+
+      tokenPoll = await tpi.createTokenPoll(eFn, {from: company});
+      //MSFW.
+      await tpi.initializeTokenPoll(tokenPoll, icoToken.address, scToken.address, '0x0', allocStartTime, eFn, {from: company, gas: 200000});  // note, the escrow address looks incorrect
+    });
+
+    it('allocates votes', async () => {
+      // Give user 1 some money
+      const bal1 = genNumEth(1);
+      const vp1E = bal1.sqrt().floor(); 
+
+      await icoToken.transfer(user1, bal1, {from: company}); // Alloc tokens
+      await icoToken.transfer(user2, bal1, {from: company}); // Alloc tokens
+
+      // Fails before
+      await util.forwardEVMTime(0);
+      eq(await tpi.getState(tokenPoll), 'Initialized');
+      await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user1}));
+
+      // Works during
+      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
+      eq(await tpi.getState(tokenPoll), 'VoteAllocation');
+      await tpi.allocVotes(tokenPoll, {from: user1});
+
+      // Fails after
+      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference + 5);
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+      await util.expectThrow(tpi.allocVotes(tokenPoll, {from: user2}));
+    });
+
+    it('test cast vote', async () => {
+      const bal1 = getRandomInt(1000000000);
+      const bal2 = getRandomInt(1000000000);
+
+      // vote power
+      const vp1E = bal1.sqrt().floor();
+      const vp2E = bal2.sqrt().floor();
+      const percentVp1e = vp1E.dividedBy(vp1E.plus(vp2E));
+
+      const fundSize = getRandomInt(100000);
+
+      // Alloc tokens
+      await icoToken.transfer(user1, bal1, {from: company}); 
+      await icoToken.transfer(user2, bal2, {from: company}); 
+
+      // Put in vote allocation state
+      await util.forwardEVMTime(voteAllocTimeStartOffset + voteAllocTimeDifference / 2);
+      eq(await tpi.getState(tokenPoll), 'VoteAllocation');
+
+      // Votes
+      await tpi.allocVotes(tokenPoll, {from: user1});     // Alloc votes
+      await tpi.allocVotes(tokenPoll, {from: user2});     // Alloc votes
+      await util.forwardEVMTime(voteAllocTimeDifference);
+
+      // Setup next round then start the round
+      let t = web3.eth.getBlock('latest').timestamp; 
+      await tpi.setupNextRound(tokenPoll, 30 + t, fundSize, {from: company}, eFn);  // 30 seconds from now
+      await util.forwardEVMTime(120);
+
+      eq(await tpi.getState(tokenPoll), 'NextRoundApproved');
+      await tpi.startRound(tokenPoll, eFn, {from: company});
+      eq(await tpi.getState(tokenPoll), 'InRound');
+      await tpi.castVote(tokenPoll, true, {from: user1});
+      await tpi.castVote(tokenPoll, false, {from: user2});
+
+      eq( (await tpi.getUserVotePower(tokenPoll, user1))
+        , vp1E.toString(10));      
+      eq( (await tpi.getUserVotePower(tokenPoll, user2)).toString(10)
+        , vp2E.toString(10));      
+
+      eq( await tpi.getUserHasVoted(tokenPoll, user1, 1, 1)
+        , true);
+      eq( await tpi.getUserHasVoted(tokenPoll, user2, 1, 1)
+        , true);
+
+      eq( await tpi.getYesVotes(tokenPoll, 1, 1)
+        , '1');
+      eq( await tpi.getNoVotes(tokenPoll, 1, 1)
+        , '1');
+
+      eq( await tpi.getQuadraticYesVotes(tokenPoll, 1, 1)
+        , vp1E.toString(10));
+      eq( await tpi.getQuadraticNoVotes(tokenPoll, 1, 1)
+        , vp2E.toString(10));
+
+    });
+  });
 */
