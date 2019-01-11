@@ -9,9 +9,10 @@ contract TokenPollFactory {
 
   constructor() public {}
 
-  function createTokenPoll() public {
+  function createTokenPoll() public returns (address) {
     TokenPoll tp = new TokenPoll();
     tp.transferOwnership(msg.sender);
     emit TokenPollCreated(msg.sender, address(tp));
+    return address(tp);
   }
 }
