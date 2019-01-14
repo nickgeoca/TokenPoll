@@ -6,7 +6,7 @@ contract OwnableInterface {
 
   function getOwner() public view returns (address);
 
-  function transferOwnership(address newOwner) public; 
+  function transferOwnership(address newOwner) public returns (address, address); 
 }
 
 /**

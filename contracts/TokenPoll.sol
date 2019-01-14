@@ -369,7 +369,7 @@ contract TokenPoll is Ownable {
            , _approvedFunding, _weightedYesVotes, _weightedNoVotes
            , _yesVoters, _noVoters
            , _fundSize
-           )
+           );
   }
 
   // ================
