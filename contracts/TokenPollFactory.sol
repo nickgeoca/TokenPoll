@@ -5,14 +5,18 @@ import "./Ownable.sol";
 
 // Voting is quadratic
 contract TokenPollFactory {
-  event TokenPollCreated(address indexed sender, address tokenPoll);
+  event TokenPollCreated(address indexed owner, address tokenPoll);
 
   constructor() public {}
 
-  function createTokenPoll() public returns (address) {
+  function createTokenPoll() public returns (address owner, address tokenPoll) {
     TokenPoll tp = new TokenPoll();
     tp.transferOwnership(msg.sender);
-    emit TokenPollCreated(msg.sender, address(tp));
-    return address(tp);
+
+    owner = msg.sender;
+    tokenPoll = address(tp);
+
+    emit TokenPollCreated(owner, tokenPoll);
+    return (owner, tokenPoll);
   }
 }
