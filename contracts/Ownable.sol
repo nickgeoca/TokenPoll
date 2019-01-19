@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity >=0.4.15;
 
 
 contract OwnableInterface {
@@ -6,7 +6,7 @@ contract OwnableInterface {
 
   function getOwner() public view returns (address);
 
-  function transferOwnership(address newOwner) public; 
+  function transferOwnership(address newOwner) public returns (address, address); 
 }
 
 /**
@@ -23,7 +23,7 @@ contract Ownable is OwnableInterface {
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
    * account.
    */
-  function Ownable () internal {
+  constructor () internal {
     owner = msg.sender;
   }
 
@@ -41,7 +41,7 @@ contract Ownable is OwnableInterface {
    */
   function _transferOwnership(address newOwner) internal onlyOwner {
     require(newOwner != address(0));
-    OwnershipTransferred(owner, newOwner);
+    emit OwnershipTransferred(owner, newOwner);
     owner = newOwner;
   }
 }

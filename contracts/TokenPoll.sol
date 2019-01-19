@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity >=0.4.15;
 
 import "./Ownable.sol";
 import "./ERC20.sol";
@@ -10,7 +10,7 @@ import "./SafeMath.sol";
 */
 
 contract Escrow {
-  function submitTransaction(address destination, uint value, bytes data) public returns (uint transactionId);
+  function submitTransaction(address destination, uint value, bytes memory data) public returns (uint transactionId);
 }
 
 // Voting is quadratic
@@ -88,7 +88,7 @@ contract TokenPoll is Ownable {
     uninitializedFlag = true;
   }
 
-  function () public { require(false); return; }
+  function () external { require(false); return; }
 
   // =============
   // ICO Functions
@@ -100,7 +100,10 @@ contract TokenPoll is Ownable {
      @notice Change owner of token poll
      @param _newOwner New owner of token poll
   */
-  function transferOwnership(address _newOwner) public { _transferOwnership(_newOwner); } 
+  function transferOwnership(address _newOwner) public returns (address oldOwner, address newOwner) {
+    _transferOwnership(_newOwner);
+    return (oldOwner, _newOwner);
+  } 
 
   // This is used b/c order of creating contracts:
   //    1 tokenPollAddr = TokenPoll() 
@@ -134,13 +137,19 @@ contract TokenPoll is Ownable {
   /// @dev start one week from now with one unit of erc20 funding - setupNextRound(now + 1 week, 1 * 10**stableCoin.decimals());
   /// @param _startTime Start of the voting period. Typically a week before closed. Unix time stamp in seconds. After this time, startRound must be called to start the round.
   /// @param _fundSize Amount of funding attempting to release. This is a big number to web3. There are typically decimal places in ERC20 tokens too.
-  function setupNextRound(uint _startTime, uint _fundSize) public inState(State.NextRoundApproved) onlyOwner {
+  /// @return NewRoundInfo(uint indexed round, uint indexed votingRoundNumber, uint startTime, uint endTime, uint fundSize)
+  function setupNextRound(uint _startTime, uint _fundSize) public inState(State.NextRoundApproved) onlyOwner
+    returns (uint, uint, uint, uint, uint)
+  {
     require(_startTime <= (now.safeAdd(maxTimeBetweenRounds)));
     require(_startTime >= now);
     require(stableCoin.balanceOf(escrow) >= _fundSize);
-    emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
+
     currentRoundStartTime = _startTime;
     currentRoundFundSize = _fundSize;
+
+    emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
+    return (currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
   }
 
   /// @notice Starts the round. Must be manually called to start the round. (called after round _startTime. see setupNextRound).
@@ -170,7 +179,10 @@ contract TokenPoll is Ownable {
 
   /// @notice Each user calls this to vote on ICO funding or get a refund. Must be in InRound state (see setupNextRound)
   /// @param _vote Vote true to fund the ICO. False to get a refund.
-  function castVote(bool _vote) public inState(State.InRound) validVoter() {
+  /// @return Vote(address indexed voter, uint indexed round, uint indexed votingRoundNumber, bool vote)
+  function castVote(bool _vote) public inState(State.InRound) validVoter()
+    returns (address, uint, uint, bool)
+  {
     require(!getHasVoted(msg.sender, currentRoundNumber, votingRoundNumber));
 
     hasVoted[msg.sender][currentRoundNumber][votingRoundNumber] = true;
@@ -185,10 +197,14 @@ contract TokenPoll is Ownable {
     }
 
     emit Vote(msg.sender, currentRoundNumber, votingRoundNumber, _vote);
+    return (msg.sender, currentRoundNumber, votingRoundNumber, _vote);
   }
 
   /// @notice Each user calls this to get a refund. This happens after users successfully voted to refund. Must be in Refund state.
-  function userRefund() public inState(State.Refund) {
+  /// @return Transfer(address indexed from, address indexed to, uint indexed quantity)
+  function userRefund() public inState(State.Refund)
+    returns (address, address, uint)
+  {
     require(userTokenBalance[msg.sender] != 0);
     address user = msg.sender;
     uint userTokenCount = userTokenBalance[user];
@@ -198,6 +214,7 @@ contract TokenPoll is Ownable {
     require(stableCoin.transfer(user, refundSize));
     address from = address(this);
     emit Transfer(from, user, refundSize);
+    return (from, user, refundSize);
   }
 
   /// @notice This starts the refund after a refund was voted for. It only needs to be called once, then the refund starts. Must be in PostRoundDecision state.
@@ -282,7 +299,7 @@ contract TokenPoll is Ownable {
     for (i = 4+12; i < (4+32)   ; i++) data[i] = bytes20(_to)[i - (4+12)];
     for (i = 4+32; i < (4+32+32); i++) data[i] = bytes32(_amount)[i - (4+32)];
 
-    Escrow(escrow).submitTransaction(stableCoin, 0, data);
+    Escrow(escrow).submitTransaction(address(stableCoin), 0, data);
   }
 
   function putInRefundState() private {
@@ -304,7 +321,10 @@ contract TokenPoll is Ownable {
 
   // Sends funds to owner if approved
   // todo, vote params (qorem),
-  function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
+  /// @return RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yesVoters, uint noVoters, uint fundSize)
+  function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision)
+    returns (uint _roundNum, uint _voteRoundNum, bool _approvedFunding, uint _weightedYesVotes, uint _weightedNoVotes, uint _yesVoters, uint _noVoters, uint _fundSize)
+  {
     bool enoughVotes = quadraticYesVotes >= quadraticNoVotes;
     bool threeStrikes = 3 == votingRoundNumber;
 
@@ -315,14 +335,16 @@ contract TokenPoll is Ownable {
       escrowTransferTokens(getOwner(), currentRoundFundSize);
     }
 
-    // State changes
-    emit RoundResult( currentRoundNumber
-                    , votingRoundNumber
-                    , enoughVotes
-                    , quadraticYesVotes, quadraticNoVotes, yesVotes, noVotes
-                    , currentRoundFundSize
-                    );
+    _roundNum = currentRoundNumber;
+    _voteRoundNum = votingRoundNumber;
+    _approvedFunding = enoughVotes;
+    _weightedYesVotes = quadraticYesVotes;
+    _weightedNoVotes = quadraticNoVotes;
+    _yesVoters = yesVotes;
+    _noVoters = noVotes;
+    _fundSize = currentRoundFundSize;
 
+    // State changes
     if (enoughVotes) {
       votingRoundNumber = 1;
       currentRoundNumber = currentRoundNumber.safeAdd(1);
@@ -336,6 +358,17 @@ contract TokenPoll is Ownable {
     quadraticNoVotes = 0;
     yesVotes = 0;
     noVotes = 0;
+
+    emit RoundResult( _roundNum, _voteRoundNum
+                    , _approvedFunding, _weightedYesVotes, _weightedNoVotes
+                    , _yesVoters, _noVoters
+                    , _fundSize
+                    );
+    return ( _roundNum, _voteRoundNum
+           , _approvedFunding, _weightedYesVotes, _weightedNoVotes
+           , _yesVoters, _noVoters
+           , _fundSize
+           );
   }
 
   // ================

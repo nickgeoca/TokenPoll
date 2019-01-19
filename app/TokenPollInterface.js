@@ -1,3 +1,19 @@
+/*
+const run = async () => {
+  const execute = test.executeContract('52ae9ac819e41a5accb673020bf8fdb14ebef375', 'createTokenPoll', []);
+  console.log('Contract execution:\n' + execute + '\n');
+  result = await execute.whenStatusEquals('Ok');
+  console.log('Contract execution result:\n' + JSON.stringify(result) + '\n');
+};
+
+const runFn (c, a, f, ps) {
+  const execute = c.executeContract(a, f, ps);  
+  return await execute.whenStatusEquals('Ok');
+}
+
+*/
+
+
 /**
  * @author Nick Geoca <nickgeoca@gmail.com>
  * @file Web interface to TokenPoll.sol
