@@ -67,9 +67,9 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity >=0.4.15;\n\n\ncontract OwnableInterface {\n  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n  function getOwner() public view returns (address);\n\n  function transferOwnership(address newOwner) public returns (address, address); \n}\n\n/**\n * @title Ownable\n * @dev The Ownable contract has an owner address, and provides basic authorization control\n * functions, this simplifies the implementation of \"user permissions\".\n */\ncontract Ownable is OwnableInterface {\n  address private owner;\n\n  function _getOwner() internal view returns (address) { return owner; }\n\n  /**\n   * @dev The Ownable constructor sets the original `owner` of the contract to the sender\n   * account.\n   */\n  constructor () internal {\n    owner = msg.sender;\n  }\n\n  /**\n   * @dev Throws if called by any account other than the owner.\n   */\n  modifier onlyOwner() {\n    require(msg.sender == owner);\n    _;\n  }\n\n  /**\n   * @dev Allows the current owner to transfer control of the contract to a newOwner.\n   * @param newOwner The address to transfer ownership to.\n   */\n  function _transferOwnership(address newOwner) internal onlyOwner {\n    require(newOwner != address(0));\n    emit OwnershipTransferred(owner, newOwner);\n    owner = newOwner;\n  }\n}\n",
-  "sourcePath": "/home/nick/workspace/dogood-site/doGood2/doGood/blockchain/TokenPoll/contracts/Ownable.sol",
+  "sourcePath": "/home/nick/workspace/TokenPoll/contracts/Ownable.sol",
   "ast": {
-    "absolutePath": "/home/nick/workspace/dogood-site/doGood2/doGood/blockchain/TokenPoll/contracts/Ownable.sol",
+    "absolutePath": "/home/nick/workspace/TokenPoll/contracts/Ownable.sol",
     "exportedSymbols": {
       "Ownable": [
         416
@@ -1051,7 +1051,7 @@
     "src": "0:1272:2"
   },
   "legacyAST": {
-    "absolutePath": "/home/nick/workspace/dogood-site/doGood2/doGood/blockchain/TokenPoll/contracts/Ownable.sol",
+    "absolutePath": "/home/nick/workspace/TokenPoll/contracts/Ownable.sol",
     "exportedSymbols": {
       "Ownable": [
         416
@@ -2038,7 +2038,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.1",
-  "updatedAt": "2019-01-21T16:53:31.969Z",
+  "updatedAt": "2019-01-21T17:19:46.656Z",
   "devdoc": {
     "details": "The Ownable contract has an owner address, and provides basic authorization control functions, this simplifies the implementation of \"user permissions\".",
     "methods": {
