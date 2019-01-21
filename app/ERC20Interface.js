@@ -1,4 +1,8 @@
-var ERC20 = artifacts.require('./../contracts/ERC20.sol');
+import Web3 from "web3";
+import ERC20_artifact from "./../build/contracts/ERC20.json";
+
+const getContract = (web3, artifact) => new web3.eth.Contract(artifact.abi);
+let ERC20;
 
 // ==============
 // Misc
@@ -19,7 +23,8 @@ const throwIfError = e => {if (e) throw e;}
 
 // Call this once before calling any other functions to initialize the file.
 const init = async (web3, eFn) => { try {
-  await ERC20.setProvider(web3.currentProvider);
+  // get contract instance
+  ERC20 = getContract(web3, ERC20_artifact);
 } catch (e) { eFn(e); }}
 
 const transfer = async (token, to, value, web3Params, eFn) => { try {

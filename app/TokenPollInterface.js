@@ -19,11 +19,19 @@ const runFn (c, a, f, ps) {
  * @file Web interface to TokenPoll.sol
  */
 
-var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
-var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
-var ERC20 = artifacts.require('./../contracts/ERC20.sol');
-var tokenpoll = undefined;
-var BigNumber = require('bignumber.js');
+
+import TokenPollFactory_artifact from "./../build/contracts/TokenPollFactory.json";
+import TokenPoll_artifact from "./../build/contracts/TokenPoll.json";
+import ERC20_artifact from "./../build/contracts/ERC20.json";
+
+const getContract = async (web3, artifact) => new web3.eth.Contract(artifact.abi);
+const getContractDeployed = async (web3, artifact) => new web3.eth.Contract(artifact.abi, artifact.networks[await web3.eth.net.getId()].address);
+
+let TokenPollFactory;
+let TokenPoll;
+let ERC20;
+let tokenpoll = undefined;
+let BigNumber = require('bignumber.js');
 let web3;
 let tpFact;
 
@@ -68,10 +76,11 @@ const throwIfError = e => {if (e) throw e;}
  * @param {callback} eFn Error handler
 */
 const init = async (_web3, eFn) => { try {
+  TokenPollFactory = await getContractDeployed(_web3, TokenPollFactory_artifact);
+  TokenPoll = getContract(_web3, TokenPoll_artifact);
+  ERC20 = getContract(_web3, ERC20_artifact);
+
   web3 = _web3;
-  await TokenPollFactory.setProvider(web3.currentProvider);
-  await TokenPoll.setProvider(web3.currentProvider);
-  tpFact = await TokenPollFactory.deployed();
 } catch (e) { eFn(e); }}
 
 const devSetTPF = tpf => { tpFact = tpf; }
@@ -300,6 +309,7 @@ const getUserRefundStatus = async(tokenPoll, user, eFn) => { try {
 const getRemainingFunds = async(tokenPoll, eFn) => { try {
   const escrowAddress = await tokenPoll.escrow();
   const stableCoinAddress = await tokenPoll.stableCoin();
+  
   return await ERC20.at(stableCoinAddress).balanceOf(escrowAddress); 
 } catch (e) { eFn(e); }}
 
