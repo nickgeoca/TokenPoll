@@ -1,3 +1,4 @@
+require('babel-polyfill');
 import Web3 from "web3";
 import ERC20_artifact from "./../build/contracts/ERC20.json";
 
