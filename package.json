@@ -5,7 +5,9 @@
   "scripts": {
     "lint": "eslint ./",
     "build": "webpack",
-    "dev": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "migrate-eth": "truffle migrate",
+    "migrate-dis": "NODE_ENV=development node migrate_dispatch.js"
   },
   "author": "Nick Geoca",
   "license": "",
@@ -57,6 +59,7 @@
     "chai-as-promised": "^7.1.1",
     "react-app": "^1.1.2",
     "solidity-sha3": "^0.4.1",
-    "truffle-hdwallet-provider": "^1.0.0-web3one.0"
+    "truffle-hdwallet-provider": "^1.0.0-web3one.0",
+    "@dispatchlabs/dispatch-js": "^2.4.2"
   }
 }

@@ -102,7 +102,7 @@ contract TokenPoll is Ownable {
   */
   function transferOwnership(address _newOwner) public returns (address oldOwner, address newOwner) {
     _transferOwnership(_newOwner);
-    return (oldOwner, _newOwner);
+    return (getOwner(), _newOwner);
   } 
 
   // This is used b/c order of creating contracts:
