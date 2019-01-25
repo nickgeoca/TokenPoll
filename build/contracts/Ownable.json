@@ -67,9 +67,9 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity >=0.4.15;\n\n\ncontract OwnableInterface {\n  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n  function getOwner() public view returns (address);\n\n  function transferOwnership(address newOwner) public returns (address, address); \n}\n\n/**\n * @title Ownable\n * @dev The Ownable contract has an owner address, and provides basic authorization control\n * functions, this simplifies the implementation of \"user permissions\".\n */\ncontract Ownable is OwnableInterface {\n  address private owner;\n\n  function _getOwner() internal view returns (address) { return owner; }\n\n  /**\n   * @dev The Ownable constructor sets the original `owner` of the contract to the sender\n   * account.\n   */\n  constructor () internal {\n    owner = msg.sender;\n  }\n\n  /**\n   * @dev Throws if called by any account other than the owner.\n   */\n  modifier onlyOwner() {\n    require(msg.sender == owner);\n    _;\n  }\n\n  /**\n   * @dev Allows the current owner to transfer control of the contract to a newOwner.\n   * @param newOwner The address to transfer ownership to.\n   */\n  function _transferOwnership(address newOwner) internal onlyOwner {\n    require(newOwner != address(0));\n    emit OwnershipTransferred(owner, newOwner);\n    owner = newOwner;\n  }\n}\n",
-  "sourcePath": "/home/nick/workspace/TokenPoll/contracts/Ownable.sol",
+  "sourcePath": "/home/khan/Projects/TokenPoll/contracts/Ownable.sol",
   "ast": {
-    "absolutePath": "/home/nick/workspace/TokenPoll/contracts/Ownable.sol",
+    "absolutePath": "/home/khan/Projects/TokenPoll/contracts/Ownable.sol",
     "exportedSymbols": {
       "Ownable": [
         416
@@ -524,7 +524,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 1779,
+                        "referencedDeclaration": 1780,
                         "src": "769:3:2",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -611,7 +611,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1779,
+                            "referencedDeclaration": 1780,
                             "src": "899:3:2",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -665,10 +665,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1782,
-                        1783
+                        1783,
+                        1784
                       ],
-                      "referencedDeclaration": 1782,
+                      "referencedDeclaration": 1783,
                       "src": "891:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -823,10 +823,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1782,
-                        1783
+                        1783,
+                        1784
                       ],
-                      "referencedDeclaration": 1782,
+                      "referencedDeclaration": 1783,
                       "src": "1163:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -1051,7 +1051,7 @@
     "src": "0:1272:2"
   },
   "legacyAST": {
-    "absolutePath": "/home/nick/workspace/TokenPoll/contracts/Ownable.sol",
+    "absolutePath": "/home/khan/Projects/TokenPoll/contracts/Ownable.sol",
     "exportedSymbols": {
       "Ownable": [
         416
@@ -1506,7 +1506,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 1779,
+                        "referencedDeclaration": 1780,
                         "src": "769:3:2",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -1593,7 +1593,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1779,
+                            "referencedDeclaration": 1780,
                             "src": "899:3:2",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -1647,10 +1647,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1782,
-                        1783
+                        1783,
+                        1784
                       ],
-                      "referencedDeclaration": 1782,
+                      "referencedDeclaration": 1783,
                       "src": "891:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -1805,10 +1805,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        1782,
-                        1783
+                        1783,
+                        1784
                       ],
-                      "referencedDeclaration": 1782,
+                      "referencedDeclaration": 1783,
                       "src": "1163:7:2",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -2034,11 +2034,11 @@
   },
   "compiler": {
     "name": "solc",
-    "version": "0.5.0+commit.1d4f565a.Emscripten.clang"
+    "version": "0.5.1+commit.c8a2cb62.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.1",
-  "updatedAt": "2019-01-21T17:19:46.656Z",
+  "schemaVersion": "3.0.0-beta.2",
+  "updatedAt": "2019-01-25T08:35:08.638Z",
   "devdoc": {
     "details": "The Ownable contract has an owner address, and provides basic authorization control functions, this simplifies the implementation of \"user permissions\".",
     "methods": {
