@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity >=0.4.15;
 
 import "./TokenPoll.sol";
 import "./Ownable.sol";
@@ -7,11 +7,11 @@ import "./Ownable.sol";
 contract TokenPollFactory {
   event TokenPollCreated(address indexed sender, address tokenPoll);
 
-  function TokenPollFactory () {}
+  constructor() public {}
 
-  function createTokenPoll() {
+  function createTokenPoll() public {
     TokenPoll tp = new TokenPoll();
     tp.transferOwnership(msg.sender);
-    TokenPollCreated(msg.sender, tp);
+    emit TokenPollCreated(msg.sender, address(tp));
   }
 }
