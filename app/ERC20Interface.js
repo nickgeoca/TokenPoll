@@ -1,4 +1,8 @@
-var ERC20 = artifacts.require('./../contracts/ERC20.sol');
+//require('babel-polyfill');
+const BigNumber = require('bignumber.js');
+
+const contract = require('truffle-contract');
+const ERC20 = contract(require('../build/contracts/ERC20.json'));
 
 // ==============
 // Misc
