@@ -3,12 +3,20 @@
  * @file Web interface to TokenPoll.sol
  */
 
-var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
-var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
-var ERC20 = artifacts.require('./../contracts/ERC20.sol');
-var tokenpoll = undefined;
-var BigNumber = require('bignumber.js');
-let web3;
+require('babel-polyfill');
+const BigNumber = require('bignumber.js');
+
+const contract = require('truffle-contract');
+const TokenPollFactory = contract(require('../build/contracts/TokenPollFactory.json'));
+const TokenPoll = contract(require('../build/contracts/TokenPoll.json'));
+const ERC20 = contract(require('../build/contracts/ERC20.json'));
+
+// var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
+// var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
+// var ERC20 = artifacts.require('./../contracts/ERC20.sol');
+// var tokenpoll = undefined;
+// var BigNumber = require('bignumber.js');
+// let web3;
 
 // ==============
 // Misc
