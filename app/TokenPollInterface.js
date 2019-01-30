@@ -3,7 +3,7 @@
  * @file Web interface to TokenPoll.sol
  */
 
-//require('babel-polyfill');
+require('babel-polyfill');
 const BigNumber = require('bignumber.js');
 
 const contract = require('truffle-contract');
