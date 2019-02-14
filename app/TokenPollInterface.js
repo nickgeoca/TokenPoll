@@ -508,6 +508,7 @@ module.exports =
   , getRemainingFunds
   , getFundingRoundNumber
   , getVotingRoundNumber
+  , getTokenPollWithAddress
 
   // Vote stats 1
   , getUserHasVoted
