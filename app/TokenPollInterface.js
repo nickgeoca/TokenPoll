@@ -76,13 +76,14 @@ const init = async (_web3, eFn) => { try {
  *
  * @function createTokenPoll
  * @async
+ * @param {address} Address of project wallet
  * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
  * @param {callback} eFn Error handler
  * @returns {Object} The Token Poll as a truffle smart contract object. Other functions in this library rely on it as a parameter 'tokenPoll'.
 */
-const createTokenPoll = async (web3Params, eFn) => { try {
+const createTokenPoll = async (projectWallet, web3Params, eFn) => { try {
   let fact = await TokenPollFactory.deployed();
-  let tx = await fact.createTokenPoll(web3Params);
+  let tx = await fact.createTokenPoll(projectWallet, web3Params);
 
   let event = pullEvent(tx, 'TokenPollCreated');
   const address = event.tokenPoll;
