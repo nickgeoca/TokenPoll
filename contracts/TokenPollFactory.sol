@@ -9,8 +9,8 @@ contract TokenPollFactory {
 
   constructor() public {}
 
-  function createTokenPoll() public {
-    TokenPoll tp = new TokenPoll();
+  function createTokenPoll(address projectWallet) public {
+    TokenPoll tp = new TokenPoll(projectWallet);
     tp.transferOwnership(msg.sender);
     emit TokenPollCreated(msg.sender, address(tp));
   }

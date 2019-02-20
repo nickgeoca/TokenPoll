@@ -61,6 +61,7 @@ contract TokenPoll is Ownable {
   uint public currentRoundStartTime; // ...
 
   // Fund variables
+  address projectWallet;
   ERC20 public stableCoin;           // Location of funds
   address public escrow;             // Initiate escrow to send funds to ICO wallet
   uint public totalRefund;           // Total size of refund
@@ -84,7 +85,8 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  constructor () public Ownable() {
+  constructor (address _projectWallet) public Ownable() {
+    projectWallet = _projectWallet;
     uninitializedFlag = true;
   }
 
@@ -102,10 +104,9 @@ contract TokenPoll is Ownable {
   */
   function transferOwnership(address _newOwner) public { _transferOwnership(_newOwner); } 
 
-  // This is used b/c order of creating contracts:
-  //    1 tokenPollAddr = TokenPoll() 
-  //    2 escrowAddr    = Escrow(tokenPollAddr)
-  //    3                 TokenPoll.initialize(escrowAddress)
+  // This is used b/c order of creating contracts: 1 tokenPollAddr =
+  //    TokenPoll() 2 escrowAddr = Escrow(tokenPollAddr) 3
+  //    TokenPoll.initialize(escrowAddress)
 
   /// @notice Initialize the token poll. This also sets the voter allocation time period.
   /// @dev Start allocation one week from now- initialize(0x123.., 0x321, 0x222, current unix time (seconds) + 1 week);
@@ -199,8 +200,8 @@ contract TokenPoll is Ownable {
     require(stableCoin.transfer(user, refundSize));
     address from = address(this);
     emit Transfer(from, user, refundSize);
-  }
-
+  
+}
   /// @notice This starts the refund after a refund was voted for. It only needs to be called once, then the refund starts. Must be in PostRoundDecision state.
   function startRefund_voteFailed() public { transitionFromState_PostRoundDecision(); }
 
@@ -313,7 +314,7 @@ contract TokenPoll is Ownable {
       putInRefundState();
     }
     else if (enoughVotes) {
-      escrowTransferTokens(getOwner(), currentRoundFundSize);
+      escrowTransferTokens(projectWallet, currentRoundFundSize);
     }
 
     // State changes
