@@ -104,6 +104,8 @@ contract TokenPoll is Ownable {
   */
   function transferOwnership(address _newOwner) public { _transferOwnership(_newOwner); } 
 
+  function setProjectWallet (address _projectWallet) public onlyOwner { projectWallet = _projectWallet; }
+
   // This is used b/c order of creating contracts: 1 tokenPollAddr =
   //    TokenPoll() 2 escrowAddr = Escrow(tokenPollAddr) 3
   //    TokenPoll.initialize(escrowAddress)
