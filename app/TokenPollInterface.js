@@ -116,15 +116,34 @@ const createTokenPoll = async (web3Params, eFn) => { try {
  * @param {address} scTokenAddress The address of the funding token
  * @param {address} escrow Address of the multi-sig wallet
  * @param {BigNum} allocStarTime Unix time stamp in seconds. Start of vote allocation period. Must be greater than the current block time when excuted on the blockchain.
+ * @param {BigNum} roundOneFunding 
  * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
  * @param {callback} eFn Error handler
  * @returns {Object} Etheruem transaction result.
 */
-const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params, eFn) => { try {
+const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, roundOneFunding, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Uninitialized');
 
-  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, web3Params);
+  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, roundOneFunding, web3Params);
+} catch (e) { eFn(e); }}
+
+
+/**
+ * Pull ICO funds and disburse round 1
+ *
+ * @example 
+ *
+ * @function pullFundsAndDisburseRound1
+ * @async
+ * @param {address} fundsOrigin Where the funds are coming from. They must be approved first- ERC20(tokenPoll address, size of funds)
+ * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
+ * @param {callback} eFn Error handler
+ * @returns {Object} Etheruem transaction result.
+*/
+const pullFundsAndDisburseRound1 = async (fundsOrigin, web3Params, eFn) => { try {
+  let tx = await tokenPoll.pullFundsAndDisburseRound1(fundsOrigin, web3Params);
+  return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
 } catch (e) { eFn(e); }}
 
 /**
@@ -486,6 +505,7 @@ module.exports =
   { init
   , createTokenPoll
   , initializeTokenPoll
+  , pullFundsAndDisburseRound1
   , setupNextRound
   , startRound
   , approveNewRound

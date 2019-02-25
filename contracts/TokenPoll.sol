@@ -61,9 +61,11 @@ contract TokenPoll is Ownable {
   uint public currentRoundStartTime; // ...
 
   // Fund variables
+  address projectWallet;
   ERC20 public stableCoin;           // Location of funds
   address public escrow;             // Initiate escrow to send funds to ICO wallet
   uint public totalRefund;           // Total size of refund
+  uint roundOneFunding;
 
   // Voting variables
   ERC20 public icoCoin;              // Voting power is based on token ownership count
@@ -84,7 +86,8 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  constructor () public Ownable() {
+  constructor (address _projectWallet) public Ownable() {
+    projectWallet = _projectWallet;
     uninitializedFlag = true;
   }
 
@@ -102,10 +105,11 @@ contract TokenPoll is Ownable {
   */
   function transferOwnership(address _newOwner) public { _transferOwnership(_newOwner); } 
 
-  // This is used b/c order of creating contracts:
-  //    1 tokenPollAddr = TokenPoll() 
-  //    2 escrowAddr    = Escrow(tokenPollAddr)
-  //    3                 TokenPoll.initialize(escrowAddress)
+
+
+  // This is used b/c order of creating contracts: 1 tokenPollAddr =
+  //    TokenPoll() 2 escrowAddr = Escrow(tokenPollAddr) 3
+  //    TokenPoll.initialize(escrowAddress)
 
   /// @notice Initialize the token poll. This also sets the voter allocation time period.
   /// @dev Start allocation one week from now- initialize(0x123.., 0x321, 0x222, current unix time (seconds) + 1 week);
@@ -113,7 +117,7 @@ contract TokenPoll is Ownable {
   /// @param _stableCoin The ERC20 funding token held in escrow. Vote yes to release funds to ico, no to refund users
   /// @param _escrow The escrow address. This is a multisig wallet address
   /// @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
-  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime) public inState(State.Uninitialized) onlyOwner {
+  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _roundOneFunding) public inState(State.Uninitialized) onlyOwner {
     // require(_allocStartTime > now);
     // todo, look more at error checking. Like time limit on allocation start
 
@@ -129,7 +133,22 @@ contract TokenPoll is Ownable {
     currentRoundNumber = 2;
     votingRoundNumber = 1;
     currentRoundStartTime = allocEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
+    roundOneFunding = _roundOneFunding;
   }
+
+  function pullFundsAndDisburseRound1(address fundsOrigin) onlyOwner public {
+    // Re-entrancy fix
+    uint r1Funding = roundOneFunding;  
+    roundOneFunding = 0;
+
+    uint fundsBalance = stableCoin.balanceOf(address(this));
+
+    // Get funds, then send round 1
+    require(stableCoin.transferFrom(fundsOrigin, escrow, fundsBalance));
+    require(stableCoin.balanceOf(escrow) == fundsBalance);
+    escrowTransferTokens(projectWallet, r1Funding);
+  }
+
 
   /// @notice Sets up the next round to vote on approving ICO funding. Must be in state NextRoundApproved
   /// @dev start one week from now with one unit of erc20 funding - setupNextRound(now + 1 week, 1 * 10**stableCoin.decimals());
@@ -139,6 +158,7 @@ contract TokenPoll is Ownable {
     require(_startTime <= (now.safeAdd(maxTimeBetweenRounds)));
     require(_startTime >= now);
     require(stableCoin.balanceOf(escrow) >= _fundSize);
+
     emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
     currentRoundStartTime = _startTime;
     currentRoundFundSize = _fundSize;
@@ -153,7 +173,7 @@ contract TokenPoll is Ownable {
   // ===============
   // Voter Functions
   // ===============
-
+  
   /// @notice Each user calls this to allocate their votes. Must be in allocation time-period/state (see initialize)
   function allocVotes() public { // {inState(State.VoteAllocation) {
     bool notYetAllocated = userTokenBalance[msg.sender] == 0;
@@ -199,8 +219,8 @@ contract TokenPoll is Ownable {
     require(stableCoin.transfer(user, refundSize));
     address from = address(this);
     emit Transfer(from, user, refundSize);
-  }
-
+  
+}
   /// @notice This starts the refund after a refund was voted for. It only needs to be called once, then the refund starts. Must be in PostRoundDecision state.
   function startRefund_voteFailed() public { transitionFromState_PostRoundDecision(); }
 
@@ -313,7 +333,7 @@ contract TokenPoll is Ownable {
       putInRefundState();
     }
     else if (enoughVotes) {
-      escrowTransferTokens(getOwner(), currentRoundFundSize);
+      escrowTransferTokens(projectWallet, currentRoundFundSize);
     }
 
     // State changes
