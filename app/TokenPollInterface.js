@@ -130,15 +130,29 @@ const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, a
 /**
  * Initializes the TokenPoll's wallet.
  *
- * @function initializeEscrow
+ * @function initializeEscrowAddress
  * @async
  * @param {address} escrow
  * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
  * @param {callback} eFn Error handler
  * @returns {Object} Etheruem transaction result.
 */
-const initializeEscrow = async (tokenPoll, escrow, web3Params, eFn) => { try {
-  return await tokenPoll.initialize(escrow, web3Params);
+const initializeEscrowAddress = async (tokenPoll, escrow, web3Params, eFn) => { try {
+  return await tokenPoll.initializeEscrowAddress(escrow, web3Params);
+} catch (e) { eFn(e); }}
+
+/**
+ * Initializes the project wallet address.
+ *
+ * @function initializeProjectWalletAddress
+ * @async
+ * @param {address} projectWallet
+ * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
+ * @param {callback} eFn Error handler
+ * @returns {Object} Etheruem transaction result.
+*/
+const initializeProjectWalletAddress = async (tokenPoll, projectWallet, web3Params, eFn) => { try {
+  return await tokenPoll.initializeProjectWalletAddress(escrow, web3Params);
 } catch (e) { eFn(e); }}
 
 /**
@@ -517,7 +531,8 @@ module.exports =
   { init
   , createTokenPoll
   , initializeTokenPoll
-  , initializeEscrow
+  , initializeEscrowAddress
+  , initializeProjectWalletAddress
   , pullFundsAndDisburseRound1
   , setupNextRound
   , startRound

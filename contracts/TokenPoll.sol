@@ -86,8 +86,7 @@ contract TokenPoll is Ownable {
   // Constructor & fallback
   // ======================
 
-  constructor (address _projectWallet) public Ownable() {
-    projectWallet = _projectWallet;
+  constructor () public Ownable() {
     uninitializedFlag = true;
   }
 
@@ -139,8 +138,14 @@ contract TokenPoll is Ownable {
     escrow = _escrow;
   }
 
+  function initializeProjectWalletAddress(address _projectWallet) onlyOwner public {
+    require(projectWallet == address(0x0));
+    projectWallet = _projectWallet;
+  }
+
   function pullFundsAndDisburseRound1(address fundsOrigin) onlyOwner public {
     require(escrow != address(0x0));
+    require(projectWallet == address(0x0));
 
     // Re-entrancy fix
     uint r1Funding = roundOneFunding;  
