@@ -115,9 +115,8 @@ contract TokenPoll is Ownable {
   /// @dev Start allocation one week from now- initialize(0x123.., 0x321, 0x222, current unix time (seconds) + 1 week);
   /// @param _icoToken The ICO's ERC20 token. Get the voters from this contract
   /// @param _stableCoin The ERC20 funding token held in escrow. Vote yes to release funds to ico, no to refund users
-  /// @param _escrow The escrow address. This is a multisig wallet address
   /// @param _allocStartTime Start of allocation period. Typically a week. Unix time stamp in seconds.
-  function initialize(address _icoToken, address _stableCoin, address _escrow, uint _allocStartTime, uint _roundOneFunding) public inState(State.Uninitialized) onlyOwner {
+  function initialize(address _icoToken, address _stableCoin, uint _allocStartTime, uint _roundOneFunding) public inState(State.Uninitialized) onlyOwner {
     // require(_allocStartTime > now);
     // todo, look more at error checking. Like time limit on allocation start
 
@@ -129,14 +128,20 @@ contract TokenPoll is Ownable {
 
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
-    escrow = _escrow;
     currentRoundNumber = 2;
     votingRoundNumber = 1;
     currentRoundStartTime = allocEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
     roundOneFunding = _roundOneFunding;
   }
 
+  function initializeEscrowAddress(address _escrow) onlyOwner public {
+    require(escrow == address(0x0));
+    escrow = _escrow;
+  }
+
   function pullFundsAndDisburseRound1(address fundsOrigin) onlyOwner public {
+    require(escrow != address(0x0));
+
     // Re-entrancy fix
     uint r1Funding = roundOneFunding;  
     roundOneFunding = 0;
@@ -148,7 +153,6 @@ contract TokenPoll is Ownable {
     require(stableCoin.balanceOf(escrow) == fundsBalance);
     escrowTransferTokens(projectWallet, r1Funding);
   }
-
 
   /// @notice Sets up the next round to vote on approving ICO funding. Must be in state NextRoundApproved
   /// @dev start one week from now with one unit of erc20 funding - setupNextRound(now + 1 week, 1 * 10**stableCoin.decimals());

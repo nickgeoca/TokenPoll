@@ -114,20 +114,32 @@ const createTokenPoll = async (web3Params, eFn) => { try {
  * @param {Object} tokenPoll The token poll that was created in createTokenPoll.
  * @param {address} icoTokenAddress The address of the ico token
  * @param {address} scTokenAddress The address of the funding token
- * @param {address} escrow Address of the multi-sig wallet
  * @param {BigNum} allocStarTime Unix time stamp in seconds. Start of vote allocation period. Must be greater than the current block time when excuted on the blockchain.
  * @param {BigNum} roundOneFunding 
  * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
  * @param {callback} eFn Error handler
  * @returns {Object} Etheruem transaction result.
 */
-const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, escrow, allocStartTime, roundOneFunding, web3Params, eFn) => { try {
+const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, allocStartTime, roundOneFunding, web3Params, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
   await verifyInState(tokenPoll, 'Uninitialized');
 
-  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, escrow, allocStartTime, roundOneFunding, web3Params);
+  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, allocStartTime, roundOneFunding, web3Params);
 } catch (e) { eFn(e); }}
 
+/**
+ * Initializes the TokenPoll's wallet.
+ *
+ * @function initializeEscrow
+ * @async
+ * @param {address} escrow
+ * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
+ * @param {callback} eFn Error handler
+ * @returns {Object} Etheruem transaction result.
+*/
+const initializeEscrow = async (tokenPoll, escrow, web3Params, eFn) => { try {
+  return await tokenPoll.initialize(escrow, web3Params);
+} catch (e) { eFn(e); }}
 
 /**
  * Pull ICO funds and disburse round 1
@@ -505,6 +517,7 @@ module.exports =
   { init
   , createTokenPoll
   , initializeTokenPoll
+  , initializeEscrow
   , pullFundsAndDisburseRound1
   , setupNextRound
   , startRound
