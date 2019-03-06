@@ -212,9 +212,9 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   }
 
   function initializeVoterRegistration(uint256 startTime) onlyOwner nonReentrant external {
-    require(block.timestamp < allocStartTime, "Vote registration has already started");
+    devRequire(block.timestamp < allocStartTime, "Vote registration has already started");
     devRequire(startTime > block.timestamp, "Start time is earlier than current time");
-    require(startTime < (block.timestamp + 24 weeks), "Start time is after 6 months");
+    devRequire(startTime < (block.timestamp + 24 weeks), "Start time is after 6 months");
 
     allocStartTime = startTime;
     allocEndTime   = startTime + allocationDuration;
