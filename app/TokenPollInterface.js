@@ -87,16 +87,6 @@ const createTokenPoll = async (web3Params, eFn) => { try {
   let event = pullEvent(tx, 'TokenPollCreated');
   const address = event.tokenPoll;
 
-  // See if there is code. Try 5 times, wait 1 second each
-  const delayP = time => result => new Promise(resolve => setTimeout(() => resolve(result), time));
-  for (let i = 0; i < 60; i++) {
-    await delayP(1000);
-    const code = await web3.eth.getCode(address);
-    const codeAvailable = code && code !== '0x0' && code !== '0x';
-    if (codeAvailable) return await TokenPoll.at(address);
-  }
-
-  // If no code, then try anyway
   return await TokenPoll.at(event.tokenPoll);
 } catch (e) { eFn(e); }}
 
