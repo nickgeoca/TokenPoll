@@ -71,7 +71,7 @@ contract QuadraticVoting {
   //                  Functions
   // **************************************************
   function registerVoter(uint amount) internal {
-    require(voterHasRegistered() == false, "Only allowed ot allocate one time");
+    require(voterHasRegistered() == false, "Only allowed ot register one time");
     require(amount != 0, "Must have a token balance");
 
     totalVotePower  = totalVotePower.safeAdd(getUserVotePower(msg.sender));
@@ -158,7 +158,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   bool public refundFlag;            // keep track of state
 
   // Round variables
-  uint public constant allocationDuration = 1 seconds;
+  uint public constant voterRegistrationDuration = 1 seconds;
   uint public constant maxTimeBetweenRounds = 180 days;
   uint public constant roundDuration = 7 minutes;
 
@@ -166,8 +166,8 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   uint public currentRoundNumber;
   uint public votingRoundNumber;
 
-  uint public allocStartTime;        // Start/end of voting allocation
-  uint public allocEndTime;          // "
+  uint public registrationStartTime;        // Start/end of voting registration
+  uint public registrationEndTime;          // "
 
   uint public currentRoundStartTime; // ...
 
@@ -208,16 +208,16 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
     escrow = _escrow;
-    currentRoundStartTime = allocEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
+    currentRoundStartTime = registrationEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
   }
 
   function initializeVoterRegistration(uint256 startTime) onlyOwner nonReentrant external {
-    devRequire(block.timestamp < allocStartTime, "Vote registration has already started");
+    devRequire(block.timestamp < registrationStartTime, "Vote registration has already started");
     devRequire(startTime > block.timestamp, "Start time is earlier than current time");
     devRequire(startTime < (block.timestamp + 24 weeks), "Start time is after 6 months");
 
-    allocStartTime = startTime;
-    allocEndTime   = startTime + allocationDuration;
+    registrationStartTime = startTime;
+    registrationEndTime   = startTime.safeAdd(voterRegistrationDuration);
   }
 
   function initializeProjectWalletAddress(address _projectWallet) onlyOwner external {
@@ -297,7 +297,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   }
   
   function registerAsVoter() external nonReentrant {
-    devRequire(allocStartTime < block.timestamp && block.timestamp < allocEndTime, "Registration has not started or is over");
+    devRequire(registrationStartTime < block.timestamp && block.timestamp < registrationEndTime, "Registration has not started or is over");
     uint userTokens = icoCoin.balanceOf(msg.sender);
     registerVoter(userTokens);
   }
