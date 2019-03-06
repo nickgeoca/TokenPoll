@@ -16,7 +16,7 @@ const ERC20 = contract(require('../build/contracts/ERC20.json'));
 // var ERC20 = artifacts.require('./../contracts/ERC20.sol');
 // var tokenpoll = undefined;
 // var BigNumber = require('bignumber.js');
-// let web3;
+let web3;
 
 // ==============
 // Misc
