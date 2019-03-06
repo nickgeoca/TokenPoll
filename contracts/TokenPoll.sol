@@ -131,6 +131,13 @@ contract TokenPoll is Ownable {
     currentRoundStartTime = allocEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
   }
 
+  function pullFunds(address fundsOrigin, uint fundsBalance) public onlyOwner {
+    require(stableCoin.transferFrom(fundsOrigin, escrow, fundsBalance));
+    require(stableCoin.balanceOf(escrow) == fundsBalance);
+    escrowTransferTokens(getOwner(), fundsBalance);
+    emit RoundResult( 1, 1, true, 0, 0, 0, 0, fundsBalance);
+  }
+
   /// @notice Sets up the next round to vote on approving ICO funding. Must be in state NextRoundApproved
   /// @dev start one week from now with one unit of erc20 funding - setupNextRound(now + 1 week, 1 * 10**stableCoin.decimals());
   /// @param _startTime Start of the voting period. Typically a week before closed. Unix time stamp in seconds. After this time, startRound must be called to start the round.
@@ -172,7 +179,7 @@ contract TokenPoll is Ownable {
   /// @notice Each user calls this to vote on ICO funding or get a refund. Must be in InRound state (see setupNextRound)
   /// @param _vote Vote true to fund the ICO. False to get a refund.
   function castVote(bool _vote) public inState(State.InRound) validVoter() {
-    require(!getHasVoted(msg.sender, currentRoundNumber, votingRoundNumber));
+    require(hasUserVoted(msg.sender, currentRoundNumber, votingRoundNumber) == false);
 
     hasVoted[msg.sender][currentRoundNumber][votingRoundNumber] = true;
 
@@ -221,7 +228,7 @@ contract TokenPoll is Ownable {
   function getRoundEndTime() public view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
 
   /// @notice Gets if the user has voted, for given funding-round and voting-round number
-  function getHasVoted(address user, uint _fundingRoundNum, uint _votingRoundNum) public view returns (bool) { return hasVoted[user][_fundingRoundNum][_votingRoundNum]; }
+  function hasUserVoted(address user, uint _fundingRoundNum, uint _votingRoundNum) public view returns (bool) { return hasVoted[user][_fundingRoundNum][_votingRoundNum]; }
 
   /// @notice Gets the current state 
   function getState() public view returns (State) {
@@ -304,7 +311,7 @@ contract TokenPoll is Ownable {
   }
 
   // Sends funds to owner if approved
-  // todo, vote params (qorem),
+  // todo, vote params (qourem),
   function transitionFromState_PostRoundDecision () private inState(State.PostRoundDecision) {
     bool enoughVotes = quadraticYesVotes >= quadraticNoVotes;
     bool threeStrikes = 3 == votingRoundNumber;
