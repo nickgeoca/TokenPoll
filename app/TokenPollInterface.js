@@ -107,15 +107,23 @@ const createTokenPoll = async (web3Params, eFn) => { try {
  * @param {BigNum} allocStarTime Unix time stamp in seconds. Start of vote allocation period. Must be greater than the current block time when excuted on the blockchain.
  * @param {BigNum} roundOneFunding 
  * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
- * @param {callback} eFn Error handler
  * @returns {Object} Etheruem transaction result.
 */
-const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, allocStartTime, roundOneFunding, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'Uninitialized');
+const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, web3Params) => {
+  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, web3Params);
+}
 
-  return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, allocStartTime, roundOneFunding, web3Params);
-} catch (e) { eFn(e); }}
+const initializeVoterRegistration = async (tokenPoll, startTime, web3Params) => {
+  return await tokenPoll.initializeVoterRegistration(startTime, web3Params);
+}
+
+const initializeProjectWalletAddress = async (tokenPoll, projectWallet, web3Params) => {
+  return await tokenPoll.initializeProjectWalletAddress(projectWallet, web3Params);
+}
+
+const initializeRound1FundingAmount = async (tokenPoll, amount, web3Params) => {
+  return await tokenPoll.initializeRound1FundingAmount(amount, web3Params);
+}
 
 /**
  * Initializes the TokenPoll's wallet.
@@ -521,8 +529,10 @@ module.exports =
   { init
   , createTokenPoll
   , initializeTokenPoll
-  , initializeEscrowAddress
+  , initializeVoterRegistration
   , initializeProjectWalletAddress
+  , initializeRound1FundingAmount
+
   , pullFundsAndDisburseRound1
   , setupNextRound
   , startRound
