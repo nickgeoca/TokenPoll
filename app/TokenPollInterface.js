@@ -126,34 +126,6 @@ const initializeRound1FundingAmount = async (tokenPoll, amount, web3Params) => {
 }
 
 /**
- * Initializes the TokenPoll's wallet.
- *
- * @function initializeEscrowAddress
- * @async
- * @param {address} escrow
- * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
- * @param {callback} eFn Error handler
- * @returns {Object} Etheruem transaction result.
-*/
-const initializeEscrowAddress = async (tokenPoll, escrow, web3Params, eFn) => { try {
-  return await tokenPoll.initializeEscrowAddress(escrow, web3Params);
-} catch (e) { eFn(e); }}
-
-/**
- * Initializes the project wallet address.
- *
- * @function initializeProjectWalletAddress
- * @async
- * @param {address} projectWallet
- * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
- * @param {callback} eFn Error handler
- * @returns {Object} Etheruem transaction result.
-*/
-const initializeProjectWalletAddress = async (tokenPoll, projectWallet, web3Params, eFn) => { try {
-  return await tokenPoll.initializeProjectWalletAddress(escrow, web3Params);
-} catch (e) { eFn(e); }}
-
-/**
  * Pull ICO funds and disburse round 1
  *
  * @example 
