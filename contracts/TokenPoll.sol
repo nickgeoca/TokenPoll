@@ -174,7 +174,6 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   // Fund variables
   address projectWallet;
   ERC20 public stableCoin;           // Location of funds
-  address public escrow;             // Initiate escrow to send funds to ICO wallet
   uint public totalRefund;           // Total size of refund
   uint roundOneFunding;
 
@@ -202,12 +201,11 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   //                  Initializers
   // **************************************************
 
-  function initialize(address _icoToken, address _stableCoin, address _escrow) external onlyOwner nonReentrant {
+  function initialize(address _icoToken, address _stableCoin) external onlyOwner nonReentrant {
     require(currentRoundNumber == 1, "Must be in round 1");
 
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
-    escrow = _escrow;
     currentRoundStartTime = registrationEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
   }
 
@@ -235,12 +233,11 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   // **************************************************
   
   function pullFundsAndDisburseRound1(address fundsOrigin, uint fundsBalance) onlyOwner nonReentrant external {
-    require(escrow == address(0x0), "Escrow address address is empty");
     require(projectWallet == address(0x0), "Project wallet address is empty");
 
     // Get funds, then send round 1
-    require(stableCoin.transferFrom(fundsOrigin, escrow, fundsBalance), "Funds not sent");
-    msw_erc20Transfer(escrow, address(stableCoin), projectWallet, roundOneFunding);
+    require(stableCoin.transferFrom(fundsOrigin, address(this), fundsBalance), "Funds not sent");
+    stableCoin.transfer(projectWallet, roundOneFunding);
     currentRoundNumber = 2;
     emit RoundResult(1, 1, true, 0, 0, 0, 0, fundsBalance);
   }
@@ -250,7 +247,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
     devRequire(refundFlag == false, "Failed funding. Refund in progress");
     devRequire(_startTime <= now.safeAdd(maxTimeBetweenRounds), "Start time is too far out");
     devRequire(_startTime >= now, "Start time is less than the current time");
-    require(stableCoin.balanceOf(escrow) >= _fundSize, "Need more funds in escrow");
+    require(stableCoin.balanceOf(address(this)) >= _fundSize, "Need more funds in stash");
     devRequire(getRoundEndTime() > block.timestamp, "Please setup next round after the current one is finished");
 
     emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
@@ -268,7 +265,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
     if (threeStrikes) {
       startRefund();
     } else if (enoughVotes) {
-      msw_erc20Transfer(escrow, address(stableCoin), projectWallet, roundOneFunding);
+      stableCoin.transfer(projectWallet, currentRoundFundSize);
     }
 
     // State changes
@@ -360,8 +357,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticV
   // ================
 
   function startRefund() private {
-      totalRefund = stableCoin.balanceOf(escrow);
-      msw_erc20Transfer(escrow, address(stableCoin), address(this), totalRefund);
-      refundFlag = true;
+    totalRefund = stableCoin.balanceOf(address(this));
+    refundFlag = true;
   }
 }
