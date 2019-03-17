@@ -10,10 +10,6 @@ import "./SafeMath.sol";
 @author Nick Geoca
 */
 
-contract MSW {
-  function submitTransaction(address destination, uint value, bytes memory data) public returns (uint transactionId);
-}
-
 contract ReentrancyGuard {
   bool private rentrancy_lock = false;
 
@@ -25,23 +21,6 @@ contract ReentrancyGuard {
   }
 }
 
-contract MSW_Util {
-  // Call through msw -- "erc20.transfer(to, amount)"
-  function msw_erc20Transfer(address _msw, address _erc20, address _to, uint _amount) internal {
-    bytes memory data = new bytes(4 + 32 + 32);
-    uint i;
-
-    // Clear memory
-    for (i = 0; i < (4+32+32); i++) data[i] = byte(0);
-    
-    // Write to data for wallet - erc20.transfer(to, amount);
-    for (i = 0   ; i < 4        ; i++) data[i] = bytes4(0xa9059cbb)[i];
-    for (i = 4+12; i < (4+32)   ; i++) data[i] = bytes20(_to)[i - (4+12)];
-    for (i = 4+32; i < (4+32+32); i++) data[i] = bytes32(_amount)[i - (4+32)];
-
-    MSW(_msw).submitTransaction(address(_erc20), 0, data);
-  }
-}
 
 contract DevRequire {
   function devRequire(bool x, string memory s) internal {
@@ -144,7 +123,7 @@ contract QuadraticVoting {
   }
 }
 
-contract TokenPoll is Ownable, ReentrancyGuard, MSW_Util, DevRequire, QuadraticVoting {
+contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   using SafeMath for uint256;
 
   event RoundResult(uint indexed round, uint indexed votingRoundNumber, bool approvedFunding, uint weightedYesVotes, uint weightedNoVotes, uint yesVoters, uint noVoters, uint fundSize);
