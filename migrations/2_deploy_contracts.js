@@ -8,5 +8,14 @@ module.exports = function(deployer, network, accounts) {
 
     await deployer.deploy(TokenPollFactory);
     
+    // /* 
+    if (network == 'rinkeby') {
+      var MockStableCoin = artifacts.require('MockStableCoin.sol');
+      var MockICOToken = artifacts.require('MockICOToken.sol');
+      await deployer.deploy(MockStableCoin);
+      await deployer.deploy(MockICOToken);
+    }
+    // */
+
   });
 }
