@@ -102,11 +102,6 @@ contract QuadraticVoting {
   function getQuadraticNoVotes() public view returns (uint) { return quadraticNoVotes; }
   function getYesVotes() public view returns (uint) { return yesVotes; }
   function getNoVotes() public view returns (uint) { return noVotes; }
-  /*
- uint private totalVoteUnits;       // Count of all tokens registered for vote
-  uint private userCount;             // Used for keeping track of quorum
-  uint private totalVotePower;        // Total voting power of users
-  */
 
   function _getHasVoted(bytes32 x) internal view returns (bool) { return wasVoteCast[x]; }
 
@@ -138,17 +133,19 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
 
   // Round variables
   uint public constant voterRegistrationDuration = 1 seconds;
-  uint public constant maxTimeBetweenRounds = 180 days;
+  uint public constant maxTimeBetweenFundingRounds = 180 days;
+  uint public constant maxTimeBetweenVotingRounds = 30 days;
   uint public constant roundDuration = 7 minutes;
 
   uint public currentRoundFundSize;
   uint public currentRoundNumber;
   uint public votingRoundNumber;
+  bool public roundComplete;
 
   uint public registrationStartTime;        // Start/end of voting registration
-  uint public registrationEndTime;          // "
+  uint public registrationEndTime;          // " todo fix this
 
-  uint public currentRoundStartTime; // ...
+  uint public currentRoundStartTime; // This carries special info. If ever 0, then ready to setup the next round
 
   // Fund variables
   address projectWallet;
@@ -210,7 +207,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   // **************************************************
   //                  Round functions
   // **************************************************
-  
+
   function pullFundsAndDisburseRound1(address fundsOrigin, uint fundsBalance) onlyOwner nonReentrant external {
     require(projectWallet == address(0x0), "Project wallet address is empty");
 
@@ -222,45 +219,45 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   }
 
   function setupNextRound(uint _startTime, uint _fundSize) external onlyOwner nonReentrant {
-    currentRoundStartTime.safeAdd(roundDuration);
+    bool nextRoundIsFundingRound = votingRoundNumber == 1;
+    if (nextRoundIsFundingRound) { devRequire(_startTime <= now.safeAdd(maxTimeBetweenFundingRounds), "Start time is too far out for funding round"); }
+    else                         { devRequire(_startTime <= now.safeAdd(maxTimeBetweenVotingRounds), "Start time is too far out for voting round");   }
+    devRequire(roundComplete == false, "Previous round is not completed");
     devRequire(refundFlag == false, "Failed funding. Refund in progress");
-    devRequire(_startTime <= now.safeAdd(maxTimeBetweenRounds), "Start time is too far out");
     devRequire(_startTime >= now, "Start time is less than the current time");
     require(stableCoin.balanceOf(address(this)) >= _fundSize, "Need more funds in stash");
-    devRequire(getRoundEndTime() > block.timestamp, "Please setup next round after the current one is finished");
 
-    emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
-
+    roundComplete = false;
     currentRoundStartTime = _startTime;
     currentRoundFundSize = _fundSize;
+
+    emit NewRoundInfo(currentRoundNumber, votingRoundNumber, _startTime, _startTime.safeAdd(roundDuration), _fundSize);
   }
 
   function finalizeRound() public nonReentrant {
+    devRequire(roundComplete == false, "Round not started");
     devRequire(block.timestamp > getRoundEndTime(), "Round is not finished");
-    
-    bool enoughVotes = yesVotesIsMoreOrEqual();
-    bool threeStrikes = 3 == votingRoundNumber;
 
-    if (threeStrikes) {
-      startRefund();
-    } else if (enoughVotes) {
-      stableCoin.transfer(projectWallet, currentRoundFundSize);
-    }
+    bool enoughPassVotes = yesVotesIsMoreOrEqual();
+    bool threeStrikes = votingRoundNumber >= 3;     // Voting round number starts at 1
 
-    // State changes
     emit RoundResult( currentRoundNumber, votingRoundNumber
-                    , enoughVotes, getQuadraticYesVotes(), getQuadraticNoVotes(), getYesVotes(), getNoVotes()
+                    , enoughPassVotes, getQuadraticYesVotes(), getQuadraticNoVotes(), getYesVotes(), getNoVotes()
                     , currentRoundFundSize
                     );
 
-    if (enoughVotes) {
+    votingRoundNumber = votingRoundNumber.safeAdd(1);  
+    clearVotingRound();
+    roundComplete = true;
+
+    // On 3rd voting round, check if there is enough pass votes first. If not, then refund
+    if (enoughPassVotes) {
       votingRoundNumber = 1;
       currentRoundNumber = currentRoundNumber.safeAdd(1);
-    } else {
-      votingRoundNumber = votingRoundNumber.safeAdd(1);
+      stableCoin.transfer(projectWallet, currentRoundFundSize);
+    } else if (threeStrikes) {
+      startRefund();
     }
-
-    clearVotingRound();
   }
 
   // **************************************************
@@ -268,8 +265,15 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   // **************************************************
 
   function refundIfPenalized() external nonReentrant {
-    bool exceededRoundSetupTime = getRoundEndTime().safeAdd(maxTimeBetweenRounds) > now;
-    if (exceededRoundSetupTime) startRefund();
+    bool nextRoundIsFundingRound = votingRoundNumber == 1;
+    bool nextRoundIsVotingRound = !nextRoundIsFundingRound;
+    bool exceededFundingRoundSetupTime = getRoundEndTime().safeAdd(maxTimeBetweenFundingRounds) > now;
+    bool exceededVotingRoundSetupTime  = getRoundEndTime().safeAdd(maxTimeBetweenVotingRounds) > now;
+
+    if ( nextRoundIsFundingRound && exceededFundingRoundSetupTime
+      || nextRoundIsVotingRound && exceededVotingRoundSetupTime) {
+        startRefund();
+    }
   }
   
   function registerAsVoter() external nonReentrant {
