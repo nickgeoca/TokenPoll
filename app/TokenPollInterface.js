@@ -106,19 +106,28 @@ const createTokenPoll = async (web3Params) => {
  * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
  * @returns {Object} Etheruem transaction result.
 */
-const initializeTokenPoll = async (tokenPoll, icoTokenAddress, scTokenAddress, web3Params) => {
+const initializeTokenPoll = async (tokenPollAddress, icoTokenAddress, scTokenAddress, web3Params) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   return await tokenPoll.initialize(icoTokenAddress, scTokenAddress, web3Params);
 }
 
-const initializeVoterRegistration = async (tokenPoll, startTime, web3Params) => {
+const initializeVoterRegistration = async (tokenPollAddress, startTime, web3Params) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   return await tokenPoll.initializeVoterRegistration(startTime, web3Params);
 }
 
-const initializeProjectWalletAddress = async (tokenPoll, projectWallet, web3Params) => {
+const initializeProjectWalletAddress = async (tokenPollAddress, projectWallet, web3Params) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   return await tokenPoll.initializeProjectWalletAddress(projectWallet, web3Params);
 }
 
-const initializeRound1FundingAmount = async (tokenPoll, amount, web3Params) => {
+const initializeRound1FundingAmount = async (tokenPollAddress, amount, web3Params) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  return await tokenPoll.initializeRound1FundingAmount(amount, web3Params);
+}
+
+const getInitializerData = async (tokenPollAddress) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   return await tokenPoll.initializeRound1FundingAmount(amount, web3Params);
 }
 
@@ -494,13 +503,15 @@ const getUserVotePowerPercentage = async(tokenPoll, user, eFn) => { try {
 // =================
 
 module.exports = 
-  // ICO fns
   { init
   , createTokenPoll
+
   , initializeTokenPoll
   , initializeVoterRegistration
   , initializeProjectWalletAddress
   , initializeRound1FundingAmount
+
+  , getInitializerData
 
   , pullFundsAndDisburseRound1
   , setupNextRound
