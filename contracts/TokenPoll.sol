@@ -143,8 +143,6 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   bool public roundComplete;
 
   uint public registrationStartTime;        // Start/end of voting registration
-  uint public registrationEndTime;          // " todo fix this
-
   uint public currentRoundStartTime; // This carries special info. If ever 0, then ready to setup the next round
 
   // Fund variables
@@ -182,7 +180,6 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
 
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
-    currentRoundStartTime = registrationEndTime.safeAdd(maxTimeBetweenRounds);  // todo reaccess if this is a good idea
   }
 
   function initializeVoterRegistration(uint256 startTime) onlyOwner nonReentrant external {
@@ -191,7 +188,6 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
     devRequire(startTime < (block.timestamp + 24 weeks), "Start time is after 6 months");
 
     registrationStartTime = startTime;
-    registrationEndTime   = startTime.safeAdd(voterRegistrationDuration);
   }
 
   function initializeProjectWalletAddress(address _projectWallet) onlyOwner external {
@@ -277,7 +273,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   }
   
   function registerAsVoter() external nonReentrant {
-    devRequire(registrationStartTime < block.timestamp && block.timestamp < registrationEndTime, "Registration has not started or is over");
+    devRequire(registrationStartTime < block.timestamp && block.timestamp < getRegistrationEndTime(), "Registration has not started or is over");
     uint userTokens = icoCoin.balanceOf(msg.sender);
     registerVoter(userTokens);
   }
@@ -334,6 +330,8 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   function getRoundStartTime() public view returns (uint) { return currentRoundStartTime; }
 
   function getRoundEndTime() public view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
+
+  function getRegistrationEndTime() public view returns (uint) { return registrationStartTime.safeAdd(voterRegistrationDuration); }
 
   // ================
   // Private fns
