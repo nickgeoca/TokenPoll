@@ -146,10 +146,10 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   uint public currentRoundStartTime; // This carries special info. If ever 0, then ready to setup the next round
 
   // Fund variables
-  address projectWallet;
+  address public projectWallet;
   ERC20 public stableCoin;           // Location of funds
   uint public totalRefund;           // Total size of refund
-  uint roundOneFunding;
+  uint public roundOneFunding;
 
   // Voting variables
   ERC20 public icoCoin;              // Voting power is based on token ownership count
