@@ -123,13 +123,21 @@ const initializeProjectWalletAddress = async (tokenPollAddress, projectWallet, w
 
 const initializeRound1FundingAmount = async (tokenPollAddress, amount, web3Params) => {
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
-  return await tokenPoll.initializeRound1FundingAmount(amount, web3Params);
+  const stableCoin = await ERC20.at(await tokenPoll.stableCoin());
+  const stableCoinDecimals = await stableCoin.decimals();
+  const stableCoinMultiplier = (new BigNumber(10)).pow(stableCoinDecimals);
+  const convertedAmount = (new BigNumber(amount)).times(stableCoinMultiplier);
+  return await tokenPoll.initializeRound1FundingAmount(convertedAmount, web3Params);
 }
 
 const getInitializerData = async (tokenPollAddress) => {
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
-  return await tokenPoll.initializeRound1FundingAmount(amount, web3Params);
+  const ps = [tokenPoll.icoCoin(), tokenPoll.stableCoin(), tokenPoll.registrationStartTime(), tokenPoll.projectWallet(), tokenPoll.roundOneFunding()];
+  const data = await Promise.all(ps)
+    return {icoCoin: data[0], stableCoin: data[1], registrationStartTime: data[2], projectWallet: data[3], roundOneFunding: data[4]};
 }
+
+
 
 /**
  * Pull ICO funds and disburse round 1
