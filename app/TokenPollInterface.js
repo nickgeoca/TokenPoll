@@ -134,113 +134,57 @@ const getInitializerData = async (tokenPollAddress) => {
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   const ps = [tokenPoll.icoCoin(), tokenPoll.stableCoin(), tokenPoll.registrationStartTime(), tokenPoll.projectWallet(), tokenPoll.roundOneFunding()];
   const data = await Promise.all(ps)
-    return {icoCoin: data[0], stableCoin: data[1], registrationStartTime: data[2], projectWallet: data[3], roundOneFunding: data[4]};
+  return {icoCoin: data[0], stableCoin: data[1], registrationStartTime: data[2], projectWallet: data[3], roundOneFunding: data[4]};
 }
 
-
-
-/**
- * Pull ICO funds and disburse round 1
- *
- * @example 
- *
- * @function pullFundsAndDisburseRound1
- * @async
- * @param {address} fundsOrigin Where the funds are coming from. They must be approved first- ERC20(tokenPoll address, size of funds)
- * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
- * @param {callback} eFn Error handler
- * @returns {Object} Etheruem transaction result.
-*/
-const pullFundsAndDisburseRound1 = async (fundsOrigin, web3Params, eFn) => { try {
-  let tx = await tokenPoll.pullFundsAndDisburseRound1(fundsOrigin, web3Params);
-  return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
-} catch (e) { eFn(e); }}
-
-/**
- * Setups the next round of funding.
- *
- * @example 
- * const tokenPoll = await createTokenPoll({from: user1}, errorFn);     // Create a token poll with user1 as owner
- * const msw = await createMSW();   // This will be added to a future version of this library
- * const allocationStartTime = current unix time seconds + 3 days;
- * await initializeTokenPoll(tokenPoll, icoToken, fundToken, msw.address, allocationStartTime, {from: user1}, errorFn);
- *
- * @function setupNextRound
- * @async
- * @param {Object} tokenPoll The token poll that was created in createTokenPoll.
- * @param {address} icoTokenAddress The address of the ico token
- * @param {address} scTokenAddress The address of the funding token
- * @param {address} escrow Address of the multi-sig wallet
- * @param {BigNum} allocStarTime Unix time stamp in seconds. Start of vote allocation period. Must be greater than the current block time when excuted on the blockchain.
- * @param {Object} web3Params Etherem parameters. The address in 'from' will be the owner of the contract.
- * @param {callback} eFn Error handler
- * @returns {Object} Etheruem transaction result.
-*/
-const setupNextRound = async (tokenPoll, newStartTime, fundSize, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'NextRoundApproved');
-
-  let tx = await tokenPoll.setupNextRound(newStartTime, fundSize, web3Params);
-  return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
-} catch (e) { eFn(e); }}
-
-const startRound = async (tokenPoll, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'NextRoundApproved');
-
-  return await tokenPoll.startRound(web3Params);
-} catch (e) { eFn(e); }}
-
-const approveNewRound = async (tokenPoll, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'PostRoundDecision');
-
-  let tx = await tokenPoll.approveNewRound(web3Params);
+const pullFundsAndDisburseRound1 = async (tokenPollAddress, fundsOrigin, fundsBalance, web3Params) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.pullFundsAndDisburseRound1(fundsOrigin, fundsBalance, web3Params);
   return {tx: tx, event: pullEvent(tx, 'RoundResult')};
-} catch (e) { eFn(e); }}
+}
 
-// ===============
-// Voter Functions
-// ===============
+// **************************************************
+// NEW STUFF
 
-// return successful, tx hash, ?
-const allocVotes = async(tokenPoll, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  // await verifyInState(tokenPoll, 'VoteAllocation');
+const setupNextRound = async (tokenPollAddress, newStartTime, fundSize, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.setupNextRound(newStartTime, fundSize, web3Params);
+  return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
+}
 
-  return tokenPoll.allocVotes(web3Params);;
-} catch (e) { eFn(e); }}
+const finalizeRound = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.finalizeRound(web3Params);
+  return {tx: tx, event: pullEvent(tx, 'RoundResult')};
+}
 
-// Vote is a boolean
-const castVote = async(tokenPoll, vote, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'InRound');
+const refundIfPenalized = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.refundIfPenalized(web3Params);
+  return {tx: tx}
+}
 
-  return tokenPoll.castVote(vote, web3Params); 
-} catch (e) { eFn(e); }}
+const registerAsVoter = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  let tx = await tokenPoll.registerAsVoter(web3Params);
+  return {tx: tx};
+}
 
-const userRefund = async(tokenPoll, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'Refund');
+const castVote = async (tokenPollAddress, vote, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.castVote(vote, web3Params);
+  return {tx: tx};
+}
 
-  let tx = await tokenPoll.userRefund(web3Params); 
-  return {tx: tx, event: pullEvent(tx, 'Transfer')};
-} catch (e) { eFn(e); }}
+const userRefund = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.userRefund(web3Params);
+  return {tx: tx};
+}
 
-const startRefund_voteFailed = async(tokenPoll, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'NextRoundApproved');
+// NEW STUFF
+// **************************************************
 
-  return tokenPoll.startRefund_voteFailed(web3Params); 
-} catch (e) { eFn(e); }}
-
-const startRefund_illegalRoundDelay = async(tokenPoll, web3Params, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  await verifyInState(tokenPoll, 'NextRoundApproved');
-
-  return tokenPoll.startRefund_illegalRoundDelay(web3Params); 
-} catch (e) { eFn(e); }}
-  
 // =======
 // Getters
 // =======
@@ -520,18 +464,13 @@ module.exports =
   , initializeRound1FundingAmount
 
   , getInitializerData
-
   , pullFundsAndDisburseRound1
   , setupNextRound
-  , startRound
-  , approveNewRound
-
-  // Voter fns
-  , allocVotes
+  , finalizeRound
+  , refundIfPenalized
+  , registerAsVoter
   , castVote
   , userRefund
-  , startRefund_voteFailed
-  , startRefund_illegalRoundDelay
 
   // Misc
   , getAllocationTimeFrame
