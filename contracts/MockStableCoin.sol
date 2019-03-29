@@ -19,6 +19,7 @@ contract BasicERC20 {
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         balances[_to] += _value;
+        balances[_from] -= _value;
         emit Transfer(_from, _to, _value);
         return true;
     }
