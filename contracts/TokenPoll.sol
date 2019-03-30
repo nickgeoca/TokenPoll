@@ -149,7 +149,6 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   address public projectWallet;
   ERC20 public stableCoin;           // Location of funds
   uint public totalRefund;           // Total size of refund
-  uint public roundOneFunding;
 
   // Voting variables
   ERC20 public icoCoin;              // Voting power is based on token ownership count
@@ -196,8 +195,8 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   }
 
   function initializeRound1FundingAmount(uint amount) onlyOwner external {
-    devRequire(roundOneFunding == 0, "Round one funding has been set already");
-    roundOneFunding = amount;
+    devRequire(currentRoundFundSize == 0, "Round one funding has been set already");
+    currentRoundFundSize = amount;
   }
 
   // **************************************************
@@ -206,19 +205,20 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
 
   function pullFundsAndDisburseRound1(address fundsOrigin, uint fundsBalance) onlyOwner nonReentrant external {
     require(projectWallet == address(0x0), "Project wallet address is empty");
-
+    require(currentRoundNumber == 1, "Round one has passed");
     // Get funds, then send round 1
     require(stableCoin.transferFrom(fundsOrigin, address(this), fundsBalance), "Funds not sent");
-    stableCoin.transfer(projectWallet, roundOneFunding);
+    require(stableCoin.transfer(projectWallet, currentRoundFundSize), "Funds not sent");
     currentRoundNumber = 2;
     emit RoundResult(1, 1, true, 0, 0, 0, 0, fundsBalance);
+    roundComplete = true;
   }
 
   function setupNextRound(uint _startTime, uint _fundSize) external onlyOwner nonReentrant {
     bool nextRoundIsFundingRound = votingRoundNumber == 1;
     if (nextRoundIsFundingRound) { devRequire(_startTime <= now.safeAdd(maxTimeBetweenFundingRounds), "Start time is too far out for funding round"); }
     else                         { devRequire(_startTime <= now.safeAdd(maxTimeBetweenVotingRounds), "Start time is too far out for voting round");   }
-    devRequire(roundComplete == false, "Previous round is not completed");
+    devRequire(roundComplete == true, "Previous round is not completed");
     devRequire(refundFlag == false, "Failed funding. Refund in progress");
     devRequire(_startTime >= now, "Start time is less than the current time");
     require(stableCoin.balanceOf(address(this)) >= _fundSize, "Need more funds in stash");
@@ -300,7 +300,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
     unregisterVoter(user);
     devRequire(stableCoin.transfer(user, refundSize), "Stable coin did not send funds");
 
-    emit Transfer(from, user, refundSize);
+    emit Transfer(from, user, refundSize); //todo, remove this b/c .transfer already does this?
   }
 
   // =======
