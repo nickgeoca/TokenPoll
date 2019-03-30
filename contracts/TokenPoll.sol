@@ -204,11 +204,12 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   // **************************************************
 
   function pullFundsAndDisburseRound1(address fundsOrigin, uint fundsBalance) onlyOwner nonReentrant external {
-    require(projectWallet == address(0x0), "Project wallet address is empty");
+    require(projectWallet != address(0x0), "Project wallet address is empty");
     require(currentRoundNumber == 1, "Round one has passed");
+
     // Get funds, then send round 1
-    require(stableCoin.transferFrom(fundsOrigin, address(this), fundsBalance), "Funds not sent");
-    require(stableCoin.transfer(projectWallet, currentRoundFundSize), "Funds not sent");
+    require(stableCoin.transferFrom(fundsOrigin, address(this), fundsBalance), "Mismatch on expected funds to receive");
+    require(stableCoin.transfer(projectWallet, currentRoundFundSize), "Failed to disburse round 1");
     currentRoundNumber = 2;
     emit RoundResult(1, 1, true, 0, 0, 0, 0, fundsBalance);
     roundComplete = true;
