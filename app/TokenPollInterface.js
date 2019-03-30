@@ -15,8 +15,8 @@ const ERC20 = contract(require('../build/contracts/ERC20.json'));
 // var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
 // var ERC20 = artifacts.require('./../contracts/ERC20.sol');
 // var tokenpoll = undefined;
-// var BigNumber = require('bignumber.js');
 let web3;
+let BN;
 
 // ==============
 // Misc
@@ -41,6 +41,25 @@ var verifyTokenPoll = tp => { return; }
 
 const throwIfError = e => {if (e) throw e;}
 
+// Truncates
+function numStrAndDecimalsToStr(strNum, decimals) {
+   decimals = parseInt(decimals);
+   function insert(str, index, value) {    return str.substr(0, index) + value + str.substr(index);}
+   const hasDecimalPlace = strNum.indexOf('.') > -1;
+   strNum = strNum + ('0'.repeat(decimals)) + (hasDecimalPlace?'':'.');
+   strNum = strNum.split('.');
+   const prevDecPlace = strNum[0].length;
+   return insert(strNum[0]+strNum[1], prevDecPlace+decimals, '.').split('.')[0];
+}
+const stableCoinRealToInt = async (tokenPollAddress, strRealAmount) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const stableCoinAddress = await tokenPoll.stableCoin();
+  const stableCoin = await ERC20.at(stableCoinAddress);
+  const stableCoinDecimals = (await stableCoin.decimals()).toString(10);
+  const result = numStrAndDecimalsToStr(strRealAmount, stableCoinDecimals);
+  return result;
+}
+
 // ==============
 // Setup Function
 // ==============
@@ -60,8 +79,10 @@ const throwIfError = e => {if (e) throw e;}
 */
 const init = async (_web3, eFn) => { try {
   web3 = _web3;
+  BN = web3.utils.BN;
   await TokenPollFactory.setProvider(web3.currentProvider);
   await TokenPoll.setProvider(web3.currentProvider);
+  await ERC20.setProvider(web3.currentProvider);
 } catch (e) { eFn(e); }}
 
 // =============
@@ -121,13 +142,10 @@ const initializeProjectWalletAddress = async (tokenPollAddress, projectWallet, w
   return await tokenPoll.initializeProjectWalletAddress(projectWallet, web3Params);
 }
 
-const initializeRound1FundingAmount = async (tokenPollAddress, amount, web3Params) => {
+const initializeRound1FundingAmount = async (tokenPollAddress, strRealAmount, web3Params) => {
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
-  const stableCoin = await ERC20.at(await tokenPoll.stableCoin());
-  const stableCoinDecimals = await stableCoin.decimals();
-  const stableCoinMultiplier = (new BigNumber(10)).pow(stableCoinDecimals);
-  const convertedAmount = (new BigNumber(amount)).times(stableCoinMultiplier);
-  return await tokenPoll.initializeRound1FundingAmount(convertedAmount, web3Params);
+  const strIntAmount = await stableCoinRealToInt(tokenPollAddress, strRealAmount);
+  return await tokenPoll.initializeRound1FundingAmount(strIntAmount, web3Params);
 }
 
 const getInitializerData = async (tokenPollAddress) => {
@@ -139,16 +157,23 @@ const getInitializerData = async (tokenPollAddress) => {
 
 const pullFundsAndDisburseRound1 = async (tokenPollAddress, fundsOrigin, fundsBalance, web3Params) => {
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
-  const tx = await tokenPoll.pullFundsAndDisburseRound1(fundsOrigin, fundsBalance, web3Params);
+  const strIntAmount = await stableCoinRealToInt(tokenPollAddress, fundsBalance);
+  console.log('Amount to pull', strIntAmount);
+  const tx = await tokenPoll.pullFundsAndDisburseRound1(fundsOrigin, strIntAmount, web3Params);
   return {tx: tx, event: pullEvent(tx, 'RoundResult')};
 }
 
-// **************************************************
-// NEW STUFF
+const registerAsVoter = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  let tx = await tokenPoll.registerAsVoter(web3Params);
+  return {tx: tx};
+}
 
 const setupNextRound = async (tokenPollAddress, newStartTime, fundSize, web3Params) => { 
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
-  const tx = await tokenPoll.setupNextRound(newStartTime, fundSize, web3Params);
+  const strIntAmount = await stableCoinRealToInt(tokenPollAddress, fundSize);
+    console.log('Round fund amount',strIntAmount);
+  const tx = await tokenPoll.setupNextRound(newStartTime, strIntAmount, web3Params);
   return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
 }
 
@@ -158,21 +183,20 @@ const finalizeRound = async (tokenPollAddress, web3Params) => {
   return {tx: tx, event: pullEvent(tx, 'RoundResult')};
 }
 
-const refundIfPenalized = async (tokenPollAddress, web3Params) => { 
-  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
-  const tx = await tokenPoll.refundIfPenalized(web3Params);
-  return {tx: tx}
-}
-
-const registerAsVoter = async (tokenPollAddress, web3Params) => { 
-  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
-  let tx = await tokenPoll.registerAsVoter(web3Params);
-  return {tx: tx};
-}
-
 const castVote = async (tokenPollAddress, vote, web3Params) => { 
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   const tx = await tokenPoll.castVote(vote, web3Params);
+  return {tx: tx};
+}
+
+const castYesVote = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.castVote(true, web3Params);
+  return {tx: tx};
+}
+const castNoVote = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.castVote(false, web3Params);
   return {tx: tx};
 }
 
@@ -180,6 +204,15 @@ const userRefund = async (tokenPollAddress, web3Params) => {
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   const tx = await tokenPoll.userRefund(web3Params);
   return {tx: tx};
+}
+
+// **************************************************
+// NEW STUFF
+
+const refundIfPenalized = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.refundIfPenalized(web3Params);
+  return {tx: tx}
 }
 
 // NEW STUFF
@@ -470,6 +503,8 @@ module.exports =
   , refundIfPenalized
   , registerAsVoter
   , castVote
+  , castYesVote
+  , castNoVote
   , userRefund
 
   // Misc
