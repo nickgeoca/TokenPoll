@@ -206,6 +206,19 @@ const userRefund = async (tokenPollAddress, web3Params) => {
   return {tx: tx};
 }
 
+const isInRound = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  return await tokenPoll.isInRound(web3Params);
+}
+
+const getRoundTimeFrame = async (tokenPollAddress) => {
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  let start = await tokenPoll.getRoundStartTime();
+  let end = await tokenPoll.getRoundEndTime();
+
+  return {start, end};
+}
+
 // **************************************************
 // NEW STUFF
 
@@ -448,15 +461,6 @@ const getAllocationTimeFrame = async (tokenPoll, eFn) => { try {
   return {start, end}
 } catch (e) { eFn(e); }}
 
-
-const getRoundTimeFrame = async (tokenPoll, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-  let start = await tokenPoll.getRoundStartTime();
-  let end = await tokenPoll.getRoundEndTime();
-
-  return {start, end};
-} catch (e) { eFn(e); }}
-
 // **** misc
 
 const getTotalVotePower = async(tokenPoll, eFn) => { try {
@@ -506,6 +510,7 @@ module.exports =
   , castYesVote
   , castNoVote
   , userRefund
+  , isInRound
 
   // Misc
   , getAllocationTimeFrame
