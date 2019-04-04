@@ -279,7 +279,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   }
 
   function castVote(bool vote) external nonReentrant {
-    devRequire(getRoundStartTime() < block.timestamp && block.timestamp < getRoundEndTime(), "Vote must happen during poll");
+    devRequire(isInRound(), "Vote must happen during round");
     devRequire(getUserTokenBalance(msg.sender) != 0, "User is not a registered voter");
     devRequire(!getHasVoted(msg.sender, currentRoundNumber, votingRoundNumber), "User has previously voted");
 
@@ -328,9 +328,10 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   function getUserRefundSize(address user) public view returns (uint) { return refundFlag == false? 0: totalRefund.safeMul(getUserTokenBalance(user)) / totalTokenCount(); }
 
   function getRoundStartTime() public view returns (uint) { return currentRoundStartTime; }
-
   function getRoundEndTime() public view returns (uint) { return currentRoundStartTime.safeAdd(roundDuration); }
+  function isInRound() public view returns (bool) { return getRoundStartTime() <= block.timestamp && block.timestamp < getRoundEndTime(); }
 
+  function getRegistrationStartTime() public view returns (uint) { return registrationStartTime; }
   function getRegistrationEndTime() public view returns (uint) { return registrationStartTime.safeAdd(voterRegistrationDuration); }
 
   // ================
