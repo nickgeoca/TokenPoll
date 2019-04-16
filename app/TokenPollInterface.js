@@ -172,7 +172,7 @@ const registerAsVoter = async (tokenPollAddress, web3Params) => {
 const setupNextRound = async (tokenPollAddress, newStartTime, fundSize, web3Params) => { 
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   const strIntAmount = await stableCoinRealToInt(tokenPollAddress, fundSize);
-    console.log('Round fund amount',strIntAmount);
+  console.log('Round fund amount',strIntAmount);
   const tx = await tokenPoll.setupNextRound(newStartTime, strIntAmount, web3Params);
   return {tx: tx, event: pullEvent(tx, 'NewRoundInfo')};
 }
@@ -258,10 +258,7 @@ const refundIfPenalized = async (tokenPollAddress, web3Params) => {
  * @param {Object} web3 Pass in web3 object.
  * @param {callback} eFn Error handler
 */
-const getState = async(tokenPoll, eFn) => { try {
-  await verifyTokenPoll(tokenPoll);
-
-  let state = await tokenPoll.getState();
+const getState = async(tokenPoll) => {
   const states = 
       [ 'Uninitialized'      // Waits token poll is parameterized
       , 'Initialized'        // Waits until vote allocation. Can't have InRound/Voting before votes are allocated
@@ -276,8 +273,8 @@ const getState = async(tokenPoll, eFn) => { try {
       , 'UnknownState'
       ];
 
-  return states[state.toString(10)];
-} catch (e) { eFn(e); }}
+  return states[0];
+}
 
 const getEndOfRefundDate = async(tokenPoll, eFn) => { try {
   await verifyTokenPoll(tokenPoll);
