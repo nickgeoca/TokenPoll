@@ -133,7 +133,7 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
 
   // Round variables
   uint public constant voterRegistrationDuration = 1 seconds;
-  uint public constant maxTimeBetweenFundingRounds = 180 days;
+  uint public constant maxTimeBetweenFundingRounds = (3*365) days;
   uint public constant maxTimeBetweenVotingRounds = 30 days;
   uint public constant roundDuration = 7 minutes;
 
@@ -175,7 +175,8 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   // **************************************************
 
   function initialize(address _icoToken, address _stableCoin) external onlyOwner nonReentrant {
-    require(currentRoundNumber == 1, "Must be in round 1");
+    devRequire(address(icoCoin) == 0x0, "Can only set this once");
+    devRequire(address(stableCoin) == 0x0, "Can only set this once");
 
     icoCoin = ERC20(_icoToken);
     stableCoin = ERC20(_stableCoin);
@@ -204,8 +205,15 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   // **************************************************
 
   function pullFundsAndDisburseRound1(address fundsOrigin, uint fundsBalance) onlyOwner nonReentrant external {
+    // Is initialized
+    devRequire(now > getRegistrationEndTime() && getRegistrationEndTime() != 0, "Vote registration must be complete first");
     require(projectWallet != address(0x0), "Project wallet address is empty");
     require(currentRoundNumber == 1, "Round one has passed");
+    devRequire(address(icoCoin) != 0x0, "Voter coins not set");  
+    devRequire(address(stableCoin) != 0x0, "Stablecoin not set");
+
+    // Parties agree on how much to transfer 
+    devRequire(stableCoin.allowance(fundsorigin, this) == fundsBalance, "Parties do not agree on amount to exchange");
 
     // Get funds, then send round 1
     require(stableCoin.transferFrom(fundsOrigin, address(this), fundsBalance), "Mismatch on expected funds to receive");
