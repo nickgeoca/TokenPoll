@@ -11,11 +11,6 @@ const TokenPollFactory = contract(require('../build/contracts/TokenPollFactory.j
 const TokenPoll = contract(require('../build/contracts/TokenPoll.json'));
 const ERC20 = contract(require('../build/contracts/ERC20.json'));
 
-// var TokenPollFactory = artifacts.require('./../build/contracts/TokenPollFactory.sol');
-// var TokenPoll = artifacts.require('./../contracts/TokenPoll.sol');
-// var ERC20 = artifacts.require('./../contracts/ERC20.sol');
-// var tokenpoll = undefined;
-let web3;
 let BN;
 
 // ==============
@@ -77,13 +72,29 @@ const stableCoinRealToInt = async (tokenPollAddress, strRealAmount) => {
  * @param {Object} web3 Pass in web3 object.
  * @param {callback} eFn Error handler
 */
-const init = async (_web3, eFn) => { try {
-  web3 = _web3;
+// https://ethereum.stackexchange.com/questions/51240/error-deploying-using-truffle-contracts-cannot-read-property-apply-of-undefin
+const hackAWeb3 = c => {
+  if (typeof c.currentProvider.sendAsync !== "function") {
+    c.currentProvider.sendAsync = function() {
+      return c.currentProvider.send.apply(
+        c.currentProvider,
+        arguments
+      );
+    };
+  }
+}
+
+const init = async (web3, eFn) => {
   BN = web3.utils.BN;
   await TokenPollFactory.setProvider(web3.currentProvider);
   await TokenPoll.setProvider(web3.currentProvider);
   await ERC20.setProvider(web3.currentProvider);
-} catch (e) { eFn(e); }}
+/*
+  hackAWeb3(TokenPollFactory);
+  hackAWeb3(TokenPoll);
+  hackAWeb3(ERC20);
+// */
+}
 
 // =============
 // ICO Functions
@@ -101,9 +112,12 @@ const init = async (_web3, eFn) => { try {
  * @returns {address} TokenPoll address
 */
 const createTokenPoll = async (web3Params) => {
-  let fact = await TokenPollFactory.deployed();
+  // Firefox..... Unhandled promise rejection DOMException: "The object could not be cloned."
+  // Chromium.... Uncaught (in promise) DOMException: Failed to execute 'postMessage' on 'Window': function (err, result) {
+  //   if(result && result.id && payload.id !== result.id) return callback(new Error(...<omitted>... } could not be cloned.
+  let fact;
+  try { fact = await TokenPollFactory.deployed(); } catch (e) {console.log(e);}
   let tx = await fact.createTokenPoll(web3Params);
-
   let event = pullEvent(tx, 'TokenPollCreated');
   return event.tokenPoll;
 }
