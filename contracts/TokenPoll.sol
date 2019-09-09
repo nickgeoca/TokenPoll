@@ -132,10 +132,10 @@ contract TokenPoll is Ownable, ReentrancyGuard, DevRequire, QuadraticVoting {
   bool public refundFlag;            // keep track of state
 
   // Round variables
-  uint public constant voterRegistrationDuration = 1 seconds;
+  uint public constant voterRegistrationDuration = 3 minutes;
   uint public constant maxTimeBetweenFundingRounds = 180 days;
   uint public constant maxTimeBetweenVotingRounds = 30 days;
-  uint public constant roundDuration = 7 minutes;
+  uint public constant roundDuration = 3 minutes;
 
   uint public currentRoundFundSize;
   uint public currentRoundNumber;

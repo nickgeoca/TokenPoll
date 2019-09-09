@@ -200,6 +200,13 @@ const castNoVote = async (tokenPollAddress, web3Params) => {
   return {tx: tx};
 }
 
+jdsf09dsjf9sdjf9ds8jf9dsfjd9sfd
+const inRefundMode = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const tx = await tokenPoll.userRefund(web3Params);
+  return {tx: tx};
+}
+ 
 const userRefund = async (tokenPollAddress, web3Params) => { 
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   const tx = await tokenPoll.userRefund(web3Params);
@@ -211,6 +218,27 @@ const isInRound = async (tokenPollAddress, web3Params) => {
   return await tokenPoll.isInRound(web3Params);
 }
 
+const isRoundOver = async (tokenPollAddress, web3Params) => { 
+  const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
+  const inRound = await tokenPoll.isInRound(web3Params);
+  if (inRound) return false;
+  const endTime = parseInt((await tokenPoll.getRoundEndTime()).toString(10));
+  const currentTime = Date.now() / 1000 | 0;
+  return endTime > currentTime;  
+}
+
+
+doisjfsoidjfoidsjfidos
+const canSetupNextRound = async (tokenPollAddress, web3Params) => { 
+  const over = await isRoundOver(tokenPollAddress);
+  const notRefundMode = await !
+  return over && 
+}
+
+const isAwaitingNextRound = async
+const cannotSetupNextRound = async
+
+
 const getRoundTimeFrame = async (tokenPollAddress) => {
   const tokenPoll = await getTokenPollWithAddress(tokenPollAddress);
   let start = await tokenPoll.getRoundStartTime();
@@ -218,6 +246,30 @@ const getRoundTimeFrame = async (tokenPollAddress) => {
 
   return {start, end};
 }
+
+/*
+Round status
+-  isInRound
+-  isRoundOver
+-  canSetupNextRound
+-  isAwaitingNextRound
+-  cannotSetupNextRound
+  
+Vote registration status
+  inVoteRegistration
+  isAfterVoteRegistration
+  canSetupVoteRegistration
+
+Vote registration values
+  voteRegistrationStartTime
+  voteRegistrationEndTime
+
+
+
+  projectFunded
+  projectUnfunded
+*/
+const 
 
 // **************************************************
 // NEW STUFF

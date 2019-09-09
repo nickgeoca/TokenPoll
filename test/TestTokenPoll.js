@@ -1,10 +1,7 @@
 const util = require("./util.js");
 
 const tpi = require("../app/TokenPollInterface.js");
-
 var ERC20 = artifacts.require('ERC20.sol');
-var MSW = artifacts.require('./wallet/MultiSigWallet.sol');
-var MSWF = artifacts.require('./wallet/MultiSigWalletFactory.sol');
 
 var chai = require('chai')
 
